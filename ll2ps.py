@@ -196,10 +196,49 @@ def compile(text,space=' '):
     trees = [build_tree_bottom_up(tree,space=space) for tree in trees]
     trees = combine_trees(trees,space=space)
     return trees
+
+def compact(trees):
+    '''
+    Compact the trees
+    '''
+    trees = trees.split('\n')
     
+    def remove_empty_columns(trees):
+        trees = [list(j) for j in zip_longest(*trees,fillvalue=' ')]
+        isempty = lambda line: all(entry==' ' for entry in line)
+        trees2 = []
+        started, previous_empty = (False, False)
+        for j,line in enumerate(trees):
+            if isempty(line):
+                if not started:
+                    trees2.append(line)
+                elif not previous_empty:
+                    trees2.append(line) # WIP <- check whether this line cannot be sometimes gotten rid of
+                previous_empty = True
+            else:
+                started = True
+                previous_empty = False
+                trees2.append(line)
+        return [''.join(j) for j in zip(*trees2)]
+
+    trees = [j*' ' + line for j,line in enumerate(trees)]
+    trees = remove_empty_columns(trees)
+    trees = [line[j:] for j,line in enumerate(trees)]
+    
+
+    trees = [(len(trees)-j-1)*' ' + line for j,line in enumerate(trees)]
+    trees = remove_empty_columns(trees)
+    trees = [line[(len(trees)-j-1):] for j,line in enumerate(trees)]
+
+    trees = [re.sub('\s+(?=$)','',line) for line in trees] # Remove trailing whitespace
+
+    return '\n'.join(trees)
+
 # if __name__ == "__main__":
 #     text = readfile('golf.ll')
 #     trees = compile(text)
+#     print(trees)
+#     trees = compact(trees)
 #     print(trees)
 
 if __name__ == "__main__":
@@ -219,6 +258,7 @@ if __name__ == "__main__":
         print(text)
         
         trees = compile(text)
+        trees = compact(trees)
 
         print('Pyramid scheme:')
         print(trees)
