@@ -138,8 +138,14 @@ def build_tree_bottom_up(tree,space='.'):
         spacing = right_spaces(left_leaf[0]) + left_spaces(right_leaf[0])
         middle_pad = space*((spacing+1)%2)
         spacing = spacing + ((spacing+1)%2)
-
+        
         root = text_to_pyramid(tree[0],min_len=spacing-2,space=space).split('\n')
+
+        # Check the root does not actually need to be bigger
+        len_root = len(root[-1])
+        if len_root>spacing:
+            middle_pad += space*(len_root-spacing)
+            spacing = len_root
 
         # Put children together
         fillvalue = space*len(left_leaf[0]) if len(left_leaf)<len(right_leaf) else space*len(right_leaf[0])
@@ -191,6 +197,11 @@ def compile(text,space=' '):
     trees = combine_trees(trees,space=space)
     return trees
     
+# if __name__ == "__main__":
+#     text = readfile('golf.ll')
+#     trees = compile(text)
+#     print(trees)
+
 if __name__ == "__main__":
     import sys
     if len(sys.argv)==1:
@@ -208,6 +219,10 @@ if __name__ == "__main__":
         print(text)
         
         trees = compile(text)
+
+        print('Pyramid scheme:')
+        print(trees)
+
         with open(output_filename,'w') as f:
             f.write(trees)
     else:
