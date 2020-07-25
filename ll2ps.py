@@ -1,3 +1,5 @@
+#!/usr/bin/python3
+
 import re
 from itertools import zip_longest
 
@@ -164,12 +166,10 @@ def build_tree_bottom_up(tree,space='.'):
 
     return tree
 
-def compile(filename,space=' '):
-    text = readfile(filename)
-    trees = split_into_trees(text)
-    trees = [split_into_subtrees(tree) for tree in trees]
-    trees = [build_tree_bottom_up(tree,space=space) for tree in trees]
-
+def combine_trees(trees,space='.'):
+    '''
+    Put multiple trees side by side
+    '''
     while len(trees)>1:
         tree_left = trees[0].split('\n')
         tree_right = trees[1].split('\n')
@@ -179,9 +179,37 @@ def compile(filename,space=' '):
 
         combined = ['\n'.join(combined)]
         trees = combined + trees[2:]
-    
-    print(trees[0])
+    return trees[0]
+
+def compile(text,space=' '):
+    '''
+    Compile text into trees
+    '''
+    trees = split_into_trees(text)
+    trees = [split_into_subtrees(tree) for tree in trees]
+    trees = [build_tree_bottom_up(tree,space=space) for tree in trees]
+    trees = combine_trees(trees,space=space)
+    return trees
     
 if __name__ == "__main__":
-    compile('test_1.ll')
+    import sys
+    if len(sys.argv)==1:
+        print('Compiles lisp-like syntax to Pyramid Scheme')
+        print('ll2ps <input filename> <output filename>')
+    elif len(sys.argv)==3:
+        input_filename = sys.argv[1]
+        output_filename = sys.argv[2]
+        print('Input filename:',input_filename)
+        print('Output filename:',output_filename)
+        
+        text = readfile(input_filename)
+        
+        print('Reduced source:')
+        print(text)
+        
+        trees = compile(text)
+        with open(output_filename,'w') as f:
+            f.write(trees)
+    else:
+        raise SyntaxError('Invalid number of input arguments')
     
