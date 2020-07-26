@@ -1,6 +1,6 @@
 # lisp-like-to-pyramid-scheme
 
-Compile (lisp (like)) pyramid scheme syntax to full [pyramid scheme](https://github.com/ConorOBrien-Foxx/Pyramid-Scheme)
+Compile pyramid scheme lisp-like (psll) syntax to full [pyramid scheme](https://github.com/ConorOBrien-Foxx/Pyramid-Scheme).
 
 ## Installation
 
@@ -18,12 +18,14 @@ Read the help:
 
 Verbose output and save to the file:
 ```
-./ll2pyra.py  array_sum_golf.ll -v -o
+./ll2pyra.py  array_sum_golf.psll -v -o
 ```
 
 ## Examples
 
-The following is an example lisp-like pyramid scheme which counts the number of input arguments it gets, and then prints it out to the command line. 
+The following is an example lisp-like pyramid scheme which counts the number of input arguments it gets, and then prints it out to the command line. The syntax supports `//` comments and newlines, as well as (almost) random additions of whitespace.
+
+N.b. C# highlighting seems to look fine for most intensions and purposes (at lest in vscode).
 
 ```cs
 // Count the number of input arguments
@@ -50,10 +52,10 @@ The following is an example lisp-like pyramid scheme which counts the number of 
 It can be compiled and run as follows:
 
 ```
-./ll2pyra.py nargin_counter.ll -o -f
+./ll2pyra.py nargin_counter.psll -o -f
 ruby ./Pyramid-Scheme/pyra.rb nargin_counter.pyra 4 3 5 2 4
 ```
-The output is 
+The output is `nargin: 5`
 
 ## ToDo's
 
@@ -62,6 +64,6 @@ The output is
   - [ ] Variable name length optimisation
   - [ ] Variable stuffing optimisation
 - [ ] Precompile code optimisations??
-- [ ] Syntactic sugar
+- [ ] Syntactic sugar?
   - [ ] Simpler writing of strings
   - [ ] Simpler writing of nested null pyramids

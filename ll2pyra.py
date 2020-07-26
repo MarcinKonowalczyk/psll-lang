@@ -290,8 +290,8 @@ if __name__ == "__main__":
     def valid_input_file(filename):
         if not os.path.exists(filename):
             raise argparse.ArgumentTypeError(f'The file {filename} does not exist!')
-        if os.path.splitext(filename)[1] != '.ll':
-            raise argparse.ArgumentTypeError(f'The input file does not have an .ll extension!')
+        if os.path.splitext(filename)[1] != '.psll':
+            raise argparse.ArgumentTypeError(f'The input file does not have an .psll extension!')
         return filename
 
     def valid_output_file(args,ext='.pyra'):
@@ -312,7 +312,7 @@ if __name__ == "__main__":
 
     parser = argparse.ArgumentParser(description='Compile lisp-like syntax to Pyramid Scheme')
     parser.add_argument('input', type=valid_input_file,
-        help='Input file written in the (lisp (like)) syntax, with the .ll expension.')
+        help='Input file written in the pyramid scheme (lisp (like)) syntax, with the .psll expension.')
     parser.add_argument('-o', dest='output', required=False,
         metavar='output', nargs='?', default = None, const = ' ',
         help='Output pyramid scheme. If "output" is supplied, the pyramid scheme is saved to that filename. If no "output" is supplied (aka just the  -o option) the pyramid scheme is saved to the filename matching the input filename, with the .pyra extension.')
