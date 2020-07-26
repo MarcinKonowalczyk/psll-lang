@@ -92,7 +92,8 @@ def text_to_pyramid(text,min_len=0,space='.'):
 def build_tree_bottom_up(tree,space='.'):
     
     assert isinstance(tree,list), f'Tree must be a list ({tree})'
-    assert isinstance(tree[0],str), f'Command root must be a string, not a tree ({tree[0]})'
+    if not isinstance(tree[0],str):
+        tree = [''] + tree
 
     if len(tree)==1:
         if isinstance(tree[0],str):
