@@ -74,38 +74,50 @@ def text_to_pyramid(text,min_len=0,space='.'):
     Put text in a pyramid
     '''
     # Pad up to length
-    text = text.replace(' ','')
-    N = max(len(text),min_len)
-    level = N//2
-    pad_length = level*2+1-len(text)
-    text = space*((pad_length//2)) + text + space*(pad_length-(pad_length//2))
+    if text or min_len > 0:
+        text = text.replace(' ','') # Remove excessive whitespace
+        N = max(len(text),min_len)
+        level = N//2
+        pad_length = level*2+1-len(text)
+        text = space*((pad_length//2)) + text + space*(pad_length-(pad_length//2))
 
-    # Make the pyramid
-    pyramid = space*(level+1) + '^' + space*(level+1) + '\n'
-    for j in range(level):
-        pyramid += space*(level-j) + '/' + space*(j*2+1) + '\\' + space*(level-j) + '\n'
-    pyramid += '/' + text + '\\\n'
-    pyramid += space*0 + '-'*(2*level+3) + space*0
+        # Make the pyramid
+        pyramid = space*(level+1) + '^' + space*(level+1) + '\n'
+        for j in range(level):
+            pyramid += space*(level-j) + '/' + space*(j*2+1) + '\\' + space*(level-j) + '\n'
+        pyramid += '/' + text + '\\\n'
+        pyramid += space*0 + '-'*(2*level+3) + space*0
+    
+    else:
+        pyramid = '^\n-' # Null pyramid
     
     return pyramid
 
-def build_tree_bottom_up(tree,space='.'):
-    
+def build_tree_bottom_up(tree,**kwargs):
+    '''
+    Build the call tree from the leaves to the root
+    '''
+
     assert isinstance(tree,list), f'Tree must be a list ({tree})'
+    space = kwargs['space']
+    null_trees = kwargs['null_trees']
+
+    # Add the null tree if none specified
+    pad_tree = '' if null_trees else ' '
     if not isinstance(tree[0],str):
-        tree = [''] + tree
+        tree = [pad_tree] + tree
 
     if len(tree)==1:
         if isinstance(tree[0],str):
             return text_to_pyramid(tree[0],space=space)
         else:
-            return build_tree_bottom_up(tree[0],space=space)
+            return build_tree_bottom_up(tree[0],**kwargs)
     elif len(tree)==2:
         root = text_to_pyramid(tree[0],space=space).split('\n')
         if isinstance(tree[1],str):
             left_leaf = text_to_pyramid(tree[1],space=space)
         else:
-            left_leaf = build_tree_bottom_up(tree[1],space=space)
+            left_leaf = build_tree_bottom_up(tree[1],**kwargs)
         left_leaf = left_leaf.split('\n')
 
         # Find apex of left leaf
@@ -113,7 +125,11 @@ def build_tree_bottom_up(tree,space='.'):
 
         # Stitch together
         root = [space*root_pad + row for row in root]
-        root[-1] = re.sub(f'{re.escape(space)}(?=-+)','^',root[-1])
+        root[-1] = re.sub(f'{re.escape(space)}(?=-+)','^',root[-1]) # Add the peak of the leaf to the last row root
+        
+        # for line in root: print(line)    
+        # for line in left_leaf: print(line)
+
         tree = root + left_leaf[1:]
         tree_width = max(len(l) for l in tree)
         tree = [line + (tree_width-len(line))*space for line in tree]
@@ -124,13 +140,13 @@ def build_tree_bottom_up(tree,space='.'):
         if isinstance(tree[1],str):
             left_leaf = text_to_pyramid(tree[1],space=space)
         else:
-            left_leaf = build_tree_bottom_up(tree[1],space=space)
+            left_leaf = build_tree_bottom_up(tree[1],**kwargs)
         left_leaf = left_leaf.split('\n')
         
         if isinstance(tree[2],str):
             right_leaf = text_to_pyramid(tree[2],space=space)
         else:
-            right_leaf = build_tree_bottom_up(tree[2],space=space)
+            right_leaf = build_tree_bottom_up(tree[2],**kwargs)
         right_leaf = right_leaf.split('\n')
 
         right_spaces = lambda x: len(x)-x.rfind('^')-1;
@@ -188,13 +204,16 @@ def combine_trees(trees,space='.'):
         trees = combined + trees[2:]
     return trees[0]
 
-def compile(text,space=' '):
+def compile(text,space=' ',null_trees=False):
     '''
     Compile text into trees
     '''
     trees = split_into_trees(text)
     trees = [split_into_subtrees(tree) for tree in trees]
-    trees = [build_tree_bottom_up(tree,space=space) for tree in trees]
+    
+    build = lambda tree: build_tree_bottom_up(tree,space=space,null_trees=null_trees)
+    trees = [build(tree) for tree in trees]
+    
     trees = combine_trees(trees,space=space)
     return trees
 
@@ -235,37 +254,80 @@ def compact(trees):
 
     return '\n'.join(trees)
 
-# if __name__ == "__main__":
-#     text = readfile('golf.ll')
-#     trees = compile(text)
-#     print(trees)
-#     trees = compact(trees)
-#     print(trees)
 
-if __name__ == "__main__":
-    import sys
-    if len(sys.argv)==1:
-        print('Compiles lisp-like syntax to Pyramid Scheme')
-        print('ll2ps <input filename> <output filename>')
-    elif len(sys.argv)==3:
-        input_filename = sys.argv[1]
-        output_filename = sys.argv[2]
-        print('Input filename:',input_filename)
-        print('Output filename:',output_filename)
-        
-        text = readfile(input_filename)
-        
-        print('Reduced source:')
-        print(text)
-        
-        trees = compile(text)
+def main(args):
+    '''
+    Main function for the command-line operation
+    '''
+
+    verbose = args.verbose
+    input = args.input
+    output = args.output
+
+    if verbose: print('Input filename:',input)
+    if output and verbose:
+        print('Output filename:',output)
+    
+    text = readfile(input)
+    if verbose: print('Reduced source:',text)
+    
+    space = '.' if args.dot_spaces else ' '
+    trees = compile(text,space=space,null_trees=args.null_trees)
+    if not args.no_compact:
         trees = compact(trees)
 
-        print('Pyramid scheme:')
-        print(trees)
+    if verbose: print('Pyramid scheme:',trees,sep='\n')
 
-        with open(output_filename,'w') as f:
+    if output:
+        with open(output,'w') as f:
             f.write(trees)
-    else:
-        raise SyntaxError('Invalid number of input arguments')
-    
+
+if __name__ == "__main__":
+
+    import argparse
+    import os.path
+
+    def valid_input_file(filename):
+        if not os.path.exists(filename):
+            raise argparse.ArgumentTypeError(f'The file {filename} does not exist!')
+        if os.path.splitext(filename)[1] != '.ll':
+            raise argparse.ArgumentTypeError(f'The input file does not have an .ll extension!')
+        return filename
+
+    def valid_output_file(args,ext='.pyra'):
+        filename = args.output
+        if not filename: return # Return if no -o option
+        # Make filename based on the input filename
+        if filename==' ':
+            filename = os.path.splitext(args.input)[0] + ext
+            args.output = filename
+        # Check whether to overwrite
+        if os.path.exists(filename) and not args.force:
+            answer = input(f'File {filename} already exists. Overwrite? [y/N]')
+            if answer.lower() != 'y':
+                args.output=None
+        # Check extension
+        if os.path.splitext(filename)[1] != ext:
+            raise argparse.ArgumentTypeError(f'The output file does not have an .pyra extension!')
+
+    parser = argparse.ArgumentParser(description='Compile lisp-like syntax to Pyramid Scheme')
+    parser.add_argument('input', type=valid_input_file,
+        help='Input file written in the (lisp (like)) syntax, with the .ll expension.')
+    parser.add_argument('-o', dest='output', required=False,
+        metavar='output', nargs='?', default = None, const = ' ',
+        help='Output pyramid scheme. If "output" is supplied, the pyramid scheme is saved to that filename. If no "output" is supplied (aka just the  -o option) the pyramid scheme is saved to the filename matching the input filename, with the .pyra extension.')
+    parser.add_argument('-v', '--verbose', action='store_true',
+        help='Run in the verbose mode.')
+    parser.add_argument('-f', '--force', action='store_true',
+        help='Force file overwrite.')
+    parser.add_argument('--null-trees', action='store_true',
+        help='Use null (height 0) trees.')
+    parser.add_argument('--no-compact', action='store_true',
+        help="Don't compact the output trees")
+    parser.add_argument('--dot-spaces', action='store_true',
+        help='Render spaces as dots')
+
+    args = parser.parse_args()
+    valid_output_file(args)
+
+    main(args)
