@@ -15,8 +15,8 @@ def readfile(filename):
     subs = ((r'//.*',''), # Remove comments
         (r'\s{1,}',' '), # Only single spaces
         (r'((?<=^)\s+|\s+(?=$))',''), # No trailing or leading whitespace
-        (r'((?<=\()\s+|\s+(?=\)))','')) # Spaces inside brackets
-
+        (r'((?<=\()\s+|\s+(?=\)))',''), # Spaces inside brackets
+        (r'(?<=\))(?=\()',' ')) # Put single spaces between crammed brackets
     # Apply substitutions
     for a,b in subs:
         text = re.sub(a,b,text)
@@ -277,7 +277,7 @@ def main(args):
         trees = compact(trees)
 
     if verbose: print('Pyramid scheme:',trees,sep='\n')
-
+    
     if output:
         with open(output,'w') as f:
             f.write(trees)
