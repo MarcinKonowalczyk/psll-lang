@@ -1,0 +1,8 @@
+// Implementation of mod(a,b) with repeated subtraction
+
+(set a 33) (set b 16)
+
+(loop (<=> (<=> a b) -1) (set a (- a b)))
+
+(out a)
+
