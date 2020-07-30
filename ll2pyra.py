@@ -109,6 +109,7 @@ def build_tree_bottom_up(tree,**kwargs):
 
     if len(tree)==1:
         if isinstance(tree[0],str):
+            if not tree[0] and not null_trees: tree[0] = ' ' # Make sure no null-trees
             return text_to_pyramid(tree[0],space=space)
         else:
             return build_tree_bottom_up(tree[0],**kwargs)
