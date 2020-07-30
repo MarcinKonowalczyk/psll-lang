@@ -3,6 +3,13 @@
 import re
 from itertools import zip_longest
 
+def pair_up(iterable):
+    ''' Pair up elements in the array '''
+    args = [iter(iterable)] * 2
+    for j,k in zip_longest(*args, fillvalue=None):
+        value = [j,k] if k else j
+        yield value
+
 def readfile(filename):
     '''
     Read the file, remove comments and make sure all the lines are
@@ -104,89 +111,93 @@ def build_tree_bottom_up(tree,**kwargs):
 
     # Add the null tree if none specified
     pad_tree = '' if null_trees else ' '
-    if not isinstance(tree[0],str):
+    if not isinstance(tree[0],str) and len(tree) < 3:
         tree = [pad_tree] + tree
 
-    if len(tree)==1:
-        if isinstance(tree[0],str):
+    if isinstance(tree[0],str):
+        if len(tree)==1:
             if not tree[0] and not null_trees: tree[0] = ' ' # Make sure no null-trees
-            return text_to_pyramid(tree[0],space=space)
+            tree =  text_to_pyramid(tree[0],space=space)
+
+        elif len(tree)==2:
+            root = text_to_pyramid(tree[0],space=space).split('\n')
+            if isinstance(tree[1],str):
+                left_leaf = text_to_pyramid(tree[1],space=space)
+            else:
+                left_leaf = build_tree_bottom_up(tree[1],**kwargs)
+            left_leaf = left_leaf.split('\n')
+
+            # Find apex of left leaf
+            root_pad = left_leaf[0].find('^')+1
+
+            # Stitch together
+            root = [space*root_pad + row for row in root]
+            root[-1] = re.sub(f'{re.escape(space)}(?=-+)','^',root[-1]) # Add the peak of the leaf to the last row root
+
+            tree = root + left_leaf[1:]
+            tree_width = max(len(l) for l in tree)
+            tree = [line + (tree_width-len(line))*space for line in tree]
+
+            tree = '\n'.join(tree)
+
+        elif len(tree)==3:
+            if isinstance(tree[1],str):
+                left_leaf = text_to_pyramid(tree[1],space=space)
+            else:
+                left_leaf = build_tree_bottom_up(tree[1],**kwargs)
+            left_leaf = left_leaf.split('\n')
+            
+            if isinstance(tree[2],str):
+                right_leaf = text_to_pyramid(tree[2],space=space)
+            else:
+                right_leaf = build_tree_bottom_up(tree[2],**kwargs)
+            right_leaf = right_leaf.split('\n')
+
+            right_spaces = lambda x: len(x)-x.rfind('^')-1;
+            left_spaces = lambda x: x.find('^');
+
+            spacing = right_spaces(left_leaf[0]) + left_spaces(right_leaf[0])
+            middle_pad = space*((spacing+1)%2)
+            spacing = spacing + ((spacing+1)%2)
+            
+            root = text_to_pyramid(tree[0],min_len=spacing-2,space=space).split('\n')
+
+            # Check the root does not actually need to be bigger
+            len_root = len(root[-1])
+            if len_root>spacing:
+                middle_pad += space*(len_root-spacing)
+                spacing = len_root
+
+            # Put children together
+            fillvalue = space*len(left_leaf[0]) if len(left_leaf)<len(right_leaf) else space*len(right_leaf[0])
+            children = [l+middle_pad+r for l,r in zip_longest(left_leaf,right_leaf,fillvalue=fillvalue)]
+            # for line in left_leaf: print(line)
+            # for line in children: print(line)
+
+            left_peak = children[0].find('^')
+            right_peak = children[0].rfind('^')
+
+            # Pad the root
+            root = [space*(left_peak+1) + row for row in root]
+            # Add bottom rung of the root between the peaks of the children
+            children[0] = children[0][:left_peak+1] + '-'*(right_peak-left_peak-1) + children[0][right_peak:]
+
+            tree = root[:-1] + children
+            tree_width = max(len(l) for l in tree)
+            tree = [line + (tree_width-len(line))*space for line in tree]
+
+            tree = '\n'.join(tree)
+
         else:
-            return build_tree_bottom_up(tree[0],**kwargs)
-    elif len(tree)==2:
-        root = text_to_pyramid(tree[0],space=space).split('\n')
-        if isinstance(tree[1],str):
-            left_leaf = text_to_pyramid(tree[1],space=space)
+            raise SyntaxError('Invalid number of input arguments')
+    else: # The first element of a tree is *not* string but a tree
+        if len(tree) == 1:
+            tree =  build_tree_bottom_up(tree[0],**kwargs)
         else:
-            left_leaf = build_tree_bottom_up(tree[1],**kwargs)
-        left_leaf = left_leaf.split('\n')
-
-        # Find apex of left leaf
-        root_pad = left_leaf[0].find('^')+1
-
-        # Stitch together
-        root = [space*root_pad + row for row in root]
-        root[-1] = re.sub(f'{re.escape(space)}(?=-+)','^',root[-1]) # Add the peak of the leaf to the last row root
-        
-        # for line in root: print(line)    
-        # for line in left_leaf: print(line)
-
-        tree = root + left_leaf[1:]
-        tree_width = max(len(l) for l in tree)
-        tree = [line + (tree_width-len(line))*space for line in tree]
-
-        tree = '\n'.join(tree)
-
-    elif len(tree)==3:
-        if isinstance(tree[1],str):
-            left_leaf = text_to_pyramid(tree[1],space=space)
-        else:
-            left_leaf = build_tree_bottom_up(tree[1],**kwargs)
-        left_leaf = left_leaf.split('\n')
-        
-        if isinstance(tree[2],str):
-            right_leaf = text_to_pyramid(tree[2],space=space)
-        else:
-            right_leaf = build_tree_bottom_up(tree[2],**kwargs)
-        right_leaf = right_leaf.split('\n')
-
-        right_spaces = lambda x: len(x)-x.rfind('^')-1;
-        left_spaces = lambda x: x.find('^');
-
-        spacing = right_spaces(left_leaf[0]) + left_spaces(right_leaf[0])
-        middle_pad = space*((spacing+1)%2)
-        spacing = spacing + ((spacing+1)%2)
-        
-        root = text_to_pyramid(tree[0],min_len=spacing-2,space=space).split('\n')
-
-        # Check the root does not actually need to be bigger
-        len_root = len(root[-1])
-        if len_root>spacing:
-            middle_pad += space*(len_root-spacing)
-            spacing = len_root
-
-        # Put children together
-        fillvalue = space*len(left_leaf[0]) if len(left_leaf)<len(right_leaf) else space*len(right_leaf[0])
-        children = [l+middle_pad+r for l,r in zip_longest(left_leaf,right_leaf,fillvalue=fillvalue)]
-        # for line in left_leaf: print(line)
-        # for line in children: print(line)
-
-        left_peak = children[0].find('^')
-        right_peak = children[0].rfind('^')
-
-        # Pad the root
-        root = [space*(left_peak+1) + row for row in root]
-        # Add bottom rung of the root between the peaks of the children
-        children[0] = children[0][:left_peak+1] + '-'*(right_peak-left_peak-1) + children[0][right_peak:]
-
-        tree = root[:-1] + children
-        tree_width = max(len(l) for l in tree)
-        tree = [line + (tree_width-len(line))*space for line in tree]
-
-        tree = '\n'.join(tree)
-
-    else:
-        raise SyntaxError('Invalid number of input arguments')
+            while len(tree)>2:
+                tree = [p for p in pair_up(tree)]
+            tree = [pad_tree] + tree
+            tree = build_tree_bottom_up(tree,**kwargs)
 
     return tree
 
