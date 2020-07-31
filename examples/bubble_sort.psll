@@ -1,0 +1,62 @@
+(set offset 48) // Character offset
+
+// Allocate an array
+(set N 1) // Array length
+(set a (chr (+ 3 offset))) // First element
+
+((set a (+ a (chr (+ 1 offset)))) (set N (+ N 1)))
+((set a (+ a (chr (+ 4 offset)))) (set N (+ N 1)))
+((set a (+ a (chr (+ 1 offset)))) (set N (+ N 1)))
+((set a (+ a (chr (+ 5 offset)))) (set N (+ N 1)))
+((set a (+ a (chr (+ 9 offset)))) (set N (+ N 1)))
+((set a (+ a (chr (+ 2 offset)))) (set N (+ N 1)))
+((set a (+ a (chr (+ 6 offset)))) (set N (+ N 1)))
+((set a (+ a (chr (+ 5 offset)))) (set N (+ N 1)))
+((set a (+ a (chr (+ 3 offset)))) (set N (+ N 1)))
+((set a (+ a (chr (+ 5 offset)))) (set N (+ N 1)))
+
+// Bubble sort the array
+(do again (
+    (set again 0)
+    (set n 0)
+    (loop (! (! (<=> n (- N 1)))) ( // Go through all the pairs
+        (set this (# (arg a n)))
+        (set next (# (arg a (+ n 1))))
+        // This and next need swapping
+        (set swap (! (<=> (<=> this next) -1)))
+        (? swap (
+            (set again 1) // Will need to go through the list again
+            (? (! (<=> n 0)) ( // If the first two elements need swapping
+                // Swap first two elements
+                (set b (chr (+ next offset)))
+                (set b (+ b (chr (+ this offset))))
+                // Add on the rest of the array
+                (set l 2)
+                (loop (<=> l N) (
+                    (set b (+ b (arg a l)))
+                (set l (+ l 1))
+                ))
+            ))
+            (? (! (! (<=> n 0))) (
+                (set l 0)
+                (loop (! (! (<=> l n))) (
+                    (? (! (<=> l 0)) (set b (arg a l)))
+                    (? (! (! (<=> l 0))) (set b (+ b (arg a l))))
+                (set l (+ l 1)) // Step up loop counter
+                ))
+                // Insert swapped elements
+                (set b (+ b (chr (+ next offset))))
+                (set b (+ b (chr (+ this offset))))
+                (set l (+ l 2))
+                // Add on the rest of the array
+                (loop (<=> l N) (
+                    (set b (+ b (arg a l)))
+                (set l (+ l 1))
+                ))
+            ))
+            (set a b)
+        ))
+    (set n (+ n 1)) // Step up loop counter
+    ))
+    (out b (chr 10)) // Print b + newline
+))
