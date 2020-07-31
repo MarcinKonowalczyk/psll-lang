@@ -67,3 +67,6 @@ The output is `nargin: 5`
 - [ ] Syntactic sugar?
   - [ ] Simpler writing of strings
   - [ ] Simpler writing of nested null pyramids
+
+## Bugs
+- [ ] `compact` options breaks when `N`th triangle is wider than all the `1..N-1`s.
