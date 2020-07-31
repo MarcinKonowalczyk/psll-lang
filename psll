@@ -1,0 +1,15 @@
+#!/bin/bash
+
+DIR=`dirname $0` # This script's directory
+PSLL_COPMILER="$DIR/ll2pyra.py"
+PYRA="$DIR/Pyramid-Scheme/pyra.rb"
+
+# Compile psll into pyramid scheme
+PSLL_FILE="$PWD/${1%.*}.psll"
+PYRA_FILE="$PWD/${1%.*}.pyra"
+echo "Compiling psll to pyramid scheme"
+python $PSLL_COPMILER $PSLL_FILE -o $PYRA_FILE -f #-v
+
+# Run pyramid scheme
+echo "Running the scheme"
+ruby $PYRA $PYRA_FILE "${@:2}"
