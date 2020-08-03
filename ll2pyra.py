@@ -79,7 +79,6 @@ def split_into_subtrees(line):
             tree.append(part)
             last_break = j+1
     
-    print(line,tree,last_break)
     # Recursively split parts of self 
     tree = [split_into_subtrees(subtree) if re.match('\(.*\)',subtree) else subtree for subtree in tree]
 
@@ -243,7 +242,6 @@ def expand_string_to_tree(string):
             tree = subtree
         else:
             tree = ['+', tree, subtree]
-    print(tree)
     return tree
 
 def combine_trees(trees,space='.'):
