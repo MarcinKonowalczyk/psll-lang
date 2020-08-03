@@ -1,6 +1,6 @@
 # psll-lang
 
-Compile pyramid scheme lisp-like (psll) syntax to full [pyramid scheme](https://github.com/ConorOBrien-Foxx/Pyramid-Scheme).
+A lisp-like language which compiles to [pyramid scheme](https://github.com/ConorOBrien-Foxx/Pyramid-Scheme) (**p**yramid **s**cheme **l**isp-**l**ike syntax, aka `psll`).
 
 ## Installation
 
@@ -27,7 +27,7 @@ Verbose output and save to the file:
 
 The following is an example lisp-like pyramid scheme which counts the number of input arguments it gets, and then prints it out to the command line. The syntax supports `//` comments and newlines, as well as (almost) random additions of whitespace.
 
-N.b. C# highlighting seems to look fine for most intensions and purposes (at lest in vscode).
+N.b. C# highlighting seems to look fine for most intensions and purposes (at lest in vscode). Lisp-highlighting somehow looks worse in my opinion.
 
 ```cs
 // Count the number of input arguments
@@ -130,8 +130,8 @@ This is not a real-purpose language. In this section the 'optimisation' refers t
   - [x] Simpler writing of strings
   - [x] Simpler writing of nested nil pyramids
 - [ ] Compiler optimisation takes a long time
-- 
+- [ ] Easier to use installation. Maybe a make-script which makes a symlink in the correct place...?
 
 ## Bugs
-- [ ] `compact` options breaks when `N`th triangle is wider than all the `1..N-1`s.
+- [ ] `compact` option breaks when `N`th triangle is wider than all the `1..N-1`s.
 - [ ] Strings do not support escape characters (And maybe they never will! Ha! They're just sugar anyway...)
