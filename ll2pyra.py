@@ -61,16 +61,25 @@ def split_into_subtrees(line):
         line = line[1:-1];
     line += ' '
 
-    count, last_break = (0,0)
+    bracket_count, last_break = (0,0) # Kepping track of bracket parity
+    last_quote = '' # Keeping track of quotation marks
+
     tree = []
     for j,char in enumerate(line):
-        count += 1 if char=='(' else 0
-        count -= 1 if char==')' else 0
-        if char == ' ' and count == 0:
+        bracket_count += 1 if char=='(' else 0
+        bracket_count -= 1 if char==')' else 0
+        for quote in ['"',"'"]:
+            if char==quote:
+                if not last_quote: last_quote = quote # Start a quote
+                elif last_quote==quote: last_quote = '' # End a quote
+
+        # Break at spaces, but not in the middle of brackets of strings
+        if char == ' ' and bracket_count == 0 and not last_quote:
             part = line[last_break:j]
             tree.append(part)
             last_break = j+1
     
+    print(line,tree,last_break)
     # Recursively split parts of self 
     tree = [split_into_subtrees(subtree) if re.match('\(.*\)',subtree) else subtree for subtree in tree]
 
@@ -100,6 +109,14 @@ def text_to_pyramid(text,min_len=0,space='.'):
     
     return pyramid
 
+def is_psll_string(x):
+    '''
+    Check whether x is a psll string
+    '''
+    if not isinstance(x,str):
+        return false # Is a tree
+    return re.match('(\'.*\'|".*")',x)
+
 def build_tree_bottom_up(tree,**kwargs):
     '''
     Build the call tree from the leaves to the root
@@ -116,13 +133,21 @@ def build_tree_bottom_up(tree,**kwargs):
 
     if isinstance(tree[0],str):
         if len(tree)==1:
-            if not tree[0] and not null_trees: tree[0] = ' ' # Make sure no null-trees
-            tree =  text_to_pyramid(tree[0],space=space)
+            if tree[0]=='' and not null_trees: tree[0] = ' ' # Make sure no null-trees
+            if is_psll_string(tree[0]):
+                expanded_string = expand_string_to_tree(tree[0])
+                tree = build_tree_bottom_up(expanded_string,**kwargs)
+            else:
+                tree = text_to_pyramid(tree[0],space=space)
 
         elif len(tree)==2:
             root = text_to_pyramid(tree[0],space=space).split('\n')
             if isinstance(tree[1],str):
-                left_leaf = text_to_pyramid(tree[1],space=space)
+                if is_psll_string(tree[1]):
+                    expanded_string = expand_string_to_tree(tree[1])
+                    left_leaf = build_tree_bottom_up(expanded_string,**kwargs)
+                else:
+                    left_leaf = text_to_pyramid(tree[1],space=space)
             else:
                 left_leaf = build_tree_bottom_up(tree[1],**kwargs)
             left_leaf = left_leaf.split('\n')
@@ -142,13 +167,22 @@ def build_tree_bottom_up(tree,**kwargs):
 
         elif len(tree)==3:
             if isinstance(tree[1],str):
-                left_leaf = text_to_pyramid(tree[1],space=space)
+                if is_psll_string(tree[1]):
+                    expanded_string = expand_string_to_tree(tree[1])
+                    left_leaf = build_tree_bottom_up(expanded_string,**kwargs)
+                else:
+                    left_leaf = text_to_pyramid(tree[1],space=space)
             else:
                 left_leaf = build_tree_bottom_up(tree[1],**kwargs)
+
             left_leaf = left_leaf.split('\n')
             
             if isinstance(tree[2],str):
-                right_leaf = text_to_pyramid(tree[2],space=space)
+                if is_psll_string(tree[2]):
+                    expanded_string = expand_string_to_tree(tree[2])
+                    right_leaf = build_tree_bottom_up(expanded_string,**kwargs)
+                else:
+                    right_leaf = text_to_pyramid(tree[2],space=space)
             else:
                 right_leaf = build_tree_bottom_up(tree[2],**kwargs)
             right_leaf = right_leaf.split('\n')
@@ -199,6 +233,17 @@ def build_tree_bottom_up(tree,**kwargs):
             tree = [pad_tree] + tree
             tree = build_tree_bottom_up(tree,**kwargs)
 
+    return tree
+
+def expand_string_to_tree(string):
+    tree = [];
+    for character in string[1:-1]:
+        subtree = ['chr', str(ord(character))]
+        if not tree:
+            tree = subtree
+        else:
+            tree = ['+', tree, subtree]
+    print(tree)
     return tree
 
 def combine_trees(trees,space='.'):
