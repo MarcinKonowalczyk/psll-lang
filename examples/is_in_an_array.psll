@@ -1,0 +1,29 @@
+
+(set N 1) // Array length
+(set a (chr 72)) // First element
+
+((set a (+ a (chr 101))) (set N (+ N 1)))
+((set a (+ a (chr 108))) (set N (+ N 1)))
+((set a (+ a (chr 108))) (set N (+ N 1)))
+((set a (+ a (chr 111))) (set N (+ N 1)))
+((set a (+ a (chr 32))) (set N (+ N 1)))
+((set a (+ a (chr 115))) (set N (+ N 1)))
+((set a (+ a (chr 97))) (set N (+ N 1)))
+((set a (+ a (chr 105))) (set N (+ N 1)))
+((set a (+ a (chr 108))) (set N (+ N 1)))
+((set a (+ a (chr 111))) (set N (+ N 1)))
+((set a (+ a (chr 114))) (set N (+ N 1)))
+((set a (+ a (chr 33))) (set N (+ N 1)))
+(out a (chr 10))
+
+(set b (chr 115)) // Character 's'
+
+(set j 0) (set result 0)
+(loop (! (= j N)) (
+    (? (= (arg a j) b) (
+        (set result 1)
+        (set j (- N 1)) // Break
+    ))
+(set j (+ j 1))
+))
+(out result)
