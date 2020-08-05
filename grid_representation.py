@@ -16,7 +16,7 @@ def text_to_pyramid(text,min_len=0,space='.'):
         pyramid = space*(level+2) + '^' + space*(level+2) + '\n'
         for j in range(level):
             pyramid += space*(level-j+1) + '/' + space*(j*2+1) + '\\' + space*(level-j+1) + '\n'
-        pyramid += ' /' + text + '\\ \n'
+        pyramid += space + '/' + text + '\\' + space + '\n'
         pyramid += space*1 + '-'*(2*level+3) + space*1
     
     else:
