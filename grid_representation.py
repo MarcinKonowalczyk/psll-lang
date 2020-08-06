@@ -57,6 +57,16 @@ class Pyramid:
         # return [row[(middle-i):(middle+i+1)] for i,row in enumerate(string)]
 
     def __init__(self,grid):
+        
+        self.height = len(grid)
+        
+        rowlen = lambda r: r[0] + len(r[1]) + r[2]
+        self.width = rowlen(grid[0])
+        for row in grid:
+            assert isinstance(row,tuple), 'All rows of the grid must be tuples'
+            assert len(row)==3, 'All rows must be 3-length tuples'
+            assert rowlen(row)==self.width, 'All rows must specify entries of the same length'
+        
         self.space = '.'
         self.grid = grid
     
@@ -71,15 +81,6 @@ class Pyramid:
 
     def __repr__(self):
         return f'<Grid #{hash(self)}:\n' + self.grid2string(self.grid) + '\n>'
-
-    @property
-    def width(self):
-        r = self.grid[0]
-        return r[0] + len(r[1]) + r[2]
-    
-    @property
-    def height(self):
-        return len(self.grid)
 
     @property
     def empty_row(self):
@@ -99,36 +100,54 @@ class Pyramid:
             # TODO: Add more detailed checking (making sure pyramids don't interfere)
             yield l[2]+r[0]-1
 
-    def add_pyramid(self,other,min_width=0):
+    def add_pyramid(self,other,tight=True,min_width=None):
         new_grid = []
         s = self.space
 
+        # Find tightest squeeze between the pyramids
         squeeze = 0
-        squeeze = min(self.row_iterator(self.grid,other.grid)) # Find tightest squeeze between the pyramids
+        if tight:
+            squeeze = min(self.row_iterator(self.grid,other.grid))
         
+        # Decrease the squeeze if required by the min_width
+        if min_width:
+            r,l = self.grid[0],other.grid[0]
+            closest_width = r[2]+l[0]-squeeze
+            squeeze -= max(min_width-closest_width,0)
+
         squeezed_width = self.width+other.width-squeeze # Width of the squeezed pyramid
         # width = max(squeezed_width,self.width,other.width) # Actual width of the pyramid
         overhang = max(self.width,other.width)-squeezed_width # Signed overhang of one pyramid over the other
-        rp,lp = (overhang,0) if self.height>other.height else (0,overhang) # Left and right pad
+        lp,rp = (max(overhang,0),0)
+        if self.height>other.height: lp,rp = rp,lp
 
+        new_grid = []
         for l,r in zip_longest(self.grid,other.grid):
             if l and r:
-                print(lp*s + l[0]*s + l[1] + (l[2]+r[0]-squeeze)*s + r[1] + r[2]*s + rp*s)
+                left_pad = lp + l[0]
+                middle = l[1] + (l[2]+r[0]-squeeze)*s + r[1]
+                right_pad = r[2] + rp
             elif l:
-                print(l[0]*s + l[1] + l[2]*s + (-overhang)*s)
+                left_pad = l[0]
+                middle = l[1]
+                right_pad = l[2]+max(0,-overhang)
             elif r:
-                print((-overhang)*s + r[0]*s  + r[1] + r[2]*s)
-            # print(left_pad + l + middle_pad + r + right_pad)
-        print()
+                left_pad = max(0,-overhang)+r[0]
+                middle = r[1]
+                right_pad = r[2]
+            row = (left_pad,middle,right_pad)
+            print(row[0]*s + row[1] + row[2]*s)
+            new_grid.append(row)
         return Pyramid(new_grid)
 
 if __name__ == '__main__':
     # p1 = Pyramid.from_keyword('Quick brown fox jumped over a lazy dog')
-    # p1 = Pyramid.from_keyword('Quick brown fox jumped')
-    p1 = Pyramid.from_keyword('hello')
-    p2 = Pyramid.from_keyword('Greetings traveller! Where goes thee this fine morning?')
+    p1 = Pyramid.from_keyword('Quick brown fox jumped')
+    # p1 = Pyramid.from_keyword('hello')
+    # p2 = Pyramid.from_keyword('Greetings traveller! Where goes thee this fine morning?')
     # p2 = Pyramid.from_keyword('Greetings traveller!')
-    # p2 = Pyramid.from_keyword('hello')
-    # print(p1,p2)
-    p1.add_pyramid(p2)
+    p2 = Pyramid.from_keyword('hello')
+    # print(p1.add_pyramid(p2))
+    p3 = p1.add_pyramid(p2)
+    # print(p3.add_pyramid(p1).add_pyramid(p1))
     # print(p1.middle,p1.grid[0][p1.middle])
