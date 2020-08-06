@@ -1,4 +1,5 @@
 from itertools import zip_longest
+from math import ceil,sqrt
 
 from itertools import tee
 
@@ -8,28 +9,34 @@ def pairwise(iterable):
     next(b, None)
     return zip(a, b)
 
-def text_to_pyramid(text,min_len=0,space='.'):
+def text_to_pyramid(text,min_len=0,space='.',remove_spaces=True):
     '''
     Put text in a pyramid
     '''
-    # Pad up to length
-    if text or min_len > 0:
-        text = text.replace(' ','') # Remove excessive whitespace
-        N = max(len(text),min_len)
-        level = N//2
-        pad_length = level*2+1-len(text)
-        text = space*((pad_length//2)) + text + space*(pad_length-(pad_length//2))
+    # N = ceil(sqrt(len(text))) # Number of pyramid levels
+    s = space
+    if remove_spaces: text = text.replace(' ','')
+    
+    # Ensure nice formatting of short keywords (without excessive space)
+    if len(text)==2: text = space + text
+    elif len(text)==3: text = space + text
+    elif len(text)==5: text = 4*space + text
+    elif len(text)==6: text = space + text[:3] + space + text[3:]
+    elif len(text)==7: text = text[:4] + space + text[4:]
+    elif len(text)==10: text = 4*space + text[:5] + space + text[5:]
 
-        # Make the pyramid
-        pyramid = space*(level+2) + '^' + space*(level+2) + '\n'
-        for j in range(level):
-            pyramid += space*(level-j+1) + '/' + space*(j*2+1) + '\\' + space*(level-j+1) + '\n'
-        pyramid += space + '/' + text + '\\' + space + '\n'
-        pyramid += space*1 + '-'*(2*level+3) + space*1
-    
-    else:
-        pyramid = ' ^ \n - ' # Null pyramid
-    
+    level = 0
+    lines = ['^']
+    while text:
+        level += 1
+        i = 2*level-1
+        front, text = (text[:i],text[i:])
+        pad = i-len(front)
+        lines.append('/' + front + pad*s + '\\')
+    lines.append('-'*(2*level+1))
+    pyramid = [(level-j+1,line,level-j+1) for j,line in enumerate(lines)]
+    pyramid[-1] = (1,pyramid[-1][1],1) # Correct the padding of the final row
+
     return pyramid
 
 class Pyramid:
@@ -82,18 +89,6 @@ class Pyramid:
     def __repr__(self):
         return f'<Grid #{hash(self)}:\n' + self.grid2string(self.grid) + '\n>'
 
-    @property
-    def empty_row(self):
-        return self.space*len(self.grid[-1])
-    def infinite_rows(self):
-        for row in self.grid:
-            yield row
-        # Thereafter keep yielding empty space of the correct size
-        N = len(row)
-        while True:
-            N += 2
-            yield N*self.space
-
     @staticmethod
     def row_iterator(left,right):
         for l,r in zip(left,right):
@@ -101,7 +96,6 @@ class Pyramid:
             yield l[2]+r[0]-1
 
     def add_pyramid(self,other,tight=True,min_width=None):
-        new_grid = []
         s = self.space
 
         # Find tightest squeeze between the pyramids
@@ -121,7 +115,7 @@ class Pyramid:
         lp,rp = (max(overhang,0),0)
         if self.height>other.height: lp,rp = rp,lp
 
-        new_grid = []
+        grid = []
         for l,r in zip_longest(self.grid,other.grid):
             if l and r:
                 left_pad = lp + l[0]
@@ -137,17 +131,30 @@ class Pyramid:
                 right_pad = r[2]
             row = (left_pad,middle,right_pad)
             print(row[0]*s + row[1] + row[2]*s)
-            new_grid.append(row)
-        return Pyramid(new_grid)
+            grid.append(row)
+        return Pyramid(grid)
 
 if __name__ == '__main__':
     # p1 = Pyramid.from_keyword('Quick brown fox jumped over a lazy dog')
-    p1 = Pyramid.from_keyword('Quick brown fox jumped')
+    # p1 = Pyramid.from_keyword('Quick brown fox jumped')
     # p1 = Pyramid.from_keyword('hello')
     # p2 = Pyramid.from_keyword('Greetings traveller! Where goes thee this fine morning?')
     # p2 = Pyramid.from_keyword('Greetings traveller!')
-    p2 = Pyramid.from_keyword('hello')
+    # p2 = Pyramid.from_keyword('hello')
     # print(p1.add_pyramid(p2))
-    p3 = p1.add_pyramid(p2)
+    # p3 = p1.add_pyramid(p2)
     # print(p3.add_pyramid(p1).add_pyramid(p1))
     # print(p1.middle,p1.grid[0][p1.middle])
+
+    print(text_to_pyramid(''))
+    print(text_to_pyramid('1'))
+    print(text_to_pyramid('12'))
+    print(text_to_pyramid('set'))
+    print(text_to_pyramid('seto'))
+    print(text_to_pyramid('hello'))
+    print(text_to_pyramid('hellos'))
+    print(text_to_pyramid('1234567'))
+    print(text_to_pyramid('12345678'))
+    print(text_to_pyramid('123456789'))
+    print(text_to_pyramid('0123456789'))
+    print(text_to_pyramid('Are you Arron Burr, Sir?'))
