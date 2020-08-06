@@ -1,5 +1,13 @@
 from itertools import zip_longest
 
+from itertools import tee
+
+def pairwise(iterable):
+    "s -> (s0,s1), (s1,s2), (s2, s3), ..."
+    a, b = tee(iterable)
+    next(b, None)
+    return zip(a, b)
+
 def text_to_pyramid(text,min_len=0,space='.'):
     '''
     Put text in a pyramid
@@ -31,17 +39,22 @@ class Pyramid:
 
     @staticmethod
     def grid2string(grid):
-        padded_grid = []
-        for i,row in enumerate(grid):
-            pad = '.'*(len(grid)-i-1)
-            padded_grid.append(pad + row + pad)
-        return '\n'.join(padded_grid)
+        s = '.'
+        return '\n'.join([s*l+row+s*r for l,row,r in grid])
 
     @staticmethod
     def string2grid(string):
-        string = string.split('\n')
-        middle = (len(string[0])-1)//2
-        return [row[(middle-i):(middle+i+1)] for i,row in enumerate(string)]
+        s = '.'
+        grid = []
+        for row in string.split('\n'):
+            i1,i2 = (0,len(row)+1)
+            for i,(l1,l2) in enumerate(pairwise(row)):
+                if l1==s and l2!=s and not i1: i1 = i+1
+                if l1!=s and l2==s: i2 = i+1
+            grid.append((i1,row[i1:i2],len(row)-i2))
+        return grid
+        # middle = (len(string[0])-1)//2
+        # return [row[(middle-i):(middle+i+1)] for i,row in enumerate(string)]
 
     def __init__(self,grid):
         self.space = '.'
@@ -61,14 +74,12 @@ class Pyramid:
 
     @property
     def width(self):
-        return len(self.grid[-1])
+        r = self.grid[0]
+        return r[0] + len(r[1]) + r[2]
     
     @property
     def height(self):
         return len(self.grid)
-    @property
-    def middle(self):
-        return (self.width-1)//2
 
     @property
     def empty_row(self):
@@ -82,33 +93,42 @@ class Pyramid:
             N += 2
             yield N*self.space
 
+    @staticmethod
+    def row_iterator(left,right):
+        for l,r in zip(left,right):
+            # TODO: Add more detailed checking (making sure pyramids don't interfere)
+            yield l[2]+r[0]-1
+
     def add_pyramid(self,other,min_width=0):
-        # squeeze = 1
         new_grid = []
         s = self.space
-        for i,(l,r) in enumerate(zip_longest(self.grid,other.grid,fillvalue='')):
+
+        squeeze = 0
+        squeeze = min(self.row_iterator(self.grid,other.grid)) # Find tightest squeeze between the pyramids
+        
+        squeezed_width = self.width+other.width-squeeze # Width of the squeezed pyramid
+        # width = max(squeezed_width,self.width,other.width) # Actual width of the pyramid
+        overhang = max(self.width,other.width)-squeezed_width # Signed overhang of one pyramid over the other
+        rp,lp = (overhang,0) if self.height>other.height else (0,overhang) # Left and right pad
+
+        for l,r in zip_longest(self.grid,other.grid):
             if l and r:
-                left_pad = max(self.middle-i,other.middle-i-self.width)*s
-                middle_pad = s*(2*min(self.middle,other.middle)-2*i)
-                right_pad = max(self.middle-i-other.width,other.middle-i)*s
+                print(lp*s + l[0]*s + l[1] + (l[2]+r[0]-squeeze)*s + r[1] + r[2]*s + rp*s)
             elif l:
-                left_pad = (self.middle-i)*s
-                middle_pad = ''
-                right_pad = max(self.middle-i,other.width-i+other.height-1)*s
+                print(l[0]*s + l[1] + l[2]*s + (-overhang)*s)
             elif r:
-                left_pad = max(other.middle-i,self.width-i+self.height-1)*s
-                middle_pad = ''
-                right_pad = (other.middle-i)*s
-            print(left_pad + l + middle_pad + r + right_pad)
+                print((-overhang)*s + r[0]*s  + r[1] + r[2]*s)
+            # print(left_pad + l + middle_pad + r + right_pad)
         print()
         return Pyramid(new_grid)
 
 if __name__ == '__main__':
     # p1 = Pyramid.from_keyword('Quick brown fox jumped over a lazy dog')
-    p1 = Pyramid.from_keyword('Quick brown fox jumped')
-    # p1 = Pyramid.from_keyword('hello')
-    # p2 = Pyramid.from_keyword('Greetings traveller! Where goes thee this fine morning?')
+    # p1 = Pyramid.from_keyword('Quick brown fox jumped')
+    p1 = Pyramid.from_keyword('hello')
+    p2 = Pyramid.from_keyword('Greetings traveller! Where goes thee this fine morning?')
     # p2 = Pyramid.from_keyword('Greetings traveller!')
-    p2 = Pyramid.from_keyword('hello')
+    # p2 = Pyramid.from_keyword('hello')
+    # print(p1,p2)
     p1.add_pyramid(p2)
     # print(p1.middle,p1.grid[0][p1.middle])
