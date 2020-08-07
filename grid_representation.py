@@ -8,17 +8,12 @@ def pairwise(iterable):
     return zip(a, b)
 
 class Tree:
-    '''
-    Tree of pyramids
-    '''
+    '''Tree of pyramids'''
 
     @staticmethod
-    def text_to_grid(text,min_len=0,space='.',remove_spaces=True):
-        '''
-        Put text in a pyramid
-        '''
+    def text2pyramid(text,min_len=0,space='.',remove_spaces=True):
+        '''Put text inside of a pyramid'''
         # N = ceil(sqrt(len(text))) # Number of pyramid levels
-        s = space
         if remove_spaces: text = text.replace(' ','')
 
         # Ensure nice formatting of short keywords (without excessive space)
@@ -29,14 +24,13 @@ class Tree:
         elif len(text)==7: text = text[:4] + space + text[4:]
         elif len(text)==10: text = 4*space + text[:5] + space + text[5:]
 
-        level = 0
-        lines = ['^']
+        level = 0; lines = ['^']
         while text:
             level += 1
             i = 2*level-1
             front, text = (text[:i],text[i:])
             pad = i-len(front)
-            lines.append('/' + front + pad*s + '\\')
+            lines.append('/' + front + pad*space + '\\')
         lines.append('-'*(2*level+1))
         grid = [(level-j+1,line,level-j+1) for j,line in enumerate(lines)]
         grid[-1] = (1,grid[-1][1],1) # Correct the padding of the final row
@@ -57,32 +51,39 @@ class Tree:
             grid.append((i1,row[i1:i2],len(row)-i2))
         return grid
 
-    def __init__(self,grid):
+    def __init__(self,grid,space='.'):
+        ''' Initialise from a grid '''
         self.height = len(grid)
         rowlen = lambda r: r[0] + len(r[1]) + r[2]
         self.width = rowlen(grid[0])
-        for row in grid:
+        
+        for row in grid: # Sanity check on rows of the grid
             assert isinstance(row,tuple), 'All rows of the grid must be tuples'
             assert len(row)==3, 'All rows must be 3-length tuples'
             assert rowlen(row)==self.width, 'All rows must specify entries of the same length'
         
-        self.space = '.'
         self.grid = grid
+        self.space = space
         
     @classmethod
-    def from_text(self,text):
-        return self(self.text_to_grid(text))
+    def from_text(self,text,space='.',**kwargs):
+        ''' Initialise single-pyramid three from text '''
+        grid = self.text2pyramid(text,space=space,**kwargs)
+        return self(grid,space=space)
 
     def __repr__(self):
-        return f'<Grid #{hash(self)}:\n' + self.grid2string(self.grid) + '\n>'
+        grid_string = self.grid2string(self.grid,space=self.space)
+        return f'<Grid #{hash(self)}:\n{grid_string}\n>'
 
     @staticmethod
     def row_iterator(left,right):
+        ''' Return distance of closest approach of each pair of rows '''
         for l,r in zip(left,right):
             # TODO: Add more detailed checking (making sure pyramids don't interfere)
             yield l[2]+r[0]-1
 
-    def add_pyramid(self,other,tight=True,min_width=None):
+    def add_side_by_side(self,other,tight=True,min_width=None):
+        ''' Add trees side-by-side '''
         s = self.space
 
         # Find tightest squeeze between the pyramids
@@ -124,7 +125,7 @@ if __name__ == '__main__':
     # p1 = Tree.from_keyword('Quick brown fox jumped over a lazy god'*10)
     # p1 = Tree.from_keyword('Quick brown fox jumped over a lazy god')
     p1 = Tree.from_text('hello')
-    p2 = Tree.from_text('Greetings traveller! Where goes thee this fine morning?'*8)
+    p2 = Tree.from_text('Greetings traveller! Where goes thee this fine morning? '*3,remove_spaces=False)
     # p2 = Tree.from_text('Greetings traveller! Where goes thee this fine morning?')
     # p2 = Tree.from_keyword('hello')
     print(p1.add_pyramid(p2).add_pyramid(p1).add_pyramid(p1).add_pyramid(p1).add_pyramid(p2))
@@ -141,7 +142,7 @@ if __name__ == '__main__':
     # print(Tree('hello'))
     # print(Tree('hellos'))
     # print(Tree('1234567'))
-    # print(Tree.text_to_grid('12345678'))
-    # print(Tree.text_to_grid('123456789'))
-    # print(Tree.text_to_grid('0123456789'))
-    # print(Tree.text_to_grid('Are you Arron Burr, Sir?'))
+    # print(Tree.text2pyramid('12345678'))
+    # print(Tree.text2pyramid('123456789'))
+    # print(Tree.text2pyramid('0123456789'))
+    # print(Tree.text2pyramid('Are you Arron Burr, Sir?'))
