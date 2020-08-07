@@ -121,6 +121,19 @@ class Tree:
             grid.append(row)
         return Tree(grid)
 
+    def __add__(self,other):
+        istree = lambda x: isinstance(x,Tree)
+        if istree(other):
+            return self.add_side_by_side(other)
+        elif isinstance(other,tuple) and len(other)==2:
+            l,r = other
+            if l and r:
+                raise NotImplementedError('"Tree.add_children()" not yet implemented')
+            elif l:
+                raise NotImplementedError('"Tree.add_left_child()" not yet implemented')
+            elif r:
+                raise NotImplementedError('"Tree.add_right_child()" not yet implemented')
+
 if __name__ == '__main__':
     # p1 = Tree.from_keyword('Quick brown fox jumped over a lazy god'*10)
     # p1 = Tree.from_keyword('Quick brown fox jumped over a lazy god')
@@ -128,9 +141,10 @@ if __name__ == '__main__':
     p2 = Tree.from_text('Greetings traveller! Where goes thee this fine morning? '*3,remove_spaces=False)
     # p2 = Tree.from_text('Greetings traveller! Where goes thee this fine morning?')
     # p2 = Tree.from_keyword('hello')
-    print(p1.add_pyramid(p2).add_pyramid(p1).add_pyramid(p1).add_pyramid(p1).add_pyramid(p2))
-    # p3 = p1.add_pyramid(p2)
-    # print(p3.add_pyramid(p1).add_pyramid(p1))
+    print(p1 + p2 + p1 + p1 + p1 + p2)
+    print(p1 + (None,p2))
+    # p3 = p1.add_side_by_side(p2)
+    # print(p3.add_side_by_side(p1).add_side_by_side(p1))
     # print(p1.middle,p1.grid[0][p1.middle])
 
 
