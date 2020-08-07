@@ -1,7 +1,5 @@
-from itertools import zip_longest
+from itertools import zip_longest, tee
 from math import ceil,sqrt
-
-from itertools import tee
 
 def pairwise(iterable):
     "s -> (s0,s1), (s1,s2), (s2, s3), ..."
@@ -9,64 +7,58 @@ def pairwise(iterable):
     next(b, None)
     return zip(a, b)
 
-def text_to_pyramid(text,min_len=0,space='.',remove_spaces=True):
+class Tree:
     '''
-    Put text in a pyramid
-    '''
-    # N = ceil(sqrt(len(text))) # Number of pyramid levels
-    s = space
-    if remove_spaces: text = text.replace(' ','')
-    
-    # Ensure nice formatting of short keywords (without excessive space)
-    if len(text)==2: text = space + text
-    elif len(text)==3: text = space + text
-    elif len(text)==5: text = 4*space + text
-    elif len(text)==6: text = space + text[:3] + space + text[3:]
-    elif len(text)==7: text = text[:4] + space + text[4:]
-    elif len(text)==10: text = 4*space + text[:5] + space + text[5:]
-
-    level = 0
-    lines = ['^']
-    while text:
-        level += 1
-        i = 2*level-1
-        front, text = (text[:i],text[i:])
-        pad = i-len(front)
-        lines.append('/' + front + pad*s + '\\')
-    lines.append('-'*(2*level+1))
-    pyramid = [(level-j+1,line,level-j+1) for j,line in enumerate(lines)]
-    pyramid[-1] = (1,pyramid[-1][1],1) # Correct the padding of the final row
-
-    return pyramid
-
-class Pyramid:
-    '''
-    Pyramid or tree of pyramids
+    Tree of pyramids
     '''
 
     @staticmethod
-    def grid2string(grid):
-        s = '.'
-        return '\n'.join([s*l+row+s*r for l,row,r in grid])
+    def text_to_grid(text,min_len=0,space='.',remove_spaces=True):
+        '''
+        Put text in a pyramid
+        '''
+        # N = ceil(sqrt(len(text))) # Number of pyramid levels
+        s = space
+        if remove_spaces: text = text.replace(' ','')
+
+        # Ensure nice formatting of short keywords (without excessive space)
+        if len(text)==2: text = space + text
+        elif len(text)==3: text = space + text
+        elif len(text)==5: text = 4*space + text
+        elif len(text)==6: text = space + text[:3] + space + text[3:]
+        elif len(text)==7: text = text[:4] + space + text[4:]
+        elif len(text)==10: text = 4*space + text[:5] + space + text[5:]
+
+        level = 0
+        lines = ['^']
+        while text:
+            level += 1
+            i = 2*level-1
+            front, text = (text[:i],text[i:])
+            pad = i-len(front)
+            lines.append('/' + front + pad*s + '\\')
+        lines.append('-'*(2*level+1))
+        grid = [(level-j+1,line,level-j+1) for j,line in enumerate(lines)]
+        grid[-1] = (1,grid[-1][1],1) # Correct the padding of the final row
+        return grid
 
     @staticmethod
-    def string2grid(string):
-        s = '.'
+    def grid2string(grid,space='.'):
+        return '\n'.join([space*l + row + space*r for l,row,r in grid])
+
+    @staticmethod
+    def string2grid(string,space='.'):
         grid = []
         for row in string.split('\n'):
             i1,i2 = (0,len(row)+1)
             for i,(l1,l2) in enumerate(pairwise(row)):
-                if l1==s and l2!=s and not i1: i1 = i+1
-                if l1!=s and l2==s: i2 = i+1
+                if l1==space and l2!=space and not i1: i1 = i+1
+                if l1!=space and l2==space: i2 = i+1
             grid.append((i1,row[i1:i2],len(row)-i2))
         return grid
-        # middle = (len(string[0])-1)//2
-        # return [row[(middle-i):(middle+i+1)] for i,row in enumerate(string)]
 
     def __init__(self,grid):
-        
         self.height = len(grid)
-        
         rowlen = lambda r: r[0] + len(r[1]) + r[2]
         self.width = rowlen(grid[0])
         for row in grid:
@@ -76,15 +68,10 @@ class Pyramid:
         
         self.space = '.'
         self.grid = grid
-    
+        
     @classmethod
-    def from_string(self,string):
-        return Pyramid(self.string2grid(string))
-
-    @classmethod
-    def from_keyword(self,keyword):
-        string = text_to_pyramid(keyword)
-        return Pyramid.from_string(string)
+    def from_text(self,text):
+        return self(self.text_to_grid(text))
 
     def __repr__(self):
         return f'<Grid #{hash(self)}:\n' + self.grid2string(self.grid) + '\n>'
@@ -130,31 +117,31 @@ class Pyramid:
                 middle = r[1]
                 right_pad = r[2]
             row = (left_pad,middle,right_pad)
-            print(row[0]*s + row[1] + row[2]*s)
             grid.append(row)
-        return Pyramid(grid)
+        return Tree(grid)
 
 if __name__ == '__main__':
-    # p1 = Pyramid.from_keyword('Quick brown fox jumped over a lazy dog')
-    # p1 = Pyramid.from_keyword('Quick brown fox jumped')
-    # p1 = Pyramid.from_keyword('hello')
-    # p2 = Pyramid.from_keyword('Greetings traveller! Where goes thee this fine morning?')
-    # p2 = Pyramid.from_keyword('Greetings traveller!')
-    # p2 = Pyramid.from_keyword('hello')
-    # print(p1.add_pyramid(p2))
+    # p1 = Tree.from_keyword('Quick brown fox jumped over a lazy god'*10)
+    # p1 = Tree.from_keyword('Quick brown fox jumped over a lazy god')
+    p1 = Tree.from_text('hello')
+    p2 = Tree.from_text('Greetings traveller! Where goes thee this fine morning?'*8)
+    # p2 = Tree.from_text('Greetings traveller! Where goes thee this fine morning?')
+    # p2 = Tree.from_keyword('hello')
+    print(p1.add_pyramid(p2).add_pyramid(p1).add_pyramid(p1).add_pyramid(p1).add_pyramid(p2))
     # p3 = p1.add_pyramid(p2)
     # print(p3.add_pyramid(p1).add_pyramid(p1))
     # print(p1.middle,p1.grid[0][p1.middle])
 
-    print(text_to_pyramid(''))
-    print(text_to_pyramid('1'))
-    print(text_to_pyramid('12'))
-    print(text_to_pyramid('set'))
-    print(text_to_pyramid('seto'))
-    print(text_to_pyramid('hello'))
-    print(text_to_pyramid('hellos'))
-    print(text_to_pyramid('1234567'))
-    print(text_to_pyramid('12345678'))
-    print(text_to_pyramid('123456789'))
-    print(text_to_pyramid('0123456789'))
-    print(text_to_pyramid('Are you Arron Burr, Sir?'))
+
+    # print(Tree(''))
+    # print(Tree('1'))
+    # print(Tree('12'))
+    # print(Tree('set'))
+    # print(Tree('seto'))
+    # print(Tree('hello'))
+    # print(Tree('hellos'))
+    # print(Tree('1234567'))
+    # print(Tree.text_to_grid('12345678'))
+    # print(Tree.text_to_grid('123456789'))
+    # print(Tree.text_to_grid('0123456789'))
+    # print(Tree.text_to_grid('Are you Arron Burr, Sir?'))
