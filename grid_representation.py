@@ -141,16 +141,16 @@ class Tree(Pyramid):
         for row in child:
             yield (None, row)
 
-    def add_one_child(self,other,left=True):
+    def add_one_child(self,child,left=True):
         ''' Add other to the tree as a left or right child '''
 
         # Figure out the padding and overhang spacing
-        p,c = (self.grid[-1], other.grid[0])
+        p,c = (self.grid[-1], child.grid[0]) # Last row of parent and first of the child
         parent_pad = c[0]
         overhang = c[2]-(len(p[1])+p[2])
 
         grid = []
-        for p,c in self.child_row_iterator(self.grid,other.grid):
+        for p,c in self.child_row_iterator(self.grid,child.grid):
             if p and not c:
                 left_pad = parent_pad + p[0] if left else max(overhang,0) + p[0]
                 middle = p[1]
@@ -167,6 +167,28 @@ class Tree(Pyramid):
             grid.append(row)
         return Tree(grid)
 
+    def add_two_children(self,left,right):
+        children = left.add_side_by_side(right,min_width=self.width)
+
+        for p,c in self.child_row_iterator(self.grid,children.grid):
+            if p and not c:
+                # left_pad = parent_pad + p[0] if left else max(overhang,0) + p[0]
+                # middle = p[1]
+                # right_pad = p[2] + max(overhang,0) if left else p[2] + parent_pad
+                print(p)
+            elif p and c:
+                # left_pad = c[0] if left else max(overhang,0) + p[0]
+                # middle = c[1] + p[1] if left else p[1] + c[1]
+                # right_pad = p[2] + max(overhang,0) if left else c[2]
+                print(p,c)
+            elif not p and c:
+                # left_pad = c[0] if left else max(-overhang,0) + c[0]
+                # middle = c[1]
+                # right_pad = c[2] + max(-overhang,0) if left else c[2]
+                print(c)
+            # row = (left_pad,middle,right_pad)
+            # grid.append(row)
+
     def __add__(self,other):
         istree = lambda x: isinstance(x,Tree)
         if istree(other):
@@ -174,6 +196,7 @@ class Tree(Pyramid):
         elif isinstance(other,tuple) and len(other)==2:
             l,r = other
             if l and r:
+                return self.add_two_children(l,r)
                 raise NotImplementedError('"Tree.add_children()" not yet implemented')
             elif l:
                 return self.add_one_child(l,left=True)
@@ -192,9 +215,13 @@ if __name__ == '__main__':
     # p2 = Tree.from_keyword('hello')
     # print(p1 + p2 + p1 + p1 + p1 + p2)
 
+    print(p1.content)
+    print(p1+(p1,p2))
     for j,k in product((p1,p2),repeat=2):
-        print(j + (k,None))
-        print(j + (None,k))
+        # print(j + (k,None))
+        # print(j + (None,k))
+        # print(j + (k,k))
+        break
 
     # print(Tree(''))
     # print(Tree('1'))
