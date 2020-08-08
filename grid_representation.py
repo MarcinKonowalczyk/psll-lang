@@ -1,5 +1,5 @@
 from itertools import zip_longest, tee
-from math import ceil,sqrt
+# from math import ceil,sqrt
 
 def pairwise(iterable):
     "s -> (s0,s1), (s1,s2), (s2, s3), ..."
@@ -7,8 +7,9 @@ def pairwise(iterable):
     next(b, None)
     return zip(a, b)
 
-class Tree:
-    '''Tree of pyramids'''
+
+class Pyramid:
+    ''' Single pyramid '''
 
     @staticmethod
     def text2pyramid(text,min_len=0,space='.',remove_spaces=True):
@@ -73,7 +74,15 @@ class Tree:
 
     def __repr__(self):
         grid_string = self.grid2string(self.grid,space=self.space)
-        return f'<Grid #{hash(self)}:\n{grid_string}\n>'
+        return f'<Pyramid #{hash(self)}:\n{grid_string}\n>'
+
+
+class Tree(Pyramid):
+    ''' Tree of pyramids '''
+
+    def __repr__(self):
+        grid_string = self.grid2string(self.grid,space=self.space)
+        return f'<Tree #{hash(self)}:\n{grid_string}\n>'
 
     @staticmethod
     def row_iterator(left,right):
@@ -134,6 +143,7 @@ class Tree:
             elif r:
                 raise NotImplementedError('"Tree.add_right_child()" not yet implemented')
 
+
 if __name__ == '__main__':
     # p1 = Tree.from_keyword('Quick brown fox jumped over a lazy god'*10)
     # p1 = Tree.from_keyword('Quick brown fox jumped over a lazy god')
@@ -142,7 +152,7 @@ if __name__ == '__main__':
     # p2 = Tree.from_text('Greetings traveller! Where goes thee this fine morning?')
     # p2 = Tree.from_keyword('hello')
     print(p1 + p2 + p1 + p1 + p1 + p2)
-    print(p1 + (None,p2))
+    print(p1 + (p2,None))
     # p3 = p1.add_side_by_side(p2)
     # print(p3.add_side_by_side(p1).add_side_by_side(p1))
     # print(p1.middle,p1.grid[0][p1.middle])
