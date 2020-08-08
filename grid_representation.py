@@ -141,8 +141,9 @@ class Tree(Pyramid):
         for row in child:
             yield (None, row)
 
-    def add_left_child(self,other):
-        ''' Add other to the tree as a left child '''
+    def add_one_child(self,other,left=True):
+        ''' Add other to the tree as a left or right child '''
+
         # Figure out the padding and overhang spacing
         p,c = (self.grid[-1], other.grid[0])
         parent_pad = c[0]
@@ -151,43 +152,17 @@ class Tree(Pyramid):
         grid = []
         for p,c in self.child_row_iterator(self.grid,other.grid):
             if p and not c:
-                left_pad = parent_pad+p[0]
+                left_pad = parent_pad + p[0] if left else max(overhang,0) + p[0]
                 middle = p[1]
-                right_pad = p[2] + max(overhang,0)
+                right_pad = p[2] + max(overhang,0) if left else p[2] + parent_pad
             elif p and c:
-                left_pad = c[0]
-                middle = c[1] + p[1]
-                right_pad = p[2] + max(overhang,0)
+                left_pad = c[0] if left else max(overhang,0) + p[0]
+                middle = c[1] + p[1] if left else p[1] + c[1]
+                right_pad = p[2] + max(overhang,0) if left else c[2]
             elif not p and c:
-                left_pad = c[0]
+                left_pad = c[0] if left else max(-overhang,0) + c[0]
                 middle = c[1]
-                right_pad = c[2] + max(-overhang,0)
-            row = (left_pad,middle,right_pad)
-            grid.append(row)
-        return Tree(grid)
-
-    def add_right_child(self,other):
-        ''' Add other to the tree as a right child '''
-        s = '.'
-        # Figure out the padding and overhang spacing
-        p,c = (self.grid[-1], other.grid[0])
-        parent_pad = c[0]
-        overhang = c[2]-(len(p[1])+p[2])
-        
-        grid = []
-        for p,c in self.child_row_iterator(self.grid,other.grid):
-            if p and not c:
-                left_pad = max(overhang,0) + p[0]
-                middle = p[1]
-                right_pad = p[2] + parent_pad
-            elif p and c:
-                left_pad = max(overhang,0) + p[0]
-                middle = p[1] + c[1]
-                right_pad = c[2]
-            elif not p and c:
-                left_pad = max(-overhang,0) + c[0]
-                middle = c[1]
-                right_pad = c[2]
+                right_pad = c[2] + max(-overhang,0) if left else c[2]
             row = (left_pad,middle,right_pad)
             grid.append(row)
         return Tree(grid)
@@ -201,10 +176,10 @@ class Tree(Pyramid):
             if l and r:
                 raise NotImplementedError('"Tree.add_children()" not yet implemented')
             elif l:
-                return self.add_left_child(l)
+                return self.add_one_child(l,left=True)
                 # raise NotImplementedError('"Tree.add_left_child()" not yet implemented')
             elif r:
-                return self.add_right_child(r)
+                return self.add_one_child(r,left=False)
                 # raise NotImplementedError('"Tree.add_right_child()" not yet implemented')
 
 
@@ -218,6 +193,7 @@ if __name__ == '__main__':
     # print(p1 + p2 + p1 + p1 + p1 + p2)
 
     for j,k in product((p1,p2),repeat=2):
+        print(j + (k,None))
         print(j + (None,k))
 
     # print(Tree(''))
