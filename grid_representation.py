@@ -1,4 +1,5 @@
 from itertools import zip_longest, tee
+from itertools import product
 # from math import ceil,sqrt
 
 def pairwise(iterable):
@@ -121,9 +122,9 @@ class Tree(Pyramid):
             elif l:
                 left_pad = l[0]
                 middle = l[1]
-                right_pad = l[2]+max(0,-overhang)
+                right_pad = l[2] + max(-overhang,0)
             elif r:
-                left_pad = max(0,-overhang)+r[0]
+                left_pad = max(-overhang,0) + r[0]
                 middle = r[1]
                 right_pad = r[2]
             row = (left_pad,middle,right_pad)
@@ -133,22 +134,17 @@ class Tree(Pyramid):
     @staticmethod
     def child_row_iterator(parent,child):
         ''' Yield rows from parent and then from the child, signalling the changeover '''
-        # child, child_copy = tee(child)
-        # print(next(child_copy,None))
-        # print([j for j in child])
-        parent = iter(parent)
-        child = iter(child)
+        parent,child = iter(parent), iter(child)
         for row,next_row in pairwise(parent):
             if next_row is not None:
                 yield (row, None)
-        yield (next_row, next(child))
+        yield (next_row, next(child)) # Intermediate row
         for row in child:
             yield (None, row)
 
     def add_left_child(self,other):
         s = '.'
         p,c = (self.grid[-1], other.grid[0])
-        width = max(c[0] + len(c[1]) + len(p[1]) + p[2],self.width,other.width)
         parent_pad = c[0]
         overhang = c[2]-(len(p[1])+p[2])
 
@@ -158,19 +154,15 @@ class Tree(Pyramid):
                 left_pad = parent_pad+p[0]
                 middle = p[1]
                 right_pad = p[2] + max(overhang,0)
-                # print((parent_pad+p[0])*s + p[1] + p[2]*s + overhang*s)
             elif p and c:
                 left_pad = c[0]
                 middle = c[1] + p[1]
                 right_pad = p[2] + max(overhang,0)
-                # print(c[0]*s + c[1] + p[1] + p[2]*s + overhang*s)
             elif not p and c:
                 left_pad = c[0]
                 middle = c[1]
                 right_pad = c[2] + max(-overhang,0)
-                # print(c[0]*s + c[1] + c[2]*s + (-overhang)*s)
             row = (left_pad,middle,right_pad)
-            # print(row)
             grid.append(row)
         return Tree(grid)
 
@@ -184,7 +176,7 @@ class Tree(Pyramid):
                 raise NotImplementedError('"Tree.add_children()" not yet implemented')
             elif l:
                 return self.add_left_child(l)
-                raise NotImplementedError('"Tree.add_left_child()" not yet implemented')
+                # raise NotImplementedError('"Tree.add_left_child()" not yet implemented')
             elif r:
                 raise NotImplementedError('"Tree.add_right_child()" not yet implemented')
 
@@ -193,18 +185,13 @@ if __name__ == '__main__':
     # p1 = Tree.from_keyword('Quick brown fox jumped over a lazy god'*10)
     # p1 = Tree.from_keyword('Quick brown fox jumped over a lazy god')
     p1 = Tree.from_text('hello')
-    p2 = Tree.from_text('Greetings traveller! Where goes thee this fine morning?  '*3,remove_spaces=False)
+    p2 = Tree.from_text('Greetings traveller! Where goes thee this fine morning?'*3,remove_spaces=False)
     # p2 = Tree.from_text('Greetings traveller! Where goes thee this fine morning?')
     # p2 = Tree.from_keyword('hello')
     # print(p1 + p2 + p1 + p1 + p1 + p2)
-    print(p1 + (p1,None))
-    print(p1 + (p2,None))
-    print(p2 + (p2,None))
-    print(p2 + (p1,None))
-    # p3 = p1.add_side_by_side(p2)
-    # print(p3.add_side_by_side(p1).add_side_by_side(p1))
-    # print(p1.middle,p1.grid[0][p1.middle])
 
+    for j,k in product((p1,p2),repeat=2):
+        print(j + (k,None))
 
     # print(Tree(''))
     # print(Tree('1'))
