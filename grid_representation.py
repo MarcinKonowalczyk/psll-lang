@@ -108,7 +108,6 @@ class Tree(Pyramid):
             squeeze -= max(min_width-closest_width,0)
 
         squeezed_width = self.width+other.width-squeeze # Width of the squeezed pyramid
-        # width = max(squeezed_width,self.width,other.width) # Actual width of the pyramid
         overhang = max(self.width,other.width)-squeezed_width # Signed overhang of one pyramid over the other
         lp,rp = (max(overhang,0),0)
         if self.height>other.height: lp,rp = rp,lp
@@ -143,7 +142,8 @@ class Tree(Pyramid):
             yield (None, row)
 
     def add_left_child(self,other):
-        s = '.'
+        ''' Add other to the tree as a left child '''
+        # Figure out the padding and overhang spacing
         p,c = (self.grid[-1], other.grid[0])
         parent_pad = c[0]
         overhang = c[2]-(len(p[1])+p[2])
@@ -166,6 +166,32 @@ class Tree(Pyramid):
             grid.append(row)
         return Tree(grid)
 
+    def add_right_child(self,other):
+        ''' Add other to the tree as a right child '''
+        s = '.'
+        # Figure out the padding and overhang spacing
+        p,c = (self.grid[-1], other.grid[0])
+        parent_pad = c[0]
+        overhang = c[2]-(len(p[1])+p[2])
+        
+        grid = []
+        for p,c in self.child_row_iterator(self.grid,other.grid):
+            if p and not c:
+                left_pad = max(overhang,0) + p[0]
+                middle = p[1]
+                right_pad = p[2] + parent_pad
+            elif p and c:
+                left_pad = max(overhang,0) + p[0]
+                middle = p[1] + c[1]
+                right_pad = c[2]
+            elif not p and c:
+                left_pad = max(-overhang,0) + c[0]
+                middle = c[1]
+                right_pad = c[2]
+            row = (left_pad,middle,right_pad)
+            grid.append(row)
+        return Tree(grid)
+
     def __add__(self,other):
         istree = lambda x: isinstance(x,Tree)
         if istree(other):
@@ -178,7 +204,8 @@ class Tree(Pyramid):
                 return self.add_left_child(l)
                 # raise NotImplementedError('"Tree.add_left_child()" not yet implemented')
             elif r:
-                raise NotImplementedError('"Tree.add_right_child()" not yet implemented')
+                return self.add_right_child(r)
+                # raise NotImplementedError('"Tree.add_right_child()" not yet implemented')
 
 
 if __name__ == '__main__':
@@ -191,7 +218,7 @@ if __name__ == '__main__':
     # print(p1 + p2 + p1 + p1 + p1 + p2)
 
     for j,k in product((p1,p2),repeat=2):
-        print(j + (k,None))
+        print(j + (None,k))
 
     # print(Tree(''))
     # print(Tree('1'))
