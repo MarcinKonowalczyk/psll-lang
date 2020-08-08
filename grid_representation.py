@@ -146,12 +146,33 @@ class Tree(Pyramid):
             yield (None, row)
 
     def add_left_child(self,other):
+        s = '.'
+        p,c = (self.grid[-1], other.grid[0])
+        width = max(c[0] + len(c[1]) + len(p[1]) + p[2],self.width,other.width)
+        parent_pad = c[0]
+        overhang = c[2]-(len(p[1])+p[2])
 
+        grid = []
         for p,c in self.child_row_iterator(self.grid,other.grid):
-            print(p,c)
-            # row = (left_pad,middle,right_pad)
-            # grid.append(row)
-
+            if p and not c:
+                left_pad = parent_pad+p[0]
+                middle = p[1]
+                right_pad = p[2] + max(overhang,0)
+                # print((parent_pad+p[0])*s + p[1] + p[2]*s + overhang*s)
+            elif p and c:
+                left_pad = c[0]
+                middle = c[1] + p[1]
+                right_pad = p[2] + max(overhang,0)
+                # print(c[0]*s + c[1] + p[1] + p[2]*s + overhang*s)
+            elif not p and c:
+                left_pad = c[0]
+                middle = c[1]
+                right_pad = c[2] + max(-overhang,0)
+                # print(c[0]*s + c[1] + c[2]*s + (-overhang)*s)
+            row = (left_pad,middle,right_pad)
+            # print(row)
+            grid.append(row)
+        return Tree(grid)
 
     def __add__(self,other):
         istree = lambda x: isinstance(x,Tree)
@@ -176,7 +197,10 @@ if __name__ == '__main__':
     # p2 = Tree.from_text('Greetings traveller! Where goes thee this fine morning?')
     # p2 = Tree.from_keyword('hello')
     # print(p1 + p2 + p1 + p1 + p1 + p2)
+    print(p1 + (p1,None))
     print(p1 + (p2,None))
+    print(p2 + (p2,None))
+    print(p2 + (p1,None))
     # p3 = p1.add_side_by_side(p2)
     # print(p3.add_side_by_side(p1).add_side_by_side(p1))
     # print(p1.middle,p1.grid[0][p1.middle])
