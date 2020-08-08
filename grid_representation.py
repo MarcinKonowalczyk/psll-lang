@@ -85,7 +85,7 @@ class Tree(Pyramid):
         return f'<Tree #{hash(self)}:\n{grid_string}\n>'
 
     @staticmethod
-    def row_iterator(left,right):
+    def distance_row_iterator(left,right):
         ''' Return distance of closest approach of each pair of rows '''
         for l,r in zip(left,right):
             # TODO: Add more detailed checking (making sure pyramids don't interfere)
@@ -98,7 +98,7 @@ class Tree(Pyramid):
         # Find tightest squeeze between the pyramids
         squeeze = 0
         if tight:
-            squeeze = min(self.row_iterator(self.grid,other.grid))
+            squeeze = min(self.distance_row_iterator(self.grid,other.grid))
         
         # Decrease the squeeze if required by the min_width
         if min_width:
@@ -130,6 +130,29 @@ class Tree(Pyramid):
             grid.append(row)
         return Tree(grid)
 
+    @staticmethod
+    def child_row_iterator(parent,child):
+        ''' Yield rows from parent and then from the child, signalling the changeover '''
+        # child, child_copy = tee(child)
+        # print(next(child_copy,None))
+        # print([j for j in child])
+        parent = iter(parent)
+        child = iter(child)
+        for row,next_row in pairwise(parent):
+            if next_row is not None:
+                yield (row, None)
+        yield (next_row, next(child))
+        for row in child:
+            yield (None, row)
+
+    def add_left_child(self,other):
+
+        for p,c in self.child_row_iterator(self.grid,other.grid):
+            print(p,c)
+            # row = (left_pad,middle,right_pad)
+            # grid.append(row)
+
+
     def __add__(self,other):
         istree = lambda x: isinstance(x,Tree)
         if istree(other):
@@ -139,6 +162,7 @@ class Tree(Pyramid):
             if l and r:
                 raise NotImplementedError('"Tree.add_children()" not yet implemented')
             elif l:
+                return self.add_left_child(l)
                 raise NotImplementedError('"Tree.add_left_child()" not yet implemented')
             elif r:
                 raise NotImplementedError('"Tree.add_right_child()" not yet implemented')
@@ -148,10 +172,10 @@ if __name__ == '__main__':
     # p1 = Tree.from_keyword('Quick brown fox jumped over a lazy god'*10)
     # p1 = Tree.from_keyword('Quick brown fox jumped over a lazy god')
     p1 = Tree.from_text('hello')
-    p2 = Tree.from_text('Greetings traveller! Where goes thee this fine morning? '*3,remove_spaces=False)
+    p2 = Tree.from_text('Greetings traveller! Where goes thee this fine morning?  '*3,remove_spaces=False)
     # p2 = Tree.from_text('Greetings traveller! Where goes thee this fine morning?')
     # p2 = Tree.from_keyword('hello')
-    print(p1 + p2 + p1 + p1 + p1 + p2)
+    # print(p1 + p2 + p1 + p1 + p1 + p2)
     print(p1 + (p2,None))
     # p3 = p1.add_side_by_side(p2)
     # print(p3.add_side_by_side(p1).add_side_by_side(p1))
