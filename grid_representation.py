@@ -1,6 +1,5 @@
-from itertools import zip_longest, tee
-from itertools import product
-# from math import ceil,sqrt
+from itertools import zip_longest, tee, product
+from abc import ABC, abstractmethod
 
 def pairwise(iterable):
     "s -> (s0,s1), (s1,s2), (s2, s3), ..."
@@ -9,8 +8,8 @@ def pairwise(iterable):
     return zip(a, b)
 
 
-class Pyramid:
-    ''' Single pyramid '''
+class AbstractTree(ABC):
+    ''' Abstract Tree class '''
 
     @staticmethod
     def text2pyramid(text,min_len=0,space='.',remove_spaces=True):
@@ -46,7 +45,7 @@ class Pyramid:
     def string2grid(string,space='.'):
         grid = []
         for row in string.split('\n'):
-            i1,i2 = (0,len(row)+1)
+            i1, i2 = 0, len(row)
             for i,(l1,l2) in enumerate(pairwise(row)):
                 if l1==space and l2!=space and not i1: i1 = i+1
                 if l1!=space and l2==space: i2 = i+1
@@ -73,17 +72,64 @@ class Pyramid:
         grid = self.text2pyramid(text,space=space,**kwargs)
         return self(grid,space=space)
 
+    @abstractmethod
+    def toTree(self):
+        ''' Convert self to a tree '''
+        return
+    
+    @abstractmethod
+    def toPyramid(self):
+        return
+
     def __repr__(self):
         grid_string = self.grid2string(self.grid,space=self.space)
-        return f'<Pyramid #{hash(self)}:\n{grid_string}\n>'
+        return f'<{type(self).__name__} #{hash(self)}:\n{grid_string}\n>'
 
 
-class Tree(Pyramid):
+class Pyramid(AbstractTree):
+    ''' Single pyramid '''
+
+    def __init__(self,grid,space='.'):
+        super().__init__(grid,space=space)
+        assert self.grid[0][1] == '^', 'Pyramid has an invalid top'
+        for row,next_row in pairwise(self.grid):
+            if not (row[0]==1 and next_row[0]==1):
+                assert (row[0]-1)==next_row[0], 'Not a pyramid'
+
+    @property
+    def content(self,space='.'):
+        content = []
+        for row in self.grid:
+            row_content = row[1][1:-1]
+            if row_content.replace('-',''):
+                content.append(row_content)
+        content = ''.join(content)
+
+        # Trim leadgin and trainling space
+        i1, i2 = 0, len(content)
+        for i,(l1,l2) in enumerate(pairwise(content)):
+            if l1==space and l2!=space and not i1: i1 = i+1
+            if l1!=space and l2==space: i2 = i+1
+        return content[i1:i2]
+
+    def toTree(self):
+        return Tree(self.grid,space=self.space)
+
+    def toPyramid(self):
+        return self
+
+    def __add__(self,other):
+        ''' Overload the + operator by passing self to Tree '''
+        if isinstance(other,AbstractTree):
+            return self.toTree() + other.toTree()
+        elif isinstance(other,tuple) and len(other)==2:
+            return self.toTree() + other
+        else:
+            raise TypeError(f"unsupported operand type for +: '{type(self).__name__}' and '{type(other).__name__}'")
+
+
+class Tree(AbstractTree):
     ''' Tree of pyramids '''
-
-    def __repr__(self):
-        grid_string = self.grid2string(self.grid,space=self.space)
-        return f'<Tree #{hash(self)}:\n{grid_string}\n>'
 
     @staticmethod
     def distance_row_iterator(left,right):
@@ -143,6 +189,7 @@ class Tree(Pyramid):
 
     def add_one_child(self,child,left=True):
         ''' Add other to the tree as a left or right child '''
+        assert isinstance(child,AbstractTree), 'The child must be a Tree or a Pyramid'
 
         # Figure out the padding and overhang spacing
         p,c = (self.grid[-1], child.grid[0]) # Last row of parent and first of the child
@@ -168,6 +215,8 @@ class Tree(Pyramid):
         return Tree(grid)
 
     def add_two_children(self,left,right):
+        left = left.toTree()
+        right = right.toTree()
         children = left.add_side_by_side(right,min_width=self.width)
 
         for p,c in self.child_row_iterator(self.grid,children.grid):
@@ -189,10 +238,15 @@ class Tree(Pyramid):
             # row = (left_pad,middle,right_pad)
             # grid.append(row)
 
+    def toTree(self):
+        return self
+
+    def toPyramid(self):
+        return Pyramid(self.grid,space=self.space)
+
     def __add__(self,other):
-        istree = lambda x: isinstance(x,Tree)
-        if istree(other):
-            return self.add_side_by_side(other)
+        if isinstance(other,AbstractTree):
+            return self.add_side_by_side(other.toTree())
         elif isinstance(other,tuple) and len(other)==2:
             l,r = other
             if l and r:
@@ -204,23 +258,26 @@ class Tree(Pyramid):
             elif r:
                 return self.add_one_child(r,left=False)
                 # raise NotImplementedError('"Tree.add_right_child()" not yet implemented')
+        else:
+            raise TypeError(f"unsupported operand type for +: '{type(self).__name__}' and '{type(other).__name__}'")
 
 
 if __name__ == '__main__':
     # p1 = Tree.from_keyword('Quick brown fox jumped over a lazy god'*10)
     # p1 = Tree.from_keyword('Quick brown fox jumped over a lazy god')
-    p1 = Tree.from_text('hello')
-    p2 = Tree.from_text('Greetings traveller! Where goes thee this fine morning?'*3,remove_spaces=False)
+    p1 = Pyramid.from_text('hello')
+    p2 = Pyramid.from_text('Greetings traveller! Where goes thee this fine morning?'*3,remove_spaces=False)
     # p2 = Tree.from_text('Greetings traveller! Where goes thee this fine morning?')
     # p2 = Tree.from_keyword('hello')
     # print(p1 + p2 + p1 + p1 + p1 + p2)
 
-    print(p1.content)
+    # print(p1.content)
+    p3 = p1 + p2
     print(p1+(p1,p2))
     for j,k in product((p1,p2),repeat=2):
-        # print(j + (k,None))
-        # print(j + (None,k))
-        # print(j + (k,k))
+        print(j + (k,None))
+        print(j + (None,k))
+        print(j + (k,k))
         break
 
     # print(Tree(''))
