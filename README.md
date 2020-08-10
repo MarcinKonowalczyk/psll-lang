@@ -1,5 +1,7 @@
 # psll-lang
 
+[![Build Status](https://travis-ci.org/MarcinKonowalczyk/psll-lang.svg?branch=master)](https://travis-ci.org/MarcinKonowalczyk/psll-lang) [![Coverage Status](https://coveralls.io/repos/github/MarcinKonowalczyk/psll-lang/badge.svg?branch=master)](https://coveralls.io/github/MarcinKonowalczyk/psll-lang?branch=master)
+
 A lisp-like language which compiles to [pyramid scheme](https://github.com/ConorOBrien-Foxx/Pyramid-Scheme) (**p**yramid **s**cheme **l**isp-**l**ike syntax, aka `psll`).
 
 ## Installation
@@ -131,6 +133,7 @@ This is not a real-purpose language. In this section the 'optimisation' refers t
   - [x] Simpler writing of nested nil pyramids
 - [ ] Compiler optimisation takes a long time
 - [ ] Easier to use installation. Maybe a make-script which makes a symlink in the correct place...?
+- [ ] Improve test coverage
 
 ## Bugs
 - [ ] `compact` option breaks when `N`th triangle is wider than all the `1..N-1`s.
