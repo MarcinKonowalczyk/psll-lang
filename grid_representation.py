@@ -7,6 +7,15 @@ def pairwise(iterable):
     next(b, None)
     return zip(a, b)
 
+#========================================================================================================================================
+#                                                                                                                                        
+#    ###    #####    ####  ######  #####      ###     ####  ######        ######  #####    #####  #####                                
+#   ## ##   ##  ##  ##       ##    ##  ##    ## ##   ##       ##            ##    ##  ##   ##     ##                                   
+#  ##   ##  #####    ###     ##    #####    ##   ##  ##       ##            ##    #####    #####  #####                                
+#  #######  ##  ##     ##    ##    ##  ##   #######  ##       ##            ##    ##  ##   ##     ##                                   
+#  ##   ##  #####   ####     ##    ##   ##  ##   ##   ####    ##            ##    ##   ##  #####  #####                                
+#                                                                                                                                        
+#========================================================================================================================================
 
 class AbstractTree(ABC):
     ''' Abstract Tree class '''
@@ -85,6 +94,15 @@ class AbstractTree(ABC):
         grid_string = self.grid2string(self.grid,space=self.space)
         return f'<{type(self).__name__} #{hash(self)}:\n{grid_string}\n>'
 
+#==============================================================================================
+#                                                                                              
+#  #####   ##    ##  #####      ###    ###    ###  ##  ####                                  
+#  ##  ##   ##  ##   ##  ##    ## ##   ## #  # ##  ##  ##  ##                                
+#  #####     ####    #####    ##   ##  ##  ##  ##  ##  ##  ##                                
+#  ##         ##     ##  ##   #######  ##      ##  ##  ##  ##                                
+#  ##         ##     ##   ##  ##   ##  ##      ##  ##  ####                                  
+#                                                                                              
+#==============================================================================================
 
 class Pyramid(AbstractTree):
     ''' Single pyramid '''
@@ -127,6 +145,15 @@ class Pyramid(AbstractTree):
         else:
             raise TypeError(f"unsupported operand type for +: '{type(self).__name__}' and '{type(other).__name__}'")
 
+#=================================================================
+#                                                                 
+#  ######  #####    #####  #####                                
+#    ##    ##  ##   ##     ##                                   
+#    ##    #####    #####  #####                                
+#    ##    ##  ##   ##     ##                                   
+#    ##    ##   ##  #####  #####                                
+#                                                                 
+#=================================================================
 
 class Tree(AbstractTree):
     ''' Tree of pyramids '''
@@ -188,8 +215,9 @@ class Tree(AbstractTree):
             yield (None, row)
 
     def add_one_child(self,child,left=True):
-        ''' Add other to the tree as a left or right child '''
+        ''' Add a left or right child to the tree '''
         assert isinstance(child,AbstractTree), 'The child must be a Tree or a Pyramid'
+        # child = child.toTree() # The child doesn't actually need to be a tree
 
         # Figure out the padding and overhang spacing
         p,c = (self.grid[-1], child.grid[0]) # Last row of parent and first of the child
@@ -261,6 +289,16 @@ class Tree(AbstractTree):
         else:
             raise TypeError(f"unsupported operand type for +: '{type(self).__name__}' and '{type(other).__name__}'")
 
+
+#======================================================================
+#                                                                      
+#  ###    ###    ###    ##  ##     ##                                
+#  ## #  # ##   ## ##   ##  ####   ##                                
+#  ##  ##  ##  ##   ##  ##  ##  ## ##                                
+#  ##      ##  #######  ##  ##    ###                                
+#  ##      ##  ##   ##  ##  ##     ##                                
+#                                                                      
+#======================================================================
 
 if __name__ == '__main__':
     # p1 = Tree.from_keyword('Quick brown fox jumped over a lazy god'*10)
