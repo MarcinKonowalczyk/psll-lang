@@ -377,7 +377,6 @@ if __name__ == '__main__':
     #     print(j + (k,None))
     #     print(j + (None,k))
         print()
-        # print(i,j,k)
         print(i + (j,k))
         # break
 
