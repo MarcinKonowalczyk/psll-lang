@@ -178,7 +178,12 @@ class Tree(AbstractTree):
         ''' Return distance of closest approach of each pair of rows '''
         for l,r in zip(left,right):
             # TODO: Add more detailed checking (making sure pyramids don't interfere)
-            yield l[2]+r[0]-1
+            distance = l[2]+r[0]
+            lc, rc = l[1][-1], r[1][0]
+            if (lc=='^' and rc == '-') or (lc=='-' and rc == '^'):
+                print('Careful!',lc,rc)
+                distance -= 1
+            yield distance
 
     def add_side_by_side(self,other,tight=True,min_width=None,odd_spacing=False):
         ''' Add trees side-by-side '''
@@ -348,7 +353,7 @@ if __name__ == '__main__':
     # p1 = Tree.from_keyword('Quick brown fox jumped over a lazy god'*10)
     # p1 = Tree.from_keyword('Quick brown fox jumped over a lazy god')
     p0 = Pyramid.from_text('')
-    p1 = Pyramid.from_text('hello')
+    p1 = Pyramid.from_text('set')
     p2 = Pyramid.from_text('Greetings traveller! Where goes thee this fine morning?'*3,remove_spaces=False)
 
     # print(p0,p1,p2)
@@ -372,7 +377,7 @@ if __name__ == '__main__':
     #     print(j + (k,None))
     #     print(j + (None,k))
         print()
-        print(i,j,k)
+        # print(i,j,k)
         print(i + (j,k))
         # break
 
