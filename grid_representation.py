@@ -94,6 +94,12 @@ class AbstractTree(ABC):
         grid_string = self.grid2string(self.grid,space=self.space)
         return f'<{type(self).__name__} #{hash(self)}:\n{grid_string}\n>'
 
+    def __getitem__(self,key):
+        return self.grid[key]
+
+    def __setitem__(self,key,value):
+        self.grid[key] = value
+
 #==============================================================================================
 #                                                                                              
 #  #####   ##    ##  #####      ###    ###    ###  ##  ####                                  
@@ -109,15 +115,15 @@ class Pyramid(AbstractTree):
 
     def __init__(self,grid,space='.'):
         super().__init__(grid,space=space)
-        assert self.grid[0][1] == '^', 'Pyramid has an invalid top'
-        for row,next_row in pairwise(self.grid):
+        assert self[0][1] == '^', 'Pyramid has an invalid top'
+        for row,next_row in pairwise(self):
             if not (row[0]==1 and next_row[0]==1):
                 assert (row[0]-1)==next_row[0], 'Not a pyramid'
 
     @property
     def content(self,space='.'):
         content = []
-        for row in self.grid:
+        for row in self:
             row_content = row[1][1:-1]
             if row_content.replace('-',''):
                 content.append(row_content)
@@ -172,11 +178,11 @@ class Tree(AbstractTree):
         # Find tightest squeeze between the pyramids
         squeeze = 0
         if tight:
-            squeeze = min(self.distance_row_iterator(self.grid,other.grid))
+            squeeze = min(self.distance_row_iterator(self,other))
         
         # Decrease the squeeze if required by the min_width
         if min_width:
-            r,l = self.grid[0],other.grid[0]
+            r,l = self[0],other[0]
             closest_width = r[2]+l[0]-squeeze
             squeeze -= max(min_width-closest_width,0)
 
@@ -186,7 +192,7 @@ class Tree(AbstractTree):
         if self.height>other.height: lp,rp = rp,lp
 
         grid = []
-        for l,r in zip_longest(self.grid,other.grid):
+        for l,r in zip_longest(self,other):
             if l and r:
                 left_pad = lp + l[0]
                 middle = l[1] + (l[2]+r[0]-squeeze)*s + r[1]
@@ -220,12 +226,12 @@ class Tree(AbstractTree):
         # child = child.toTree() # The child doesn't actually need to be a tree
 
         # Figure out the padding and overhang spacing
-        p,c = (self.grid[-1], child.grid[0]) # Last row of parent and first of the child
+        p,c = (self[-1], child[0]) # Last row of parent and first of the child
         parent_pad = c[0]
         overhang = c[2]-(len(p[1])+p[2])
 
         grid = []
-        for p,c in self.child_row_iterator(self.grid,child.grid):
+        for p,c in self.child_row_iterator(self,child):
             if p and not c:
                 left_pad = parent_pad + p[0] if left else max(overhang,0) + p[0]
                 middle = p[1]
@@ -243,11 +249,21 @@ class Tree(AbstractTree):
         return Tree(grid)
 
     def add_two_children(self,left,right):
-        left = left.toTree()
-        right = right.toTree()
+        
+        left, right = left.toTree(), right.toTree()
         children = left.add_side_by_side(right,min_width=self.width)
 
-        for p,c in self.child_row_iterator(self.grid,children.grid):
+        print(len(children[0]))
+        if True:
+            try:
+                parent = self.toPyramid()
+            except:
+                raise TypeError('Cannot add children to non-singleton Trees')
+
+            print(parent.content)
+
+
+        for p,c in self.child_row_iterator(self,children):
             if p and not c:
                 # left_pad = parent_pad + p[0] if left else max(overhang,0) + p[0]
                 # middle = p[1]
