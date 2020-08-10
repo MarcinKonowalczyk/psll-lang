@@ -4,15 +4,16 @@ python:
   - "3.6"
   - "3.7"
 
-# install:
-  # - pip install more_itertools
+install:
+  - pip install coveralls
   
 script:
   - python -c "import sys; print(sys.version, '\n', sys.prefix)"
-  - python -m unittest discover tests -v
+  - coverage run -m unittest discover tests -v
 
 after_success:
   - echo == ALL TESTS PASSED ==
+  - coveralls
 
 after_failure:
   - echo == FAILURE ==
