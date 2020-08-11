@@ -1,0 +1,2 @@
+#!/bin/bash
+python grid_representation.py
