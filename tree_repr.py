@@ -17,59 +17,65 @@ def pairwise(iterable):
 #                                                                                                                                        
 #========================================================================================================================================
 
+TOP    = '^'
+BOTTOM = '-'
+L_SIDE = '/'
+R_SIDE = '\\'
+SPACE  = ' '
+
 class AbstractTree(ABC):
     ''' Abstract Tree class '''
 
     @staticmethod
-    def text2pyramid(text,space='.',min_width=None,remove_spaces=True):
-        '''Put text inside of a pyramid'''
+    def text2pyramid(text,min_width=None,remove_spaces=True):
+        ''' Put text inside of a pyramid '''
         # N = ceil(sqrt(len(text))) # Number of pyramid levels
-        if remove_spaces: text = text.replace(space,'')
+        if remove_spaces: text = text.replace(SPACE,'')
         if min_width:
             # Pad the string out such that the pyramid ends up having a correct width
             min_width = min_width//2*2+1 # Make sure width is odd
             text_pad = min_width-len(text)-2 # Figure out by how much would the text have to be padded in a single line
             text_width = ((min_width-1)//2)**2 # Desired text width
             if text_pad > 0:
-                text = (text_pad//2)*space + text + (text_pad-(text_pad//2))*space
-            text = (text_width-len(text))*space + text # Pad out the rest
+                text = (text_pad//2)*SPACE + text + (text_pad-(text_pad//2))*SPACE
+            text = (text_width-len(text))*SPACE + text # Pad out the rest
 
-        # Ensure nice formatting of short keywords (without excessive space)
-        if len(text)==2: text = space + text
-        elif len(text)==3: text = space + text
-        elif len(text)==5: text = 4*space + text
-        elif len(text)==6: text = space + text[:3] + space + text[3:]
-        elif len(text)==7: text = text[:4] + space + text[4:]
-        elif len(text)==10: text = 4*space + text[:5] + space + text[5:]
+        # Ensure nice formatting of short keywords (without excessive SPACE)
+        if len(text)==2: text = SPACE + text
+        elif len(text)==3: text = SPACE + text
+        elif len(text)==5: text = 4*SPACE + text
+        elif len(text)==6: text = SPACE + text[:3] + SPACE + text[3:]
+        elif len(text)==7: text = text[:4] + SPACE + text[4:]
+        elif len(text)==10: text = 4*SPACE + text[:5] + SPACE + text[5:]
 
-        level = 0; lines = ['^']
+        level = 0; lines = [TOP,]
         while text:
             level += 1
             i = 2*level-1
             front, text = (text[:i],text[i:])
             pad = i-len(front)
-            lines.append('/' + front + pad*space + '\\')
-        lines.append('-'*(2*level+1))
+            lines.append(L_SIDE + front + pad*SPACE + R_SIDE)
+        lines.append(BOTTOM*(2*level+1))
         grid = [(level-j+1,line,level-j+1) for j,line in enumerate(lines)]
         grid[-1] = (1,grid[-1][1],1) # Correct the padding of the final row
         return grid
 
     @staticmethod
-    def grid2string(grid,space='.'):
-        return '\n'.join([space*l + row + space*r for l,row,r in grid])
+    def grid2string(grid):
+        return '\n'.join([SPACE*l + row + SPACE*r for l,row,r in grid])
 
     @staticmethod
-    def string2grid(string,space='.'):
+    def string2grid(string):
         grid = []
         for row in string.split('\n'):
             i1, i2 = 0, len(row)
             for i,(l1,l2) in enumerate(pairwise(row)):
-                if l1==space and l2!=space and not i1: i1 = i+1
-                if l1!=space and l2==space: i2 = i+1
+                if l1==SPACE and l2!=SPACE and not i1: i1 = i+1
+                if l1!=SPACE and l2==SPACE: i2 = i+1
             grid.append((i1,row[i1:i2],len(row)-i2))
         return grid
 
-    def __init__(self,grid,space='.'):
+    def __init__(self,grid):
         ''' Initialise from a grid '''
         self.height = len(grid)
         rowlen = lambda r: r[0] + len(r[1]) + r[2]
@@ -81,14 +87,19 @@ class AbstractTree(ABC):
             assert rowlen(row)==self.width, 'All rows must specify entries of the same length'
         
         self.grid = grid
-        self.space = space
         
     @classmethod
-    def from_text(self,text,space='.',**kwargs):
-        ''' Initialise single-pyramid three from text '''
-        grid = self.text2pyramid(text,space=space,**kwargs)
-        return self(grid,space=space)
-
+    def from_text(self,text,**kwargs):
+        ''' Initialise from keyword text '''
+        grid = self.text2pyramid(text,**kwargs)
+        return self(grid)
+    
+    @classmethod
+    def from_str(self,string):
+        ''' Initialise from string representation '''
+        grid = string2grid(string)
+        return self(grid)
+        
     @abstractmethod
     def toTree(self):
         ''' Convert self to a tree '''
@@ -99,7 +110,7 @@ class AbstractTree(ABC):
         return
 
     def __str__(self):
-        return self.grid2string(self.grid,space=self.space)
+        return self.grid2string(self.grid)
 
     def __repr__(self):
         return f'<{type(self).__name__} #{hash(self)}:\n{str(self)}\n>'
@@ -123,32 +134,31 @@ class AbstractTree(ABC):
 class Pyramid(AbstractTree):
     ''' Single pyramid '''
 
-    def __init__(self,grid,space='.'):
-        super().__init__(grid,space=space)
-        assert self[0][1] == '^', 'Pyramid has an invalid top'
+    def __init__(self,grid):
+        super().__init__(grid)
+        assert self[0][1] == TOP, 'Pyramid has an invalid top'
         for row,next_row in pairwise(self):
             if not (row[0]==1 and next_row[0]==1):
                 assert (row[0]-1)==next_row[0], 'Not a pyramid'
 
     @property
     def content(self):
-        space = self.space
         content = []
         for row in self:
             row_content = row[1][1:-1]
-            if row_content.replace('-',''):
+            if row_content.replace(BOTTOM,''):
                 content.append(row_content)
         content = ''.join(content)
 
         # Trim leadgin and trainling space
         i1, i2 = 0, len(content)
         for i,(l1,l2) in enumerate(pairwise(content)):
-            if l1==space and l2!=space and not i1: i1 = i+1
-            if l1!=space and l2==space: i2 = i+1
+            if l1==SPACE and l2!=SPACE and not i1: i1 = i+1
+            if l1!=SPACE and l2==SPACE: i2 = i+1
         return content[i1:i2]
 
     def toTree(self):
-        return Tree(self.grid,space=self.space)
+        return Tree(self.grid)
 
     def toPyramid(self):
         return self
@@ -182,15 +192,13 @@ class Tree(AbstractTree):
             # TODO: Add more detailed checking (making sure pyramids don't interfere)
             distance = l[2]+r[0]
             lc, rc = l[1][-1], r[1][0]
-            if (lc=='^' and rc == '-') or (lc=='-' and rc == '^'):
+            if (lc==TOP and rc == BOTTOM) or (lc==BOTTOM and rc == TOP):
                 print('Careful!',lc,rc)
                 distance -= 1
             yield distance
 
     def add_side_by_side(self,other,tight=True,min_width=None,odd_spacing=False):
         ''' Add trees side-by-side '''
-        s = self.space
-
         # Find tightest squeeze between the pyramids
         squeeze = 0
         if tight:
@@ -224,7 +232,7 @@ class Tree(AbstractTree):
         for l,r in zip_longest(self,other):
             if l and r:
                 left_pad = lp + l[0]
-                middle = l[1] + (l[2]+r[0]-squeeze)*s + r[1]
+                middle = l[1] + (l[2]+r[0]-squeeze)*SPACE + r[1]
                 right_pad = r[2] + rp
             elif l:
                 left_pad = l[0]
@@ -280,8 +288,6 @@ class Tree(AbstractTree):
 
     def add_two_children(self,left,right):
         ''' Add left and right child to a tree '''
-        space = self.space
-
         parent_width = len(self[-1][1])//2*2+1 # Make sure parent width is odd
         # Put children together with minimum width of a parent, make sure they're odd
         left, right = left.toTree(), right.toTree()
@@ -321,7 +327,7 @@ class Tree(AbstractTree):
         return self
 
     def toPyramid(self):
-        return Pyramid(self.grid,space=self.space)
+        return Pyramid(self.grid)
 
     def __add__(self,other):
         if isinstance(other,AbstractTree):

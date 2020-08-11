@@ -12,11 +12,13 @@ import psll
 
 from contextlib import contextmanager
 
+random_string = lambda N: ''.join(choice(ascii_letters) for _ in range(N)) 
+
 @contextmanager
 def psll_file(content,filename=None):
     ''' Mock a .psll file with certain content '''
     if not filename: # Make temp filename
-        filename = 'temp_' + ''.join(choice(ascii_letters) for _ in range(10)) + '.psll'
+        filename = f'temp_{random_string(10)}.psll'
     try:
         with open(filename,'w') as f:
             f.write(content)
