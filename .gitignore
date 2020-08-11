@@ -4,3 +4,4 @@
 examples/*.pyra
 .coverage
 htmlcov
+tree_repr
