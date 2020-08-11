@@ -10,26 +10,19 @@ sys.path.append(os.path.realpath('.'))
 
 import psll
 
-class psll_file:
+from contextlib import contextmanager
+
+@contextmanager
+def psll_file(content,filename=None):
     ''' Mock a .psll file with certain content '''
-
-    def __init__(self,content,filename=None):
-        self.content = content
-        self.file = None
-        self.filename = filename
-        if not filename: # Make temp filename
-            self.filename = 'temp_' + ''.join(choice(ascii_letters) for _ in range(10)) + '.psll'
-
-    def __enter__(self):
-        with open(self.filename,'w') as f:
-            f.write(self.content)
-        # self.file = open(self.filename,'r')
-        return self.filename
-
-    def __exit__(self,*args):
-        # self.file.close()
-        os.remove(self.filename)
-
+    if not filename: # Make temp filename
+        filename = 'temp_' + ''.join(choice(ascii_letters) for _ in range(10)) + '.psll'
+    try:
+        with open(filename,'w') as f:
+            f.write(content)
+        yield filename
+    finally:
+        os.remove(filename)
 
 class Readfile(unittest.TestCase):
 
