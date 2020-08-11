@@ -10,13 +10,28 @@ sys.path.append(os.path.realpath('.'))
 
 from tree_repr import Pyramid
 
+from contextlib import contextmanager
+from io import StringIO
+
+@contextmanager
+def capture_output():
+    old = sys.stdout
+    try:
+        sys.stdout = StringIO()
+        yield sys.stdout
+    finally:
+        sys.stdout = old
+
 class Pyramids(unittest.TestCase):
 
     def test_creation(self):
-        ''' Create a few pyramids '''
+        ''' Create a and print few pyramids '''
         contents = ['','!','hi','sup','hola','salut','hellos','regards','morning!',"Howdy'll",'greetings','blue skies']
         for c in contents:
-            tree_repr = Pyramid.from_text(c)
+            with self.subTest(content=c):
+                tree_repr = Pyramid.from_text(c)
+                with capture_output() as output:
+                    print(tree_repr)
 
 if __name__ == '__main__':
     unittest.main()

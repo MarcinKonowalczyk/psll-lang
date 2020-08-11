@@ -98,9 +98,11 @@ class AbstractTree(ABC):
     def toPyramid(self):
         return
 
+    def __str__(self):
+        return self.grid2string(self.grid,space=self.space)
+
     def __repr__(self):
-        grid_string = self.grid2string(self.grid,space=self.space)
-        return f'<{type(self).__name__} #{hash(self)}:\n{grid_string}\n>'
+        return f'<{type(self).__name__} #{hash(self)}:\n{str(self)}\n>'
 
     def __getitem__(self,key):
         return self.grid[key]
