@@ -110,21 +110,20 @@ def text_to_pyramid(text,min_len=0,space='.'):
     return pyramid
 
 def is_psll_string(x):
-    '''
-    Check whether x is a psll string
-    '''
+    ''' Check whether x is a psll string '''
     if not isinstance(x,str):
         return false # Is a tree
     return re.match('(\'.*\'|".*")',x)
 
-def build_tree_bottom_up(tree,**kwargs):
-    '''
-    Build the call tree from the leaves to the root
-    '''
+def build_tree(tree,**kwargs):
+    ''' Build the call tree from the leaves to the root '''
 
+    # Not PsllSyntaxErrors. These should not happen normally
     assert isinstance(tree,list), f'Tree must be a list ({tree})'
-    space = kwargs['space']
-    null_trees = kwargs['null_trees']
+    assert len(tree)>0, 'Tree cannot be empty'
+
+    space = kwargs['space'] if 'space' in kwargs else '.'
+    null_trees = kwargs['null_trees'] if 'null_trees' in kwargs else False
 
     # Add the null tree if none specified
     pad_tree = '' if null_trees else ' '
@@ -136,7 +135,7 @@ def build_tree_bottom_up(tree,**kwargs):
             if tree[0]=='' and not null_trees: tree[0] = ' ' # Make sure no null-trees
             if is_psll_string(tree[0]):
                 expanded_string = expand_string_to_tree(tree[0])
-                tree = build_tree_bottom_up(expanded_string,**kwargs)
+                tree = build_tree(expanded_string,**kwargs)
             else:
                 tree = text_to_pyramid(tree[0],space=space)
 
@@ -145,11 +144,11 @@ def build_tree_bottom_up(tree,**kwargs):
             if isinstance(tree[1],str):
                 if is_psll_string(tree[1]):
                     expanded_string = expand_string_to_tree(tree[1])
-                    left_leaf = build_tree_bottom_up(expanded_string,**kwargs)
+                    left_leaf = build_tree(expanded_string,**kwargs)
                 else:
                     left_leaf = text_to_pyramid(tree[1],space=space)
             else:
-                left_leaf = build_tree_bottom_up(tree[1],**kwargs)
+                left_leaf = build_tree(tree[1],**kwargs)
             left_leaf = left_leaf.split('\n')
 
             # Find apex of left leaf
@@ -169,22 +168,22 @@ def build_tree_bottom_up(tree,**kwargs):
             if isinstance(tree[1],str):
                 if is_psll_string(tree[1]):
                     expanded_string = expand_string_to_tree(tree[1])
-                    left_leaf = build_tree_bottom_up(expanded_string,**kwargs)
+                    left_leaf = build_tree(expanded_string,**kwargs)
                 else:
                     left_leaf = text_to_pyramid(tree[1],space=space)
             else:
-                left_leaf = build_tree_bottom_up(tree[1],**kwargs)
+                left_leaf = build_tree(tree[1],**kwargs)
 
             left_leaf = left_leaf.split('\n')
             
             if isinstance(tree[2],str):
                 if is_psll_string(tree[2]):
                     expanded_string = expand_string_to_tree(tree[2])
-                    right_leaf = build_tree_bottom_up(expanded_string,**kwargs)
+                    right_leaf = build_tree(expanded_string,**kwargs)
                 else:
                     right_leaf = text_to_pyramid(tree[2],space=space)
             else:
-                right_leaf = build_tree_bottom_up(tree[2],**kwargs)
+                right_leaf = build_tree(tree[2],**kwargs)
             right_leaf = right_leaf.split('\n')
 
             right_spaces = lambda x: len(x)-x.rfind('^')-1;
@@ -223,15 +222,15 @@ def build_tree_bottom_up(tree,**kwargs):
             tree = '\n'.join(tree)
 
         else:
-            raise SyntaxError('Invalid number of input arguments')
+            raise PsllSyntaxError('Invalid number of input arguments')
     else: # The first element of a tree is *not* string but a tree
         if len(tree) == 1:
-            tree =  build_tree_bottom_up(tree[0],**kwargs)
+            tree =  build_tree(tree[0],**kwargs)
         else:
             while len(tree)>2:
                 tree = [p for p in pair_up(tree)]
             tree = [pad_tree] + tree
-            tree = build_tree_bottom_up(tree,**kwargs)
+            tree = build_tree(tree,**kwargs)
 
     return tree
 
@@ -267,7 +266,7 @@ def compile(text,space=' ',null_trees=False):
     trees = split_into_trees(text)
     trees = [split_into_subtrees(tree) for tree in trees]
     
-    build = lambda tree: build_tree_bottom_up(tree,space=space,null_trees=null_trees)
+    build = lambda tree: build_tree(tree,space=space,null_trees=null_trees)
     trees = [build(tree) for tree in trees]
     
     trees = combine_trees(trees,space=space)
