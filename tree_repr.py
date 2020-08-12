@@ -2,7 +2,7 @@ from itertools import zip_longest, tee, product
 from abc import ABC, abstractmethod
 
 def pairwise(iterable):
-    "s -> (s0,s1), (s1,s2), (s2, s3), ..."
+    ''' s -> (s0,s1), (s1,s2), (s2, s3), ... '''
     a, b = tee(iterable)
     next(b, None)
     return zip(a, b)
@@ -336,7 +336,7 @@ class Tree(AbstractTree):
             l,r = other
             if l and r:
                 return self.add_two_children(l,r)
-                raise NotImplementedError('"Tree.add_children()" not yet implemented')
+                # raise NotImplementedError('"Tree.add_children()" not yet implemented')
             elif l:
                 return self.add_one_child(l,left=True)
                 # raise NotImplementedError('"Tree.add_left_child()" not yet implemented')

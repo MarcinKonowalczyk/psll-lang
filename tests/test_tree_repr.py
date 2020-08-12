@@ -2,6 +2,7 @@ import unittest
 
 from string import ascii_letters
 from random import choice
+
 from itertools import product, permutations
 
 # Add '.' to path so running this file by itself also works
@@ -25,7 +26,7 @@ def capture_output():
 
 random_string = lambda N: ''.join(choice(ascii_letters) for _ in range(N)) 
 
-TEST_CONTENT = ['','!','hi','sup','hola','salut','hellos','regards','morning!',"Howdy'll",'greetings']
+TEST_CONTENT = ['','!','hi','sup','hola','salut','hellos','regards','morning!','Howdy\'ll','greetings']
 TEST_PYRAMIDS = [' ^ \n - ',
 '  ^  \n /!\\ \n --- ',
 '   ^   \n  / \\  \n /hi \\ \n ----- ',

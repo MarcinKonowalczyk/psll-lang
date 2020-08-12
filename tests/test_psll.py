@@ -2,7 +2,7 @@ import unittest
 
 from string import ascii_letters
 from random import choice
-from itertools import product
+from itertools import product, permutations
 
 # Add '.' to path so running this file by itself also works
 import os, sys
@@ -71,6 +71,67 @@ class Readfile(unittest.TestCase):
         targets = ['() ()','(hi)','(hi)','(hi)','(hi)']
         self.paired_content_target(contents,targets)
 
+class Split(unittest.TestCase):
 
+    def paired_test(self,texts,targets,fun=psll.split_into_trees):
+        ''' Test text/target pairs with fun(text)==target '''
+        self.assertEqual(len(texts),len(targets))
+        for text,target in zip(texts,targets):
+            with self.subTest(text=text):
+                self.assertEqual(fun(text),target)
+
+    def syntax_error_test(self,texts):
+        ''' Test that text throws a PsllSyntaxError '''
+        for text in texts:
+            with self.subTest(text=text):
+                with self.assertRaises(psll.PsllSyntaxError):
+                    psll.split_into_trees(text)
+
+    def test_simple(self):
+        ''' Simple inputs '''
+        texts = ['','()','() ()','(hi)','(out 1)','(set a 1)']
+        targets = [[],['()'],['()','()'],['(hi)'],['(out 1)'],['(set a 1)']]
+        self.paired_test(texts,targets)
+
+    def test_nested(self):
+        ''' Nested inputs '''
+        texts = ['(())','(()) ()','(((hi)))','(() () hi)','(() ()) (()) ()']
+        targets = [['(())'],['(())','()'],['(((hi)))'],['(() () hi)'],['(() ())','(())','()']]
+        self.paired_test(texts,targets)
+
+    def test_string(self):
+        ''' Bracket parity error '''
+        texts = ['(',')',')(','(hi))','((hi)','((','))','((()())','(()()))']
+        self.syntax_error_test(texts)
+
+    def test_simple_subtrees(self):
+        ''' Simple subtrees'''
+        texts = ['(hi)','(set a 1)','(one two three four)']
+        targets = [['hi'],['set','a','1'],['one','two','three','four']]
+        self.paired_test(texts,targets,fun=psll.split_into_subtrees)
+
+    def test_nested_subtrees(self):
+        ''' Nested subtrees'''
+        texts = ['(set a (= b 1))','(a (b (() c)))']
+        targets = [['set','a',['=','b','1']],['a',['b',[[''],'c']]]]
+        self.paired_test(texts,targets,fun=psll.split_into_subtrees)
+
+    def test_blank(self):
+        ''' Trees with blank elements '''
+        texts = ['()','(())','(() hi)','(1 2)','((hi 1) (hi 2))']
+        targets = [[''],[['']],[[''], 'hi'],['1','2'],[['hi','1'],['hi','2']]]
+        self.paired_test(texts,targets,fun=psll.split_into_subtrees)
+
+    def test_quotes(self):
+        ''' Don't split quotes '''
+        texts = ['("hi")','(\'hello\')','(set a \'one\')','(set b "two")']
+        targets = [['"hi"'],['\'hello\''],['set','a','\'one\''],['set','b','"two"']]
+        self.paired_test(texts,targets,fun=psll.split_into_subtrees)
+
+# def BuildTree(unittest.TestCase):
+
+#     def test_basic(self):
+
+        
 if __name__ == '__main__':
     unittest.main()

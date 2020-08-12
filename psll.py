@@ -3,6 +3,11 @@
 import re
 from itertools import zip_longest
 
+from tree_repr import Pyramid
+
+class PsllSyntaxError(SyntaxError):
+    pass
+
 def pair_up(iterable):
     ''' Pair up elements in the array '''
     args = [iter(iterable)] * 2
@@ -31,9 +36,7 @@ def readfile(filename):
     return text
     
 def split_into_trees(text):
-    '''
-    Split the text into major trees
-    '''
+    ''' Split the text into major trees '''
     # Split into lines at first level brackets
     count, last_count, last_break = (0,0,0)
     lines = []
@@ -46,17 +49,17 @@ def split_into_trees(text):
                 lines.append(line)
             else: # Start of a new bracket
                 last_break = j+1
+        elif count < 0:
+            raise PsllSyntaxError('Invalid bracket alignment (ketbra)')
         last_count = count
 
     if count != 0: # Check the final count is 0
-        raise SyntaxError(f'Bracket parity error')
+        raise PsllSyntaxError('Invalid bracket parity.')
 
     return lines
 
 def split_into_subtrees(line):
-    '''
-    Split tree into subtrees
-    '''
+    ''' Split each tree into subtrees '''
     if re.match('\(.*\)',line): # Remove outermost bracket
         line = line[1:-1];
     line += ' '
@@ -68,7 +71,7 @@ def split_into_subtrees(line):
     for j,char in enumerate(line):
         bracket_count += 1 if char=='(' else 0
         bracket_count -= 1 if char==')' else 0
-        for quote in ['"',"'"]:
+        for quote in ['"','\'']:
             if char==quote:
                 if not last_quote: last_quote = quote # Start a quote
                 elif last_quote==quote: last_quote = '' # End a quote
@@ -85,9 +88,7 @@ def split_into_subtrees(line):
     return tree
 
 def text_to_pyramid(text,min_len=0,space='.'):
-    '''
-    Put text in a pyramid
-    '''
+    ''' Put text in a pyramid '''
     # Pad up to length
     if text or min_len > 0:
         text = text.replace(' ','') # Remove excessive whitespace
