@@ -193,6 +193,7 @@ def build_tree(ast,**kwargs):
 
         elif len(ast)==3:
             root = Pyramid.from_text(ast[0])
+            # TODO make this a recursive call into oneself
             left_leaf = Pyramid.from_text(ast[1]) if isinstance(ast[1],str) else build_tree(ast[1],**kwargs)
             right_leaf = Pyramid.from_text(ast[2]) if isinstance(ast[2],str) else build_tree(ast[2],**kwargs)
             tree = root + (left_leaf,right_leaf)

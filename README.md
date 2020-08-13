@@ -121,24 +121,26 @@ Psll expands a string literal into such construct, so its enough to write:
 This is not a real-purpose language. In this section the 'optimisation' refers to obtaining nicer-looking and more compact pyramids, *not* not efficient code.
 
 - [ ] More compiler optimisations
-  - [ ] Subtree packing <- !!! (work on this next!)
+  - [x] Subtree packing <s><- !!! (work on this next!)</s>
   - [ ] Left/right subnode packing
     - [ ] Support for left/right singleton children
-  - [ ] Packing with nil-tree snakes
+  - [ ] Packing with null-tree snakes
   - [ ] Variable name optimisation
     - [ ] Automatic shortening
-    - [ ] Packing into the upper parts of the triangles too
+    - [x] Packing into the upper parts of the triangles too
 - [ ] Pre-compile code optimisations?? <s>Not sure what that would be though, tbh.</s>
   - [x] Move string expansion to pre-proc
   - [ ] Move binary bracket expansion to pre-proc
-  - [ ] Move null-trees to pre-proc
+  - [ ] Move null-trees to pre-proc <s><- (work on this next, because it's broken...)</s>
 - [x] Syntactic sugar?
   - [x] Simpler writing of strings
   - [x] Simpler writing of nested nil pyramids
-- [ ] Compiler optimisation takes a long time
+- [x] Compiler optimisation takes a long time
 - [ ] Easier to use installation. Maybe a make-script which makes a symlink in the correct place...?
 - [ ] Improve test coverage
+  - [x] Make the coverage count only the tests for that file
 
 ## Bugs
-- [ ] `compact` option breaks when `N`th triangle is wider than all the `1..N-1`s.
+- [x] `compact` option breaks when `N`th triangle is wider than all the `1..N-1`s.
+  - [ ] `compact` option does nothing
 - [ ] Strings do not support escape characters (And maybe they never will! Ha! They're just sugar anyway...)

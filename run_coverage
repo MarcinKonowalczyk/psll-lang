@@ -13,13 +13,12 @@ done
 echo ""
 coverage report
 
-# If -html option is passed, display the corerage report and delete the .coverage file
+# If -html option is passed, display the coverage report and delete the .coverage file
 if [[ "$1" == "-html" ]]; then
     coverage html
     rm .coverage
     open ./htmlcov/index.html
 else
-    # Dont generate the html report on travis
-    # echo "Running of travis.ci"
+    # Don't generate the html report on travis
     :
 fi
