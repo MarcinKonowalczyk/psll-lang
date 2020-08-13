@@ -249,7 +249,10 @@ def compile(text,space=' ',null_trees=False):
     for tree in trees[1:]:
         program += tree
 
+    # Post-processing
     program = str(program)
+    program = '\n'.join(re.sub('\s*(?=$)','',line[1:]) for line in program.split('\n'))
+    # Regex '^(.*?)\s*$' would probably work too
 
     return program
 
