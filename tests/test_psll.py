@@ -142,10 +142,10 @@ class BuildTree(unittest.TestCase,MetaTests):
 
     def test_nested(self):
         ''' > Nested trees '''
-        trees = [['set','a',['+','1','1']],
+        trees = [[['sup']],['set','a',['+','1','1']],
             ['out',['chr','32'],'b'],
             ['loop',['!',['<=>','n','N']],['set','a',['+','a','1']]]]
-        targets = ['    ^      \n   / \\     \n  /set\\    \n ^-----^   \n/a\\   /+\\  \n---  ^---^ \n    /1\\ /1\\\n    --- ---',
+        targets = ['    ^ \n   / \\\n  ^---\n / \\  \n/sup\\ \n----- ','    ^      \n   / \\     \n  /set\\    \n ^-----^   \n/a\\   /+\\  \n---  ^---^ \n    /1\\ /1\\\n    --- ---',
             '        ^    \n       / \\   \n      /out\\  \n     ^-----^ \n    / \\   /b\\\n   /chr\\  ---\n  ^-----     \n / \\         \n/32 \\        \n-----        ',
             '          ^          \n         / \\         \n        /   \\        \n       /loop \\       \n      ^-------^      \n     /!\\     / \\     \n    ^---    /set\\    \n   / \\     ^-----^   \n  /<=>\\   /a\\   /+\\  \n ^-----^  ---  ^---^ \n/n\\   /N\\     /a\\ /1\\\n---   ---     --- ---']
         fun = lambda tree: psll.build_tree(tree,space=' ')
@@ -189,8 +189,16 @@ class BuildTree(unittest.TestCase,MetaTests):
 
     def test_string_expansion_2(self):
         ''' > Expand some more strings as subtrees '''
-        trees = [['"hi"'],['\'hi\''],['out','"hi"'],['"one"','\'two\'']]
-        for tree in trees:
+        trees = [['.hi.'],['out','.hi.'],['.one.','.two.'],
+            ['set','a','.hello.'],['set','.a.','hello'],
+            ['.set.','a','hello']]
+        for quote,tree in product('"\'',trees):
+            tree = [t.replace('.',quote) for t in tree]
+            with self.subTest(tree=tree):
+                psll.build_tree(tree,space=' ')
+        # Also test different quotes in one tree
+        tree = ['"one"','\'two\'']
+        with self.subTest(tree=tree):
             psll.build_tree(tree,space=' ')
 
 if __name__ == '__main__':
