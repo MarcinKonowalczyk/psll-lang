@@ -123,11 +123,15 @@ This is not a real-purpose language. In this section the 'optimisation' refers t
 - [ ] More compiler optimisations
   - [ ] Subtree packing <- !!! (work on this next!)
   - [ ] Left/right subnode packing
+    - [ ] Support for left/right singleton children
   - [ ] Packing with nil-tree snakes
   - [ ] Variable name optimisation
     - [ ] Automatic shortening
     - [ ] Packing into the upper parts of the triangles too
-- [ ] Precompile code optimisations?? Not sure what that would be though, tbh.
+- [ ] Pre-compile code optimisations?? <s>Not sure what that would be though, tbh.</s>
+  - [x] Move string expansion to pre-proc
+  - [ ] Move binary bracket expansion to pre-proc
+  - [ ] Move null-trees to pre-proc
 - [x] Syntactic sugar?
   - [x] Simpler writing of strings
   - [x] Simpler writing of nested nil pyramids

@@ -132,12 +132,12 @@ class BuildTree(unittest.TestCase,MetaTests):
 
     def test_simple(self):
         ''' > Simple trees '''
-        trees = [[''],['hi'],['out','a'],['set','a','1']]
-        targets = [' ^ \n/ \\\n---',
-            '  ^  \n / \\ \n/hi \\\n-----',
-            '    ^  \n   / \\ \n  /out\\\n ^-----\n/a\\    \n---    ',
-            '    ^    \n   / \\   \n  /set\\  \n ^-----^ \n/a\\   /1\\\n---   ---']
-        fun = lambda tree: psll.build_tree(tree,space=' ')
+        trees = [[' '],['hi'],['out','a'],['set','a','1']]
+        targets = ['  ^  \n / \\ \n --- ',
+            '   ^   \n  / \\  \n /hi \\ \n ----- ',
+            '     ^   \n    / \\  \n   /out\\ \n  ^----- \n /a\\     \n ---     ',
+            '     ^     \n    / \\    \n   /set\\   \n  ^-----^  \n /a\\   /1\\ \n ---   --- ']
+        fun = lambda tree: str(psll.build_tree(tree))
         self.paired_test(trees,targets,fun)
 
     def test_nested(self):
@@ -145,20 +145,9 @@ class BuildTree(unittest.TestCase,MetaTests):
         trees = [[['sup']],['set','a',['+','1','1']],
             ['out',['chr','32'],'b'],
             ['loop',['!',['<=>','n','N']],['set','a',['+','a','1']]]]
-        targets = ['    ^ \n   / \\\n  ^---\n / \\  \n/sup\\ \n----- ','    ^      \n   / \\     \n  /set\\    \n ^-----^   \n/a\\   /+\\  \n---  ^---^ \n    /1\\ /1\\\n    --- ---',
-            '        ^    \n       / \\   \n      /out\\  \n     ^-----^ \n    / \\   /b\\\n   /chr\\  ---\n  ^-----     \n / \\         \n/32 \\        \n-----        ',
-            '          ^          \n         / \\         \n        /   \\        \n       /loop \\       \n      ^-------^      \n     /!\\     / \\     \n    ^---    /set\\    \n   / \\     ^-----^   \n  /<=>\\   /a\\   /+\\  \n ^-----^  ---  ^---^ \n/n\\   /N\\     /a\\ /1\\\n---   ---     --- ---']
-        fun = lambda tree: psll.build_tree(tree,space=' ')
+        targets = ['     ^  \n    / \\ \n   ^--- \n  / \\   \n /sup\\  \n -----  ','     ^       \n    / \\      \n   /set\\     \n  ^-----^    \n /a\\   /+\\   \n ---  ^---^  \n     /1\\ /1\\ \n     --- --- ','         ^     \n        / \\    \n       /out\\   \n      ^-----^  \n     / \\   /b\\ \n    /chr\\  --- \n   ^-----      \n  / \\          \n /32 \\         \n -----         ','           ^           \n          / \\          \n         /   \\         \n        /loop \\        \n       ^-------^       \n      /!\\     / \\      \n     ^---    /set\\     \n    / \\     ^-----^    \n   /<=>\\   /a\\   /+\\   \n  ^-----^  ---  ^---^  \n /n\\   /N\\     /a\\ /1\\ \n ---   ---     --- --- ']
+        fun = lambda tree: str(psll.build_tree(tree))
         self.paired_test(trees,targets,fun)
-
-    def test_spaces(self):
-        ''' > Put in different space characters '''
-        spaces = [' ','.','~','_']
-        for s in spaces:
-            target = '..^..\n./.\\.\n/hi.\\\n-----'.replace('.',s)
-            with self.subTest(space=s):
-                tree = psll.build_tree(['hi'],space=s)
-                self.assertEqual(tree,target)
 
     def test_too_many(self):
         ''' > Invalid number of keywords in a bracket '''
@@ -168,7 +157,7 @@ class BuildTree(unittest.TestCase,MetaTests):
 
     def test_invalid(self):
         ''' > Invalid trees '''
-        trees = [[],[1,2,3],'blah']
+        trees = [[],1,'blah',['set','a',1],(),{},set]
         fun = psll.build_tree
         self.syntax_error_test(trees,fun,AssertionError)
 
@@ -182,10 +171,10 @@ class BuildTree(unittest.TestCase,MetaTests):
                 self.assertGreater(len(tree.split('\n')),wrong_height)
 
     def test_string_expansion_1(self):
-        ''' > Make sure the prompt is expanded '''
-        prompt = ''
-        with self.assertRaises(AssertionError):
-            psll.build_tree([f'"{prompt}"'])
+        ''' > Make sure the " sign is *not* is expanded '''
+        target = '  ^  \n /"\\ \n --- '
+        tree = psll.build_tree(['"'])
+        self.assertEqual(str(tree),target)
 
     def test_string_expansion_2(self):
         ''' > Expand some more strings as subtrees '''

@@ -5,6 +5,8 @@ from itertools import zip_longest
 
 from tree_repr import Pyramid
 
+SPACE = ' '
+
 class PsllSyntaxError(SyntaxError):
     pass
 
@@ -100,28 +102,6 @@ def split_into_subtrees(line):
 
     return tree
 
-def text_to_pyramid(text,min_len=0,space='.'):
-    ''' Put text in a pyramid '''
-    # Pad up to length
-    if text or min_len > 0:
-        text = text.replace(' ','') # Remove excessive whitespace
-        N = max(len(text),min_len)
-        level = N//2
-        pad_length = level*2+1-len(text)
-        text = space*((pad_length//2)) + text + space*(pad_length-(pad_length//2))
-
-        # Make the pyramid
-        pyramid = space*(level+1) + '^' + space*(level+1) + '\n'
-        for j in range(level):
-            pyramid += space*(level-j) + '/' + space*(j*2+1) + '\\' + space*(level-j) + '\n'
-        pyramid += '/' + text + '\\\n'
-        pyramid += space*0 + '-'*(2*level+3) + space*0
-    
-    else:
-        pyramid = '^\n-' # Null pyramid
-    
-    return pyramid
-
 #=====================================================================================================
 #                                                                                                     
 #  #####   #####    #####            #####   #####     #####    ####                                
@@ -156,135 +136,76 @@ def expand_string_to_tree(string):
             tree = ['+', tree, subtree]
     return tree
 
-#==========================================================================
-#                                                                          
-#  #####     ###    #####     ####  #####                                
-#  ##  ##   ## ##   ##  ##   ##     ##                                   
-#  #####   ##   ##  #####     ###   #####                                
-#  ##      #######  ##  ##      ##  ##                                   
-#  ##      ##   ##  ##   ##  ####   #####                                
-#                                                                          
-#==========================================================================
+def expand_all_stings(ast):
+    ''' Walk through the abstract syntax tree and expand all the psll string objects into pyramid scheme trees '''
+    ast2 = []
+    for node in ast:
+        if isinstance(node,str):
+            if is_psll_string(node):
+                ast2.append(expand_string_to_tree(node))
+            else:
+                ast2.append(node)
+        elif isinstance(node,list):
+            ast2.append(expand_all_stings(node))
+        else:
+            raise TypeError
+    return ast2
 
-def build_tree(tree,**kwargs):
+#=======================================================================
+#                                                                       
+#  #####   ##   ##  ##  ##      ####                                  
+#  ##  ##  ##   ##  ##  ##      ##  ##                                
+#  #####   ##   ##  ##  ##      ##  ##                                
+#  ##  ##  ##   ##  ##  ##      ##  ##                                
+#  #####    #####   ##  ######  ####                                  
+#                                                                       
+#=======================================================================
+
+
+def build_tree(ast,**kwargs):
     ''' Build the call tree from the leaves to the root '''
 
     # Not PsllSyntaxErrors. These should not happen normally
-    assert isinstance(tree,list), f'Tree must be a list ({tree})'
-    assert len(tree)>0, 'Tree cannot be empty'
+    assert isinstance(ast,list), f'Abstract syntax tree must be a list, not a {type(ast)}'
+    assert len(ast)>0, 'Abstract syntax tree cannot be empty'
 
     # TODO Code these a bit more sanely
-    space = kwargs['space'] if 'space' in kwargs else '.'
     null_trees = kwargs['null_trees'] if 'null_trees' in kwargs else False
 
     # Add the null tree if none specified
     # TODO Move this to pre-processor
     pad_tree = '' if null_trees else ' '
-    if not isinstance(tree[0],str) and len(tree) < 3:
-        tree = [pad_tree] + tree
+    if not isinstance(ast[0],str) and len(ast) < 3:
+        ast = [pad_tree] + ast
 
-    if isinstance(tree[0],str):
-        if len(tree)==1:
-            if tree[0]=='' and not null_trees: tree[0] = ' ' # Make sure no null-trees
-            if is_psll_string(tree[0]):
-                expanded_string = expand_string_to_tree(tree[0])
-                tree = build_tree(expanded_string,**kwargs)
-            else:
-                tree = text_to_pyramid(tree[0],space=space)
+    if isinstance(ast[0],str):
+        if len(ast)==1:
+            # TODO Move this to pre-processor
+            if ast[0]=='' and not null_trees: ast[0] = ' ' # Make sure no null-trees
+            tree = Pyramid.from_text(ast[0])
 
-        elif len(tree)==2:
-            root = text_to_pyramid(tree[0],space=space).split('\n')
-            if isinstance(tree[1],str):
-                if is_psll_string(tree[1]):
-                    expanded_string = expand_string_to_tree(tree[1])
-                    left_leaf = build_tree(expanded_string,**kwargs)
-                else:
-                    left_leaf = text_to_pyramid(tree[1],space=space)
-            else:
-                left_leaf = build_tree(tree[1],**kwargs)
-            left_leaf = left_leaf.split('\n')
+        elif len(ast)==2:
+            root = Pyramid.from_text(ast[0])
+            left_leaf = Pyramid.from_text(ast[1]) if isinstance(ast[1],str) else build_tree(ast[1],**kwargs)
+            tree = root + (left_leaf,None)
 
-            # Find apex of left leaf
-            root_pad = left_leaf[0].find('^')+1
-
-            # Stitch together
-            root = [space*root_pad + row for row in root]
-            root[-1] = re.sub(f'{re.escape(space)}(?=-+)','^',root[-1]) # Add the peak of the leaf to the last row root
-
-            tree = root + left_leaf[1:]
-            tree_width = max(len(l) for l in tree)
-            tree = [line + (tree_width-len(line))*space for line in tree]
-
-            tree = '\n'.join(tree)
-
-        elif len(tree)==3:
-            if isinstance(tree[1],str):
-                if is_psll_string(tree[1]):
-                    expanded_string = expand_string_to_tree(tree[1])
-                    left_leaf = build_tree(expanded_string,**kwargs)
-                else:
-                    left_leaf = text_to_pyramid(tree[1],space=space)
-            else:
-                left_leaf = build_tree(tree[1],**kwargs)
-
-            left_leaf = left_leaf.split('\n')
-            
-            if isinstance(tree[2],str):
-                if is_psll_string(tree[2]):
-                    expanded_string = expand_string_to_tree(tree[2])
-                    right_leaf = build_tree(expanded_string,**kwargs)
-                else:
-                    right_leaf = text_to_pyramid(tree[2],space=space)
-            else:
-                right_leaf = build_tree(tree[2],**kwargs)
-            right_leaf = right_leaf.split('\n')
-
-            right_spaces = lambda x: len(x)-x.rfind('^')-1;
-            left_spaces = lambda x: x.find('^');
-
-            spacing = right_spaces(left_leaf[0]) + left_spaces(right_leaf[0])
-            middle_pad = space*((spacing+1)%2)
-            spacing = spacing + ((spacing+1)%2)
-            
-            root = text_to_pyramid(tree[0],min_len=spacing-2,space=space).split('\n')
-
-            # Check the root does not actually need to be bigger
-            len_root = len(root[-1])
-            if len_root>spacing:
-                middle_pad += space*(len_root-spacing)
-                spacing = len_root
-
-            # Put children together
-            fillvalue = space*len(left_leaf[0]) if len(left_leaf)<len(right_leaf) else space*len(right_leaf[0])
-            children = [l+middle_pad+r for l,r in zip_longest(left_leaf,right_leaf,fillvalue=fillvalue)]
-            # for line in left_leaf: print(line)
-            # for line in children: print(line)
-
-            left_peak = children[0].find('^')
-            right_peak = children[0].rfind('^')
-
-            # Pad the root
-            root = [space*(left_peak+1) + row for row in root]
-            # Add bottom rung of the root between the peaks of the children
-            children[0] = children[0][:left_peak+1] + '-'*(right_peak-left_peak-1) + children[0][right_peak:]
-
-            tree = root[:-1] + children
-            tree_width = max(len(l) for l in tree)
-            tree = [line + (tree_width-len(line))*space for line in tree]
-
-            tree = '\n'.join(tree)
+        elif len(ast)==3:
+            root = Pyramid.from_text(ast[0])
+            left_leaf = Pyramid.from_text(ast[1]) if isinstance(ast[1],str) else build_tree(ast[1],**kwargs)
+            right_leaf = Pyramid.from_text(ast[2]) if isinstance(ast[2],str) else build_tree(ast[2],**kwargs)
+            tree = root + (left_leaf,right_leaf)
 
         else:
             raise PsllSyntaxError('Invalid number of input arguments')
     else: # The first element of a tree is *not* string but a tree
-        if len(tree) == 1:
-            tree =  build_tree(tree[0],**kwargs)
+        if len(ast) == 1:
+            tree =  build_tree(ast[0],**kwargs)
         else:
             # TODO Move this to pre-processor
-            while len(tree)>2:
-                tree = [p for p in pair_up(tree)]
-            tree = [pad_tree] + tree
-            tree = build_tree(tree,**kwargs)
+            while len(ast)>2:
+                ast = [p for p in pair_up(ast)]
+            ast = [pad_tree] + ast
+            tree = build_tree(ast,**kwargs)
 
     return tree
 
@@ -301,51 +222,6 @@ def combine_trees(trees,space='.'):
         trees = combined + trees[2:]
     return trees[0]
 
-#=============================================================================================================
-#                                                                                                             
-#  #####    #####    ####  ######            #####   #####     #####    ####                                
-#  ##  ##  ##   ##  ##       ##              ##  ##  ##  ##   ##   ##  ##                                   
-#  #####   ##   ##   ###     ##              #####   #####    ##   ##  ##                                   
-#  ##      ##   ##     ##    ##              ##      ##  ##   ##   ##  ##                                   
-#  ##       #####   ####     ##    ########  ##      ##   ##   #####    ####                                
-#                                                                                                             
-#=============================================================================================================
-
-def compact(trees):
-    ''' Compact the trees '''
-    trees = trees.split('\n')
-    
-    def remove_empty_columns(trees):
-        trees = [list(j) for j in zip_longest(*trees,fillvalue=' ')]
-        isempty = lambda line: all(entry==' ' for entry in line)
-        trees2 = []
-        started, previous_empty = (False, False)
-        for j,line in enumerate(trees):
-            if isempty(line):
-                if not started:
-                    trees2.append(line)
-                elif not previous_empty:
-                    trees2.append(line) # WIP <- check whether this line cannot be sometimes gotten rid of
-                previous_empty = True
-            else:
-                started = True
-                previous_empty = False
-                trees2.append(line)
-        return [''.join(j) for j in zip(*trees2)]
-
-    trees = [j*' ' + line for j,line in enumerate(trees)]
-    trees = remove_empty_columns(trees)
-    trees = [line[j:] for j,line in enumerate(trees)]
-    
-
-    trees = [(len(trees)-j-1)*' ' + line for j,line in enumerate(trees)]
-    trees = remove_empty_columns(trees)
-    trees = [line[(len(trees)-j-1):] for j,line in enumerate(trees)]
-
-    trees = [re.sub('\s+(?=$)','',line) for line in trees] # Remove trailing whitespace
-
-    return '\n'.join(trees)
-
 #=========================================================================================
 #                                                                                         
 #   ####   #####   ###    ###  #####   ##  ##      #####                                
@@ -358,14 +234,20 @@ def compact(trees):
 
 def compile(text,space=' ',null_trees=False):
     ''' Compile text into trees '''
+    # Lex
     trees = split_into_trees(text)
-    trees = [split_into_subtrees(tree) for tree in trees]
+    asts = [split_into_subtrees(tree) for tree in trees]
     
-    build = lambda tree: build_tree(tree,space=space,null_trees=null_trees)
-    trees = [build(tree) for tree in trees]
+    # Pre-process
+    asts = expand_all_stings(asts) # Expans psll strings
     
-    trees = combine_trees(trees,space=space)
-    return 
+    # Build
+    trees = [build_tree(tree,null_trees=null_trees) for tree in trees]
+    program = trees[0]
+    for tree in trees[1:]:
+        program += tree
+
+    return program
 
 def main(args):
     ''' Main function for the command-line operation '''
@@ -393,8 +275,14 @@ def main(args):
             f.write(trees)
 
 if __name__ == "__main__":
+    ast = [['"set"','"a"','"hello"'],['hello']]
+    ast = expand_all_stings(ast)
+    trees = [build_tree(tree) for tree in ast]
+    program = trees[0]
+    for tree in trees[1:]:
+        program += tree
+    print(program)
 
-    tree
 if False: #__name__ == "__main__":
 
     import argparse

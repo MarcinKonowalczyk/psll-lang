@@ -27,7 +27,7 @@ class AbstractTree(ABC):
     ''' Abstract Tree class '''
 
     @staticmethod
-    def text2pyramid(text,min_width=None,remove_spaces=True):
+    def text2pyramid(text,min_width=None,remove_spaces=False):
         ''' Put text inside of a pyramid '''
         # N = ceil(sqrt(len(text))) # Number of pyramid levels
         if remove_spaces: text = text.replace(SPACE,'')
