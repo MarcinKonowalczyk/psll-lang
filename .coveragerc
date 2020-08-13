@@ -1,7 +1,10 @@
-[run]
-omit =
-    # Don't test coverage of tests
-    */tests/*
+# Python 'coverage' command settings
+
+# This is made obsolete by the run_coverage bash script
+# [run]
+# omit =
+#     # Don't test coverage of tests
+#     */tests/*
 
 [report]
 exclude_lines =
