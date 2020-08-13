@@ -131,6 +131,7 @@ class Split(unittest.TestCase,MetaTests):
 class BuildTree(unittest.TestCase,MetaTests):
 
     def test_simple(self):
+        ''' Simple trees '''
         trees = [[''],['hi'],['out','a'],['set','a','1']]
         targets = [' ^ \n/ \\\n---',
             '  ^  \n / \\ \n/hi \\\n-----',
@@ -140,6 +141,7 @@ class BuildTree(unittest.TestCase,MetaTests):
         self.paired_test(trees,targets,fun)
 
     def test_nested(self):
+        ''' Nested trees '''
         trees = [['set','a',['+','1','1']],
             ['out',['chr','32'],'b'],
             ['loop',['!',['<=>','n','N']],['set','a',['+','a','1']]]]
@@ -150,9 +152,10 @@ class BuildTree(unittest.TestCase,MetaTests):
         self.paired_test(trees,targets,fun)
 
     def test_spaces(self):
+        ''' Put in different space characters '''
         spaces = [' ','.','~','_']
         for s in spaces:
-            target = '  ^  \n / \\ \n/hi \\\n-----'.replace(' ',s)
+            target = '..^..\n./.\\.\n/hi.\\\n-----'.replace('.',s)
             with self.subTest(space=s):
                 tree = psll.build_tree(['hi'],space=s)
                 self.assertEqual(tree,target)
@@ -168,6 +171,27 @@ class BuildTree(unittest.TestCase,MetaTests):
         trees = [[],[1,2,3],'blah']
         fun = psll.build_tree
         self.syntax_error_test(trees,fun,AssertionError)
+
+    def test_string_expansion_1(self):
+        ''' Make sure the prompt is expanded '''
+        prompts = [random_string(N+1) for N in range(10)]
+        for prompt in prompts:
+            with self.subTest(prompt=prompt):
+                wrong_height = (len(prompt)-1)//2
+                tree = psll.build_tree([f'"{prompt}"'])
+                self.assertGreater(len(tree.split('\n')),wrong_height)
+
+    def test_string_expansion_1(self):
+        ''' Make sure the prompt is expanded '''
+        prompt = ''
+        with self.assertRaises(AssertionError):
+            psll.build_tree([f'"{prompt}"'])
+
+    def test_string_expansion_2(self):
+        ''' Expand some more strings as subtrees '''
+        trees = [['"hi"'],['\'hi\''],['out','"hi"'],['"one"','\'two\'']]
+        for tree in trees:
+            psll.build_tree(tree,space=' ')
 
 if __name__ == '__main__':
     unittest.main()
