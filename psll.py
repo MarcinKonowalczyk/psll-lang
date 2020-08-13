@@ -173,10 +173,12 @@ def build_tree(tree,**kwargs):
     assert isinstance(tree,list), f'Tree must be a list ({tree})'
     assert len(tree)>0, 'Tree cannot be empty'
 
+    # TODO Code these a bit more sanely
     space = kwargs['space'] if 'space' in kwargs else '.'
     null_trees = kwargs['null_trees'] if 'null_trees' in kwargs else False
 
     # Add the null tree if none specified
+    # TODO Move this to pre-processor
     pad_tree = '' if null_trees else ' '
     if not isinstance(tree[0],str) and len(tree) < 3:
         tree = [pad_tree] + tree
@@ -278,6 +280,7 @@ def build_tree(tree,**kwargs):
         if len(tree) == 1:
             tree =  build_tree(tree[0],**kwargs)
         else:
+            # TODO Move this to pre-processor
             while len(tree)>2:
                 tree = [p for p in pair_up(tree)]
             tree = [pad_tree] + tree
@@ -297,17 +300,6 @@ def combine_trees(trees,space='.'):
         combined = ['\n'.join(combined)]
         trees = combined + trees[2:]
     return trees[0]
-
-def compile(text,space=' ',null_trees=False):
-    ''' Compile text into trees '''
-    trees = split_into_trees(text)
-    trees = [split_into_subtrees(tree) for tree in trees]
-    
-    build = lambda tree: build_tree(tree,space=space,null_trees=null_trees)
-    trees = [build(tree) for tree in trees]
-    
-    trees = combine_trees(trees,space=space)
-    return 
 
 #=============================================================================================================
 #                                                                                                             
@@ -354,15 +346,26 @@ def compact(trees):
 
     return '\n'.join(trees)
 
-#======================================================================
-#                                                                      
-#  ###    ###    ###    ##  ##     ##                                
-#  ## #  # ##   ## ##   ##  ####   ##                                
-#  ##  ##  ##  ##   ##  ##  ##  ## ##                                
-#  ##      ##  #######  ##  ##    ###                                
-#  ##      ##  ##   ##  ##  ##     ##                                
-#                                                                      
-#======================================================================
+#=========================================================================================
+#                                                                                         
+#   ####   #####   ###    ###  #####   ##  ##      #####                                
+#  ##     ##   ##  ## #  # ##  ##  ##  ##  ##      ##                                   
+#  ##     ##   ##  ##  ##  ##  #####   ##  ##      #####                                
+#  ##     ##   ##  ##      ##  ##      ##  ##      ##                                   
+#   ####   #####   ##      ##  ##      ##  ######  #####                                
+#                                                                                         
+#=========================================================================================
+
+def compile(text,space=' ',null_trees=False):
+    ''' Compile text into trees '''
+    trees = split_into_trees(text)
+    trees = [split_into_subtrees(tree) for tree in trees]
+    
+    build = lambda tree: build_tree(tree,space=space,null_trees=null_trees)
+    trees = [build(tree) for tree in trees]
+    
+    trees = combine_trees(trees,space=space)
+    return 
 
 def main(args):
     ''' Main function for the command-line operation '''
