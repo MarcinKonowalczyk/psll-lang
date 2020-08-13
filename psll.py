@@ -8,12 +8,15 @@ from tree_repr import Pyramid
 class PsllSyntaxError(SyntaxError):
     pass
 
-def pair_up(iterable):
-    ''' Pair up elements in the array '''
-    args = [iter(iterable)] * 2
-    for j,k in zip_longest(*args, fillvalue=None):
-        value = [j,k] if k else j
-        yield value
+#==========================================================================================================
+#                                                                                                          
+#  #####  ##  ##      #####        ##  ##     ##  #####   ##   ##  ######                                
+#  ##     ##  ##      ##           ##  ####   ##  ##  ##  ##   ##    ##                                  
+#  #####  ##  ##      #####        ##  ##  ## ##  #####   ##   ##    ##                                  
+#  ##     ##  ##      ##           ##  ##    ###  ##      ##   ##    ##                                  
+#  ##     ##  ######  #####        ##  ##     ##  ##       #####     ##                                  
+#                                                                                                          
+#==========================================================================================================
 
 def readfile(filename):
     '''
@@ -34,7 +37,17 @@ def readfile(filename):
         text = re.sub(a,b,text)
 
     return text
-    
+
+#=============================================================
+#                                                             
+#  ##      #####  ##    ##                                    
+#  ##      ##      ##  ##                                     
+#  ##      #####    ####                                      
+#  ##      ##      ##  ##                                     
+#  ######  #####  ##    ##                                    
+#                                                             
+#=============================================================
+
 def split_into_trees(text):
     ''' Split the text into major trees '''
     # Split into lines at first level brackets
@@ -109,11 +122,49 @@ def text_to_pyramid(text,min_len=0,space='.'):
     
     return pyramid
 
+#=====================================================================================================
+#                                                                                                     
+#  #####   #####    #####            #####   #####     #####    ####                                
+#  ##  ##  ##  ##   ##               ##  ##  ##  ##   ##   ##  ##                                   
+#  #####   #####    #####  ########  #####   #####    ##   ##  ##                                   
+#  ##      ##  ##   ##               ##      ##  ##   ##   ##  ##                                   
+#  ##      ##   ##  #####            ##      ##   ##   #####    ####                                
+#                                                                                                     
+#=====================================================================================================
+
+def pair_up(iterable):
+    ''' Pair up elements in the array '''
+    args = [iter(iterable)] * 2
+    for j,k in zip_longest(*args, fillvalue=None):
+        value = [j,k] if k else j
+        yield value
+
 def is_psll_string(x):
     ''' Check whether x is a psll string '''
     if not isinstance(x,str):
         return false # Is a tree
     return re.match('(\'.*\'|".*")',x)
+
+def expand_string_to_tree(string):
+    ''' Expand psll string to an appropriate tree '''
+    tree = [];
+    for character in string[1:-1]:
+        subtree = ['chr', str(ord(character))]
+        if not tree:
+            tree = subtree
+        else:
+            tree = ['+', tree, subtree]
+    return tree
+
+#==========================================================================
+#                                                                          
+#  #####     ###    #####     ####  #####                                
+#  ##  ##   ## ##   ##  ##   ##     ##                                   
+#  #####   ##   ##  #####     ###   #####                                
+#  ##      #######  ##  ##      ##  ##                                   
+#  ##      ##   ##  ##   ##  ####   #####                                
+#                                                                          
+#==========================================================================
 
 def build_tree(tree,**kwargs):
     ''' Build the call tree from the leaves to the root '''
@@ -234,20 +285,8 @@ def build_tree(tree,**kwargs):
 
     return tree
 
-def expand_string_to_tree(string):
-    tree = [];
-    for character in string[1:-1]:
-        subtree = ['chr', str(ord(character))]
-        if not tree:
-            tree = subtree
-        else:
-            tree = ['+', tree, subtree]
-    return tree
-
 def combine_trees(trees,space='.'):
-    '''
-    Put multiple trees side by side
-    '''
+    ''' Put multiple trees side by side '''
     while len(trees)>1:
         tree_left = trees[0].split('\n')
         tree_right = trees[1].split('\n')
@@ -260,9 +299,7 @@ def combine_trees(trees,space='.'):
     return trees[0]
 
 def compile(text,space=' ',null_trees=False):
-    '''
-    Compile text into trees
-    '''
+    ''' Compile text into trees '''
     trees = split_into_trees(text)
     trees = [split_into_subtrees(tree) for tree in trees]
     
@@ -270,12 +307,20 @@ def compile(text,space=' ',null_trees=False):
     trees = [build(tree) for tree in trees]
     
     trees = combine_trees(trees,space=space)
-    return trees
+    return 
+
+#=============================================================================================================
+#                                                                                                             
+#  #####    #####    ####  ######            #####   #####     #####    ####                                
+#  ##  ##  ##   ##  ##       ##              ##  ##  ##  ##   ##   ##  ##                                   
+#  #####   ##   ##   ###     ##              #####   #####    ##   ##  ##                                   
+#  ##      ##   ##     ##    ##              ##      ##  ##   ##   ##  ##                                   
+#  ##       #####   ####     ##    ########  ##      ##   ##   #####    ####                                
+#                                                                                                             
+#=============================================================================================================
 
 def compact(trees):
-    '''
-    Compact the trees
-    '''
+    ''' Compact the trees '''
     trees = trees.split('\n')
     
     def remove_empty_columns(trees):
@@ -309,11 +354,18 @@ def compact(trees):
 
     return '\n'.join(trees)
 
+#======================================================================
+#                                                                      
+#  ###    ###    ###    ##  ##     ##                                
+#  ## #  # ##   ## ##   ##  ####   ##                                
+#  ##  ##  ##  ##   ##  ##  ##  ## ##                                
+#  ##      ##  #######  ##  ##    ###                                
+#  ##      ##  ##   ##  ##  ##     ##                                
+#                                                                      
+#======================================================================
 
 def main(args):
-    '''
-    Main function for the command-line operation
-    '''
+    ''' Main function for the command-line operation '''
 
     verbose = args.verbose
     input = args.input
@@ -338,6 +390,9 @@ def main(args):
             f.write(trees)
 
 if __name__ == "__main__":
+
+    tree
+if False: #__name__ == "__main__":
 
     import argparse
     import os.path
