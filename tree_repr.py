@@ -197,7 +197,7 @@ class Tree(AbstractTree):
                 distance -= 1
             yield distance
 
-    def add_side_by_side(self,other,tight=True,min_width=None,odd_spacing=False):
+    def add_side_by_side(self,other,tight=True,min_spacing=None,odd_spacing=False):
         ''' Add trees side-by-side '''
         # Find tightest squeeze between the pyramids
         squeeze = 0
@@ -205,16 +205,16 @@ class Tree(AbstractTree):
             squeeze = min(self.distance_row_iterator(self,other))
         
         # Decrease the squeeze if required by the min_width
-        r,l = self[0],other[0]
-        if min_width:
-            closest_width = r[2]+l[0]-squeeze
-            squeeze -= max(min_width-closest_width,0)
+        l,r = self[0],other[0]
+        p2p_distance = l[2]+r[0]-squeeze
+        if min_spacing:
+            squeeze -= max(min_spacing-p2p_distance,0)
+            p2p_distance = l[2]+r[0]-squeeze
 
         # Width of the squeezed pyramid
         squeezed_width = self.width+other.width-squeeze
 
         # Make sure spacing between the peaks is an odd
-        p2p_distance = l[2]+r[0]-squeeze
         if odd_spacing and not (p2p_distance%2):
             squeeze -= 1
             squeezed_width +=1
@@ -291,9 +291,8 @@ class Tree(AbstractTree):
         parent_width = len(self[-1][1])//2*2+1 # Make sure parent width is odd
         # Put children together with minimum width of a parent, make sure they're odd
         left, right = left.toTree(), right.toTree()
-        children = left.add_side_by_side(right,min_width=parent_width,odd_spacing=True)
+        children = left.add_side_by_side(right,min_spacing=parent_width,odd_spacing=True)
         actual_children_width = len(children[0][1])-2
-
         # Try to expand oneself to accommodate the width of the children
         if (actual_children_width > parent_width) or (parent_width>len(self[-1][1])):
             try:
