@@ -165,6 +165,8 @@ def expand_all_stings(ast):
 def build_tree(ast,**kwargs):
     ''' Build the call tree from the leaves to the root '''
 
+    if not isinstance(ast,list):
+        print(ast)
     # Not PsllSyntaxErrors. These should not happen normally
     assert isinstance(ast,list), f'Abstract syntax tree must be a list, not a {type(ast)}'
     assert len(ast)>0, 'Abstract syntax tree cannot be empty'
@@ -242,10 +244,12 @@ def compile(text,space=' ',null_trees=False):
     asts = expand_all_stings(asts) # Expans psll strings
     
     # Build
-    trees = [build_tree(tree,null_trees=null_trees) for tree in trees]
+    trees = [build_tree(ast,null_trees=null_trees) for ast in asts]
     program = trees[0]
     for tree in trees[1:]:
         program += tree
+
+    program = str(program)
 
     return program
 
@@ -264,26 +268,15 @@ def main(args):
     if verbose: print('Reduced source:',text)
     
     space = '.' if args.dot_spaces else ' '
-    trees = compile(text,space=space,null_trees=args.null_trees)
-    if not args.no_compact:
-        trees = compact(trees)
+    program = compile(text,space=space,null_trees=args.null_trees)
 
-    if verbose: print('Pyramid scheme:',trees,sep='\n')
+    if verbose: print('Pyramid scheme:',program,sep='\n')
     
     if output:
         with open(output,'w') as f:
-            f.write(trees)
-
+            f.write(program)
+            
 if __name__ == "__main__":
-    ast = [['"set"','"a"','"hello"'],['hello']]
-    ast = expand_all_stings(ast)
-    trees = [build_tree(tree) for tree in ast]
-    program = trees[0]
-    for tree in trees[1:]:
-        program += tree
-    print(program)
-
-if False: #__name__ == "__main__":
 
     import argparse
     import os.path

@@ -4,3 +4,5 @@
 examples/*.pyra
 .coverage
 htmlcov
+.pytest_cache
+__pycache__
