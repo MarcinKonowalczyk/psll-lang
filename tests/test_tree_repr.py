@@ -42,17 +42,17 @@ TEST_PYRAMIDS = [' ^ \n - ',
 class Pyramids(unittest.TestCase):
 
     def test_creation(self):
-        ''' Create few pyramids '''
+        ''' > Create few pyramids '''
         for c in TEST_CONTENT:
             with self.subTest(content=c):
                 p = Pyramid.from_text(c)
 
     def test_default_space(self):
-        ''' Make sure the default space is a space '''
+        ''' > Make sure the default space is a space '''
         self.assertEqual(tree_repr.SPACE,' ')
     
     def test_output(self):
-        ''' Check output is what it is supposed to be '''
+        ''' > Check output is what it is supposed to be '''
         for c,p in zip(TEST_CONTENT,TEST_PYRAMIDS):
             with self.subTest(content=c):
                 with capture_output() as output:
@@ -60,13 +60,13 @@ class Pyramids(unittest.TestCase):
                 self.assertEqual(output.getvalue(),p)
         
     def test_min_width(self):
-        ''' Create a few pyramids, but now with minimum width '''
+        ''' > Create a few pyramids, but now with minimum width '''
         for c,w in product(TEST_CONTENT,range(10)):
             with self.subTest(content=c,min_width=w):
                 p = Pyramid.from_text(c,min_width=w)
 
     def test_remove_spaces(self):
-        ''' '''
+        ''' > Don't remove spaces from the input '''
         p = Pyramid.from_text('  ! ',remove_spaces=False)
         target = '   ^   \n  / \\  \n / ! \\ \n ----- '
         with capture_output() as output:

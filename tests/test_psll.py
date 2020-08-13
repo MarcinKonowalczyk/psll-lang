@@ -51,36 +51,36 @@ class Readfile(unittest.TestCase,MetaTests):
             return psll.readfile(f)
 
     def test_empty(self):
-        ''' Read and parse files with empty brackets '''
+        ''' > Read and parse files with empty brackets '''
         contents = ['','()','( )','()()','()()()','(())','() (())']
         targets = ['','()','()','() ()','() () ()','(())','() (())']
         self.paired_test(contents,targets,self.readfile)
 
     def test_simple(self):
-        ''' Read and parse files with simple contents '''
+        ''' > Read and parse files with simple contents '''
         contents = ['(set)','(hi)','(set 1)','(set hi 1)','(1 2 3 4)','(hi) (salut)']
         self.paired_test(contents,contents,self.readfile)
 
     def test_comments(self):
-        ''' Removing comments '''
+        ''' > Removing comments '''
         contents = ['// hi','() // hi','(\n// hi\n)','//(\n()','()\n//)','// hi\n()\n// hi','//()']
         targets = ['','()','()','()','()','()','']
         self.paired_test(contents,targets,self.readfile)
     
     def test_single_spaces(self):
-        ''' Only single spaces '''
+        ''' > Only single spaces '''
         contents = ['( )','(  )','(   )','(     )']
         targets = ['()','()','()','()']
         self.paired_test(contents,targets,self.readfile)
     
     def test_leading_and_trailing_spaces(self):
-        ''' No leading or trailing whitepace '''
+        ''' > No leading or trailing whitepace '''
         contents = ['(   hi)','(hi   )','(hi   1)','(   hi 1)','(hi 1   )']
         targets = ['(hi)','(hi)','(hi 1)','(hi 1)','(hi 1)']
         self.paired_test(contents,targets,self.readfile)
 
     def test_multiline(self):
-        ''' Input over multiple lines '''
+        ''' > Input over multiple lines '''
         contents = ['()\n()','\n(hi)','(\nhi)','(hi\n)','(hi)\n'];
         targets = ['() ()','(hi)','(hi)','(hi)','(hi)']
         self.paired_test(contents,targets,self.readfile)
@@ -88,42 +88,42 @@ class Readfile(unittest.TestCase,MetaTests):
 class Split(unittest.TestCase,MetaTests):
 
     def test_simple(self):
-        ''' Simple inputs '''
+        ''' > Simple inputs '''
         texts = ['','()','() ()','(hi)','(out 1)','(set a 1)']
         targets = [[],['()'],['()','()'],['(hi)'],['(out 1)'],['(set a 1)']]
         self.paired_test(texts,targets,psll.split_into_trees)
 
     def test_nested(self):
-        ''' Nested inputs '''
+        ''' > Nested inputs '''
         texts = ['(())','(()) ()','(((hi)))','(() () hi)','(() ()) (()) ()']
         targets = [['(())'],['(())','()'],['(((hi)))'],['(() () hi)'],['(() ())','(())','()']]
         self.paired_test(texts,targets,psll.split_into_trees)
 
     def test_string(self):
-        ''' Bracket parity error '''
+        ''' > Bracket parity error '''
         texts = ['(',')',')(','(hi))','((hi)','((','))','((()())','(()()))']
         self.syntax_error_test(texts,psll.split_into_trees,psll.PsllSyntaxError)
 
     def test_simple_subtrees(self):
-        ''' Simple subtrees'''
+        ''' > Simple subtrees'''
         texts = ['(hi)','(set a 1)','(one two three four)']
         targets = [['hi'],['set','a','1'],['one','two','three','four']]
         self.paired_test(texts,targets,psll.split_into_subtrees)
 
     def test_nested_subtrees(self):
-        ''' Nested subtrees'''
+        ''' > Nested subtrees'''
         texts = ['(set a (= b 1))','(a (b (() c)))']
         targets = [['set','a',['=','b','1']],['a',['b',[[''],'c']]]]
         self.paired_test(texts,targets,psll.split_into_subtrees)
 
     def test_blank(self):
-        ''' Trees with blank elements '''
+        ''' > Trees with blank elements '''
         texts = ['()','(())','(() hi)','(1 2)','((hi 1) (hi 2))']
         targets = [[''],[['']],[[''], 'hi'],['1','2'],[['hi','1'],['hi','2']]]
         self.paired_test(texts,targets,psll.split_into_subtrees)
 
     def test_quotes(self):
-        ''' Don't split quotes '''
+        ''' > Don't split quotes '''
         texts = ['("hi")','(\'hello\')','(set a \'one\')','(set b "two")']
         targets = [['"hi"'],['\'hello\''],['set','a','\'one\''],['set','b','"two"']]
         self.paired_test(texts,targets,psll.split_into_subtrees)
@@ -131,7 +131,7 @@ class Split(unittest.TestCase,MetaTests):
 class BuildTree(unittest.TestCase,MetaTests):
 
     def test_simple(self):
-        ''' Simple trees '''
+        ''' > Simple trees '''
         trees = [[''],['hi'],['out','a'],['set','a','1']]
         targets = [' ^ \n/ \\\n---',
             '  ^  \n / \\ \n/hi \\\n-----',
@@ -141,7 +141,7 @@ class BuildTree(unittest.TestCase,MetaTests):
         self.paired_test(trees,targets,fun)
 
     def test_nested(self):
-        ''' Nested trees '''
+        ''' > Nested trees '''
         trees = [['set','a',['+','1','1']],
             ['out',['chr','32'],'b'],
             ['loop',['!',['<=>','n','N']],['set','a',['+','a','1']]]]
@@ -152,7 +152,7 @@ class BuildTree(unittest.TestCase,MetaTests):
         self.paired_test(trees,targets,fun)
 
     def test_spaces(self):
-        ''' Put in different space characters '''
+        ''' > Put in different space characters '''
         spaces = [' ','.','~','_']
         for s in spaces:
             target = '..^..\n./.\\.\n/hi.\\\n-----'.replace('.',s)
@@ -161,19 +161,19 @@ class BuildTree(unittest.TestCase,MetaTests):
                 self.assertEqual(tree,target)
 
     def test_too_many(self):
-        ''' Invalid number of keywords in a bracket '''
+        ''' > Invalid number of keywords in a bracket '''
         trees = [['one','two','three','four'],['1','2','3','4','5']]
         fun = psll.build_tree
         self.syntax_error_test(trees,fun,psll.PsllSyntaxError)
 
     def test_invalid(self):
-        ''' Invalid trees '''
+        ''' > Invalid trees '''
         trees = [[],[1,2,3],'blah']
         fun = psll.build_tree
         self.syntax_error_test(trees,fun,AssertionError)
 
     def test_string_expansion_1(self):
-        ''' Make sure the prompt is expanded '''
+        ''' > Make sure the prompt is expanded '''
         prompts = [random_string(N+1) for N in range(10)]
         for prompt in prompts:
             with self.subTest(prompt=prompt):
@@ -182,13 +182,13 @@ class BuildTree(unittest.TestCase,MetaTests):
                 self.assertGreater(len(tree.split('\n')),wrong_height)
 
     def test_string_expansion_1(self):
-        ''' Make sure the prompt is expanded '''
+        ''' > Make sure the prompt is expanded '''
         prompt = ''
         with self.assertRaises(AssertionError):
             psll.build_tree([f'"{prompt}"'])
 
     def test_string_expansion_2(self):
-        ''' Expand some more strings as subtrees '''
+        ''' > Expand some more strings as subtrees '''
         trees = [['"hi"'],['\'hi\''],['out','"hi"'],['"one"','\'two\'']]
         for tree in trees:
             psll.build_tree(tree,space=' ')
