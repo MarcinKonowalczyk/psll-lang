@@ -10,6 +10,10 @@ PYRA_FILE="$PWD/${1%.*}.pyra"
 echo "Compiling psll to pyramid scheme"
 python $PSLL_COMPILER $PSLL_FILE -o $PYRA_FILE -f --no-compact # -v
 
-# Run pyramid scheme
-echo "Running the scheme"
-ruby $PYRA $PYRA_FILE "${@:2}"
+if [ "$?" -eq 0 ]; then
+    # Run pyramid scheme if compilation worked
+    echo "Running the scheme"
+    ruby $PYRA $PYRA_FILE "${@:2}"
+fi
+
+
