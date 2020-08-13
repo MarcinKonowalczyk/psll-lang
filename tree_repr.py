@@ -193,7 +193,8 @@ class Tree(AbstractTree):
             distance = l[2]+r[0]
             lc, rc = l[1][-1], r[1][0]
             if (lc==TOP and rc == BOTTOM) or (lc==BOTTOM and rc == TOP):
-                print('Careful!',lc,rc)
+                # print('Careful!',lc,rc)
+                # TODO ^ replace with warning...?
                 distance -= 1
             yield distance
 
