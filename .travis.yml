@@ -1,8 +1,11 @@
 language: python
 
 python:
+  # - "3.5" # Doesn't work because of f-strings
   - "3.6"
-  - "3.7"
+  # No need to test for higher versions
+  # - "3.7"
+  # - "3.8"
 
 install:
   - pip install coveralls
