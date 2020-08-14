@@ -157,7 +157,7 @@ class BuildTree(unittest.TestCase,MetaTests):
 
     def test_invalid(self):
         ''' > Invalid trees '''
-        trees = [[],1,'blah',['set','a',1],(),{},set]
+        trees = [[],1,['set','a',1],(),{},set]
         fun = psll.build_tree
         self.syntax_error_test(trees,fun,AssertionError)
 

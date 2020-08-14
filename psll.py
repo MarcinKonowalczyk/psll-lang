@@ -165,8 +165,9 @@ def expand_all_stings(ast):
 def build_tree(ast,**kwargs):
     ''' Build the call tree from the leaves to the root '''
 
-    if not isinstance(ast,list):
-        print(ast)
+    if isinstance(ast,str):
+        return Pyramid.from_text(ast)
+
     # Not PsllSyntaxErrors. These should not happen normally
     assert isinstance(ast,list), f'Abstract syntax tree must be a list, not a {type(ast)}'
     assert len(ast)>0, 'Abstract syntax tree cannot be empty'
@@ -184,18 +185,17 @@ def build_tree(ast,**kwargs):
         if len(ast)==1:
             # TODO Move this to pre-processor
             if ast[0]=='' and not null_trees: ast[0] = ' ' # Make sure no null-trees
-            tree = Pyramid.from_text(ast[0])
+            tree = build_tree(ast[0],**kwargs)
 
         elif len(ast)==2:
-            root = Pyramid.from_text(ast[0])
-            left_leaf = Pyramid.from_text(ast[1]) if isinstance(ast[1],str) else build_tree(ast[1],**kwargs)
+            root = build_tree(ast[0],**kwargs)
+            left_leaf = build_tree(ast[1],**kwargs)
             tree = root + (left_leaf,None)
 
         elif len(ast)==3:
-            root = Pyramid.from_text(ast[0])
-            # TODO make this a recursive call into oneself
-            left_leaf = Pyramid.from_text(ast[1]) if isinstance(ast[1],str) else build_tree(ast[1],**kwargs)
-            right_leaf = Pyramid.from_text(ast[2]) if isinstance(ast[2],str) else build_tree(ast[2],**kwargs)
+            root = build_tree(ast[0],**kwargs)
+            left_leaf = build_tree(ast[1],**kwargs)
+            right_leaf = build_tree(ast[2],**kwargs)
             tree = root + (left_leaf,right_leaf)
 
         else:
@@ -235,7 +235,7 @@ def combine_trees(trees,space='.'):
 #                                                                                         
 #=========================================================================================
 
-def compile(text,space=' ',null_trees=False):
+def compile(text,null_trees=False):
     ''' Compile text into trees '''
     # Lex
     trees = split_into_trees(text)
@@ -318,12 +318,14 @@ if __name__ == "__main__":
         help='Run in the verbose mode.')
     parser.add_argument('-f', '--force', action='store_true',
         help='Force file overwrite.')
-    parser.add_argument('--null-trees', action='store_true',
+    
+    # Compiler options
+    parser.add_argument('-nt','--null-trees', action='store_true',
         help='Use null (height 0) trees.')
-    parser.add_argument('--no-compact', action='store_true',
+    parser.add_argument('-nc','--no-compact', action='store_true',
         help="Don't compact the output trees")
-    parser.add_argument('--dot-spaces', action='store_true',
-        help='Render spaces as dots')
+    # parser.add_argument('--dot-spaces', action='store_true',
+    #     help='Render spaces as dots')
 
     args = parser.parse_args()
     valid_output_file(args)
