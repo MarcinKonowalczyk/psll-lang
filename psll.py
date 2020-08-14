@@ -130,10 +130,7 @@ def expand_string_to_tree(string):
     tree = [];
     for character in string[1:-1]:
         subtree = ['chr', str(ord(character))]
-        if not tree:
-            tree = subtree
-        else:
-            tree = ['+', tree, subtree]
+        tree = subtree if not tree else ['+', tree, subtree]
     return tree
 
 def expand_all_stings(ast):
@@ -141,10 +138,7 @@ def expand_all_stings(ast):
     ast2 = []
     for node in ast:
         if isinstance(node,str):
-            if is_psll_string(node):
-                ast2.append(expand_string_to_tree(node))
-            else:
-                ast2.append(node)
+            ast2.append(expand_string_to_tree(node) if is_psll_string(node) else node)
         elif isinstance(node,list):
             ast2.append(expand_all_stings(node))
         else:
