@@ -42,6 +42,16 @@ class MetaTests:
                 with self.assertRaises(error):
                     fun(i)
 
+#==========================================================================================================
+#                                                                                                          
+#  #####  ##  ##      #####        ##  ##     ##  #####   ##   ##  ######                                
+#  ##     ##  ##      ##           ##  ####   ##  ##  ##  ##   ##    ##                                  
+#  #####  ##  ##      #####        ##  ##  ## ##  #####   ##   ##    ##                                  
+#  ##     ##  ##      ##           ##  ##    ###  ##      ##   ##    ##                                  
+#  ##     ##  ######  #####        ##  ##     ##  ##       #####     ##                                  
+#                                                                                                          
+#==========================================================================================================
+
 class Readfile(unittest.TestCase,MetaTests):
 
     @staticmethod
@@ -84,6 +94,16 @@ class Readfile(unittest.TestCase,MetaTests):
         contents = ['()\n()','\n(hi)','(\nhi)','(hi\n)','(hi)\n'];
         targets = ['() ()','(hi)','(hi)','(hi)','(hi)']
         self.paired_test(contents,targets,self.readfile)
+
+#=============================================================
+#                                                             
+#  ##      #####  ##    ##                                    
+#  ##      ##      ##  ##                                     
+#  ##      #####    ####                                      
+#  ##      ##      ##  ##                                     
+#  ######  #####  ##    ##                                    
+#                                                             
+#=============================================================
 
 class Split(unittest.TestCase,MetaTests):
 
@@ -128,7 +148,37 @@ class Split(unittest.TestCase,MetaTests):
         targets = [['"hi"'],['\'hello\''],['set','a','\'one\''],['set','b','"two"']]
         self.paired_test(texts,targets,psll.split_into_subtrees)
 
+#=====================================================================================================
+#                                                                                                     
+#  #####   #####    #####            #####   #####     #####    ####                                
+#  ##  ##  ##  ##   ##               ##  ##  ##  ##   ##   ##  ##                                   
+#  #####   #####    #####  ########  #####   #####    ##   ##  ##                                   
+#  ##      ##  ##   ##               ##      ##  ##   ##   ##  ##                                   
+#  ##      ##   ##  #####            ##      ##   ##   #####    ####                                
+#                                                                                                     
+#=====================================================================================================
+
+class PreProc(unittest.TestCase):
+    pass
+
+#=======================================================================
+#                                                                       
+#  #####   ##   ##  ##  ##      ####                                  
+#  ##  ##  ##   ##  ##  ##      ##  ##                                
+#  #####   ##   ##  ##  ##      ##  ##                                
+#  ##  ##  ##   ##  ##  ##      ##  ##                                
+#  #####    #####   ##  ######  ####                                  
+#                                                                       
+#=======================================================================
+
+@unittest.skip("blah")
 class BuildTree(unittest.TestCase,MetaTests):
+    
+    @classmethod
+    def setUpClass(cls):
+        # run the constructor test
+        if constructor_test_failed:
+            raise unittest.SkipTest("Constructor failed")
 
     def test_simple(self):
         ''' > Simple trees '''
@@ -184,11 +234,11 @@ class BuildTree(unittest.TestCase,MetaTests):
         for quote,tree in product('"\'',trees):
             tree = [t.replace('.',quote) for t in tree]
             with self.subTest(tree=tree):
-                psll.build_tree(tree,space=' ')
+                psll.build_tree(tree)
         # Also test different quotes in one tree
         tree = ['"one"','\'two\'']
         with self.subTest(tree=tree):
-            psll.build_tree(tree,space=' ')
+            psll.build_tree(tree)
 
 if __name__ == '__main__':
     unittest.main()

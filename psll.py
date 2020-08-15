@@ -77,7 +77,7 @@ def split_into_subtrees(line):
     ''' Split each tree into subtrees '''
     if re.match('\(.*\)',line): # Remove outermost bracket
         line = line[1:-1];
-    line += ' '
+    line += SPACE
 
     bracket_count, last_break = (0,0) # Kepping track of bracket parity
     last_quote = '' # Keeping track of quotation marks
@@ -92,7 +92,7 @@ def split_into_subtrees(line):
                 elif last_quote==quote: last_quote = '' # End a quote
 
         # Break at spaces, but not in the middle of brackets of strings
-        if char == ' ' and bracket_count == 0 and not last_quote:
+        if char == SPACE and bracket_count == 0 and not last_quote:
             part = line[last_break:j]
             tree.append(part)
             last_break = j+1
@@ -146,7 +146,7 @@ def pair_up(iterable):
         yield value
 
 def expand_overful_brackets(ast):
-    ''' '''
+    ''' Recursively expand lists of many lists into lists of length 2 '''
     ast2 = []
     for node in ast:
         if isinstance(node,str):
@@ -156,13 +156,15 @@ def expand_overful_brackets(ast):
             if all(map(lambda x: isinstance(x,list),node)):
                 while len(node)>2:
                     node = [p for p in pair_up(node)]
+            elif len(node)>3:
+                raise PsllSyntaxError(f'Invalid bracket structure. Can only expand lists of lists. Node = \'{node}\'')
             ast2.append(node)
         else:
             raise TypeError
     return ast2
 
 def fill_in_empty_trees(ast):
-    ''' '''
+    ''' Fill in the implicit empty strings in brackets with only lists '''
     ast2 = []
     for node in ast:
         if isinstance(node,str):
@@ -176,7 +178,6 @@ def fill_in_empty_trees(ast):
             raise TypeError
     return ast2
 
-
 #=======================================================================
 #                                                                       
 #  #####   ##   ##  ##  ##      ####                                  
@@ -187,76 +188,33 @@ def fill_in_empty_trees(ast):
 #                                                                       
 #=======================================================================
 
-
-class ThisShouldNeverHappen(Exception):
-    pass
-
-def build_tree(ast,**kwargs):
+def build_tree(ast):
     ''' Build the call tree from the leaves to the root '''
 
     if isinstance(ast,str):
         return Pyramid.from_text(ast)
+    
+    elif isinstance(ast,list):
+        assert len(ast)>0, 'Invalid abstract syntax tree. Abstract syntax tree cannot be empty'
+        assert isinstance(ast[0],str), 'Invalid abstract syntax tree. The first element of each node must be a string.'
 
-    # Not PsllSyntaxErrors. These should not happen normally
-    assert isinstance(ast,list), f'Abstract syntax tree must be a list, not a {type(ast)}'
-    assert len(ast)>0, 'Abstract syntax tree cannot be empty'
-    assert isinstance(ast[0],str), 'Invalid abstract syntax tree'
-
-    # TODO Code these a bit more sanely
-    null_trees = kwargs['null_trees'] if 'null_trees' in kwargs else False
-
-    # Add the null tree if none specified
-    # TODO Move this to pre-processor
-    pad_tree = '' if null_trees else ' '
-    if not isinstance(ast[0],str) and len(ast) < 3:
-        ast = [pad_tree] + ast
-
-    if isinstance(ast[0],str):
-        if len(ast)==1:
-            raise ThisShouldNeverHappen
-            # TODO Move this to pre-processor
-            if ast[0]=='' and not null_trees: ast[0] = ' ' # Make sure no null-trees
-            tree = build_tree(ast[0],**kwargs)
-
-        elif len(ast)==2:
-            root = build_tree(ast[0],**kwargs)
-            left_leaf = build_tree(ast[1],**kwargs)
+        if len(ast)==2:
+            # TODO Choice (left/right) trees...?
+            root = build_tree(ast[0])
+            left_leaf = build_tree(ast[1])
             tree = root + (left_leaf,None)
 
         elif len(ast)==3:
-            root = build_tree(ast[0],**kwargs)
-            left_leaf = build_tree(ast[1],**kwargs)
-            right_leaf = build_tree(ast[2],**kwargs)
+            root = build_tree(ast[0])
+            left_leaf = build_tree(ast[1])
+            right_leaf = build_tree(ast[2])
             tree = root + (left_leaf,right_leaf)
 
         else:
             raise PsllSyntaxError('Invalid number of input arguments')
-    else: # The first element of a tree is *not* string but a tree
-        raise ThisShouldNeverHappen
-        if len(ast) == 1:
-            tree =  build_tree(ast[0],**kwargs)
-        else:
-            # TODO Move this to pre-processor
-            print(len(ast))
-            while len(ast)>2:
-                ast = [p for p in pair_up(ast)]
-            ast = [pad_tree] + ast
-            tree = build_tree(ast,**kwargs)
-
+    else:
+        raise TypeError(f'Abstract syntax tree must be represented by a list (or just a string) not a {type(ast)}')
     return tree
-
-def combine_trees(trees,space='.'):
-    ''' Put multiple trees side by side '''
-    while len(trees)>1:
-        tree_left = trees[0].split('\n')
-        tree_right = trees[1].split('\n')
-
-        fillvalue = space*len(tree_left[0]) if len(tree_left)<len(tree_right) else space*len(tree_right[0])
-        combined = [l+r for l,r in zip_longest(tree_left,tree_right,fillvalue=fillvalue)]
-
-        combined = ['\n'.join(combined)]
-        trees = combined + trees[2:]
-    return trees[0]
 
 #=========================================================================================
 #                                                                                         
@@ -268,19 +226,19 @@ def combine_trees(trees,space='.'):
 #                                                                                         
 #=========================================================================================
 
-def compile(text,null_trees=False):
+def compile(text):
     ''' Compile text into trees '''
     # Lex
     trees = split_into_trees(text)
     ast = [split_into_subtrees(tree) for tree in trees]
     
     # Pre-process
-    ast = expand_all_stings(ast) # Expans psll strings
+    ast = expand_all_stings(ast)
     ast = expand_overful_brackets(ast)
     ast = fill_in_empty_trees(ast)
 
     # Build
-    trees = [build_tree(a,null_trees=null_trees) for a in ast]
+    trees = [build_tree(a) for a in ast]
     program = trees[0]
     for tree in trees[1:]:
         program += tree
@@ -294,31 +252,18 @@ def compile(text,null_trees=False):
 
 def main(args):
     ''' Main function for the command-line operation '''
-
-    verbose = args.verbose
-    input = args.input
-    output = args.output
-
-    if verbose: print('Input filename:',input)
-    if output and verbose:
-        print('Output filename:',output)
+    if args.verbose: print('Input filename:',args.input)
+    if args.output and args.verbose: print('Output filename:',args.output)
     
-    text = readfile(input)
-    if verbose: print('Reduced source:',text)
+    text = readfile(args.input)
+    if args.verbose: print('Reduced source:',text)
     
-    program = compile(text,null_trees=args.null_trees)
-
-    if verbose: print('Pyramid scheme:',program,sep='\n')
+    program = compile(text)
+    if args.verbose: print('Pyramid scheme:',program,sep='\n')
     
-    if output:
-        with open(output,'w') as f:
+    if args.output:
+        with open(args.output,'w') as f:
             f.write(program)
-
-# if __name__ == "__main__":
-#     ast = [[['hi','1','bla',[''],''],'blah','hi','hi'],'']
-#     ast = expand_overful_brackets(ast)
-#     ast = fill_in_empty_trees(ast)
-#     print(ast)
 
 if __name__ == "__main__":
 
@@ -360,10 +305,10 @@ if __name__ == "__main__":
         help='Force file overwrite.')
     
     # Compiler options
-    parser.add_argument('-nt','--null-trees', action='store_true',
-        help='Use null (height 0) trees.')
-    parser.add_argument('-nc','--no-compact', action='store_true',
-        help="Don't compact the output trees")
+    # parser.add_argument('-nt','--null-trees', action='store_true',
+    #     help='Use null (height 0) trees.')
+    # parser.add_argument('-nc','--no-compact', action='store_true',
+    #     help="Don't compact the output trees")
     # parser.add_argument('--dot-spaces', action='store_true',
     #     help='Render spaces as dots')
 
