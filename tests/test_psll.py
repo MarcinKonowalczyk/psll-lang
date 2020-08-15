@@ -14,6 +14,15 @@ from contextlib import contextmanager
 
 random_string = lambda N: ''.join(choice(ascii_letters) for _ in range(N)) 
 
+def depth(tree):
+    ''' Calc the depth of a tree '''
+    if isinstance(tree,str):
+        return 0
+    elif isinstance(tree,list):
+        return max(depth(node) for node in tree) + 1
+    else:
+        raise TypeError
+
 @contextmanager
 def psll_file(content,filename=None):
     ''' Mock a .psll file with certain content '''
@@ -158,8 +167,37 @@ class Split(unittest.TestCase,MetaTests):
 #                                                                                                     
 #=====================================================================================================
 
-class PreProc(unittest.TestCase):
-    pass
+class StingExpansion(unittest.TestCase):
+
+    def test_string_expansion(self):
+        ''' > Make sure the prompt is expanded '''
+        prompts = [random_string(N+1) for N in range(10)]
+        for prompt in prompts:
+            with self.subTest(prompt=prompt):
+                ast = [f'"{prompt}"']
+                est = psll.expand_all_stings([f'"{prompt}"'])
+                self.assertGreater(depth(est),depth(ast))
+
+    def test_double_quote(self):
+        ''' > Make sure the " sign is *not* is expanded '''
+        ast = ['"']
+        est = psll.expand_all_stings(ast)
+        self.assertEqual(ast,est)
+
+    def test_quote_combinations(self):
+        ''' > Expand some more strings as subtrees '''
+        trees1 = [['.hi.'],['out','.hi.'],['.one.','.two.'],
+            ['set','a','.hello.'],['set','.a.','hello'],
+            ['.set.','a','hello']]
+        for quote,ast in product('"\'',trees1):
+            ast = [t.replace('.',quote) for t in ast]
+            with self.subTest(ast=ast):
+                est = psll.expand_all_stings(ast)
+                self.assertGreater(depth(est),depth(ast))
+        ast = ['"one"','\'two\'']
+        with self.subTest(ast=ast):
+            est = psll.expand_all_stings(ast)
+            self.assertGreater(depth(est),depth(ast))
 
 #=======================================================================
 #                                                                       
@@ -171,19 +209,14 @@ class PreProc(unittest.TestCase):
 #                                                                       
 #=======================================================================
 
-@unittest.skip("blah")
+# @unittest.skip("blah")
 class BuildTree(unittest.TestCase,MetaTests):
-    
-    @classmethod
-    def setUpClass(cls):
-        # run the constructor test
-        if constructor_test_failed:
-            raise unittest.SkipTest("Constructor failed")
 
     def test_simple(self):
         ''' > Simple trees '''
-        trees = [[' '],['hi'],['out','a'],['set','a','1']]
-        targets = ['  ^  \n / \\ \n --- ',
+        trees = [[''],[' '],['hi'],['out','a'],['set','a','1']]
+        targets = [' ^ \n - ',
+            '  ^  \n / \\ \n --- ',
             '   ^   \n  / \\  \n /hi \\ \n ----- ',
             '     ^   \n    / \\  \n   /out\\ \n  ^----- \n /a\\     \n ---     ',
             '     ^     \n    / \\    \n   /set\\   \n  ^-----^  \n /a\\   /1\\ \n ---   --- ']
@@ -192,7 +225,7 @@ class BuildTree(unittest.TestCase,MetaTests):
 
     def test_nested(self):
         ''' > Nested trees '''
-        trees = [[['sup']],['set','a',['+','1','1']],
+        trees = [[' ',['sup']],['set','a',['+','1','1']],
             ['out',['chr','32'],'b'],
             ['loop',['!',['<=>','n','N']],['set','a',['+','a','1']]]]
         targets = ['     ^  \n    / \\ \n   ^--- \n  / \\   \n /sup\\  \n -----  ','     ^       \n    / \\      \n   /set\\     \n  ^-----^    \n /a\\   /+\\   \n ---  ^---^  \n     /1\\ /1\\ \n     --- --- ','         ^     \n        / \\    \n       /out\\   \n      ^-----^  \n     / \\   /b\\ \n    /chr\\  --- \n   ^-----      \n  / \\          \n /32 \\         \n -----         ','           ^           \n          / \\          \n         /   \\         \n        /loop \\        \n       ^-------^       \n      /!\\     / \\      \n     ^---    /set\\     \n    / \\     ^-----^    \n   /<=>\\   /a\\   /+\\   \n  ^-----^  ---  ^---^  \n /n\\   /N\\     /a\\ /1\\ \n ---   ---     --- --- ']
@@ -207,38 +240,13 @@ class BuildTree(unittest.TestCase,MetaTests):
 
     def test_invalid(self):
         ''' > Invalid trees '''
-        trees = [[],1,['set','a',1],(),{},set]
         fun = psll.build_tree
+        
+        trees = [1,(),{},set,['set','a',1]]
+        self.syntax_error_test(trees,fun,TypeError)
+        # TODO Split this into multiple tests
+        trees = [[],[['set'],'a','1']]
         self.syntax_error_test(trees,fun,AssertionError)
 
-    def test_string_expansion_1(self):
-        ''' > Make sure the prompt is expanded '''
-        prompts = [random_string(N+1) for N in range(10)]
-        for prompt in prompts:
-            with self.subTest(prompt=prompt):
-                wrong_height = (len(prompt)-1)//2
-                tree = psll.build_tree([f'"{prompt}"'])
-                self.assertGreater(len(tree.split('\n')),wrong_height)
-
-    def test_string_expansion_1(self):
-        ''' > Make sure the " sign is *not* is expanded '''
-        target = '  ^  \n /"\\ \n --- '
-        tree = psll.build_tree(['"'])
-        self.assertEqual(str(tree),target)
-
-    def test_string_expansion_2(self):
-        ''' > Expand some more strings as subtrees '''
-        trees = [['.hi.'],['out','.hi.'],['.one.','.two.'],
-            ['set','a','.hello.'],['set','.a.','hello'],
-            ['.set.','a','hello']]
-        for quote,tree in product('"\'',trees):
-            tree = [t.replace('.',quote) for t in tree]
-            with self.subTest(tree=tree):
-                psll.build_tree(tree)
-        # Also test different quotes in one tree
-        tree = ['"one"','\'two\'']
-        with self.subTest(tree=tree):
-            psll.build_tree(tree)
-
 if __name__ == '__main__':
-    unittest.main()
+    unittest.main(verbosity=2,failfast=True)

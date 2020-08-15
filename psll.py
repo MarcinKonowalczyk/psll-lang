@@ -198,7 +198,10 @@ def build_tree(ast):
         assert len(ast)>0, 'Invalid abstract syntax tree. Abstract syntax tree cannot be empty'
         assert isinstance(ast[0],str), 'Invalid abstract syntax tree. The first element of each node must be a string.'
 
-        if len(ast)==2:
+        if len(ast)==1:
+            tree = build_tree(ast[0])
+
+        elif len(ast)==2:
             # TODO Choice (left/right) trees...?
             root = build_tree(ast[0])
             left_leaf = build_tree(ast[1])
