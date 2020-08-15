@@ -112,13 +112,6 @@ def split_into_subtrees(line):
 #                                                                                                     
 #=====================================================================================================
 
-def pair_up(iterable):
-    ''' Pair up elements in the array '''
-    args = [iter(iterable)] * 2
-    for j,k in zip_longest(*args, fillvalue=None):
-        value = [j,k] if k else j
-        yield value
-
 def is_psll_string(x):
     ''' Check whether x is a psll string '''
     if not isinstance(x,str):
@@ -145,6 +138,45 @@ def expand_all_stings(ast):
             raise TypeError
     return ast2
 
+def pair_up(iterable):
+    ''' Pair up elements in the array '''
+    args = [iter(iterable)] * 2
+    for j,k in zip_longest(*args, fillvalue=None):
+        value = [j,k] if k else j
+        yield value
+
+def expand_overful_brackets(ast):
+    ''' '''
+    ast2 = []
+    for node in ast:
+        if isinstance(node,str):
+            ast2.append(node)
+        elif isinstance(node,list):
+            node = expand_overful_brackets(node)
+            if all(map(lambda x: isinstance(x,list),node)):
+                while len(node)>2:
+                    node = [p for p in pair_up(node)]
+            ast2.append(node)
+        else:
+            raise TypeError
+    return ast2
+
+def fill_in_empty_trees(ast):
+    ''' '''
+    ast2 = []
+    for node in ast:
+        if isinstance(node,str):
+            ast2.append(node)
+        elif isinstance(node,list):
+            node = fill_in_empty_trees(node)
+            if not isinstance(node[0],str):
+                node = [''] + node
+            ast2.append(node)
+        else:
+            raise TypeError
+    return ast2
+
+
 #=======================================================================
 #                                                                       
 #  #####   ##   ##  ##  ##      ####                                  
@@ -156,6 +188,9 @@ def expand_all_stings(ast):
 #=======================================================================
 
 
+class ThisShouldNeverHappen(Exception):
+    pass
+
 def build_tree(ast,**kwargs):
     ''' Build the call tree from the leaves to the root '''
 
@@ -165,6 +200,7 @@ def build_tree(ast,**kwargs):
     # Not PsllSyntaxErrors. These should not happen normally
     assert isinstance(ast,list), f'Abstract syntax tree must be a list, not a {type(ast)}'
     assert len(ast)>0, 'Abstract syntax tree cannot be empty'
+    assert isinstance(ast[0],str), 'Invalid abstract syntax tree'
 
     # TODO Code these a bit more sanely
     null_trees = kwargs['null_trees'] if 'null_trees' in kwargs else False
@@ -177,6 +213,7 @@ def build_tree(ast,**kwargs):
 
     if isinstance(ast[0],str):
         if len(ast)==1:
+            raise ThisShouldNeverHappen
             # TODO Move this to pre-processor
             if ast[0]=='' and not null_trees: ast[0] = ' ' # Make sure no null-trees
             tree = build_tree(ast[0],**kwargs)
@@ -195,10 +232,12 @@ def build_tree(ast,**kwargs):
         else:
             raise PsllSyntaxError('Invalid number of input arguments')
     else: # The first element of a tree is *not* string but a tree
+        raise ThisShouldNeverHappen
         if len(ast) == 1:
             tree =  build_tree(ast[0],**kwargs)
         else:
             # TODO Move this to pre-processor
+            print(len(ast))
             while len(ast)>2:
                 ast = [p for p in pair_up(ast)]
             ast = [pad_tree] + ast
@@ -233,13 +272,15 @@ def compile(text,null_trees=False):
     ''' Compile text into trees '''
     # Lex
     trees = split_into_trees(text)
-    asts = [split_into_subtrees(tree) for tree in trees]
+    ast = [split_into_subtrees(tree) for tree in trees]
     
     # Pre-process
-    asts = expand_all_stings(asts) # Expans psll strings
-    
+    ast = expand_all_stings(ast) # Expans psll strings
+    ast = expand_overful_brackets(ast)
+    ast = fill_in_empty_trees(ast)
+
     # Build
-    trees = [build_tree(ast,null_trees=null_trees) for ast in asts]
+    trees = [build_tree(a,null_trees=null_trees) for a in ast]
     program = trees[0]
     for tree in trees[1:]:
         program += tree
@@ -265,15 +306,20 @@ def main(args):
     text = readfile(input)
     if verbose: print('Reduced source:',text)
     
-    space = '.' if args.dot_spaces else ' '
-    program = compile(text,space=space,null_trees=args.null_trees)
+    program = compile(text,null_trees=args.null_trees)
 
     if verbose: print('Pyramid scheme:',program,sep='\n')
     
     if output:
         with open(output,'w') as f:
             f.write(program)
-            
+
+# if __name__ == "__main__":
+#     ast = [[['hi','1','bla',[''],''],'blah','hi','hi'],'']
+#     ast = expand_overful_brackets(ast)
+#     ast = fill_in_empty_trees(ast)
+#     print(ast)
+
 if __name__ == "__main__":
 
     import argparse
