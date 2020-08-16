@@ -112,14 +112,6 @@ def split_into_subtrees(line):
 #                                                                                                     
 #=====================================================================================================
 
-def expand_string_to_tree(string):
-    ''' Expand psll string to an appropriate tree '''
-    tree = [];
-    for character in string[1:-1]:
-        subtree = ['chr', str(ord(character))]
-        tree = subtree if not tree else ['+', tree, subtree]
-    return tree
-
 def tree_traversal(ast, str_fun=None, list_fun=None):
     ''' Walk through the abstract syntax tree and apply appropriate functions '''
     ast2 = []
@@ -133,11 +125,20 @@ def tree_traversal(ast, str_fun=None, list_fun=None):
             raise TypeError
     return ast2
 
-def expand_all_stings(ast):
-    ''' Expand all the psll string objects into pyramid scheme trees '''
-    is_psll_string = lambda node: isinstance(node,str) and re.match('(\'.*\'|".*")',node)
-    str_fun = lambda node: expand_string_to_tree(node) if is_psll_string(node) else node
-    return tree_traversal(ast,str_fun=str_fun)
+def expand_sting_literals(ast):
+    ''' Expand all the psll string literals objects into pyramid scheme trees '''
+    
+    def expand(string):
+        if re.match('(\'.*\'|".*")',string):
+            tree = []
+            for character in string[1:-1]:
+                subtree = ['chr', str(ord(character))]
+                tree = subtree if not tree else ['+', tree, subtree]
+            return tree
+        else:
+            return string
+
+    return tree_traversal(ast,str_fun=expand)
 
 def pair_up(iterable):
     ''' Pair up elements in the array '''
@@ -146,14 +147,27 @@ def pair_up(iterable):
         value = [j,k] if k else j
         yield value
 
-def expand_overful_brackets(ast):
+# def expand_overfull_brackets(ast):
+#     ''' Recursively expand lists of many lists into lists of length 2 '''
+
+#     def overful_expander(node):
+#         if all(map(lambda x: isinstance(x,list),node)):
+#             while len(node)>2:
+#                 node = [p for p in pair_up(node)]
+#         elif len(node)>3:
+#             raise PsllSyntaxError(f'Invalid bracket structure. Can only expand lists of lists. Node = \'{node}\'')
+#         return node
+        
+#     ast = tree_traversal(ast,list_fun=overful_expander)
+
+def expand_overfull_brackets(ast):
     ''' Recursively expand lists of many lists into lists of length 2 '''
     ast2 = []
     for node in ast:
         if isinstance(node,str):
             ast2.append(node)
         elif isinstance(node,list):
-            node = expand_overful_brackets(node)
+            node = expand_overfull_brackets(node)
             if all(map(lambda x: isinstance(x,list),node)):
                 while len(node)>2:
                     node = [p for p in pair_up(node)]
@@ -237,8 +251,8 @@ def compile(text):
     ast = [split_into_subtrees(tree) for tree in trees]
     
     # Pre-process
-    ast = expand_all_stings(ast)
-    ast = expand_overful_brackets(ast)
+    ast = expand_sting_literals(ast)
+    ast = expand_overfull_brackets(ast)
     ast = fill_in_empty_trees(ast)
 
     # Build
