@@ -129,12 +129,15 @@ def expand_sting_literals(ast):
     ''' Expand all the psll string literals objects into pyramid scheme trees '''
     
     def expand(string):
-        if re.match('(\'.*\'|".*")',string):
+        if re.match('(\'.+\'|".+")',string):
             tree = []
             for character in string[1:-1]:
                 subtree = ['chr', str(ord(character))]
                 tree = subtree if not tree else ['+', tree, subtree]
             return tree
+        elif re.match('(\'\'|"")',string):
+            # TODO Is there a more robust way of making an empty string in pyramid scheme??
+            return ['eps'] # 'eps' is an empty string
         else:
             return string
 
