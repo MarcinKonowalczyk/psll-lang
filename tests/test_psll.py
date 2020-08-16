@@ -218,7 +218,7 @@ class TreeTraversal(unittest.TestCase,MetaTests):
         ['Quick',[['brown','fox'],['jumped',[('over',)]],'a'],['lazy'],'dog']]
         self.syntax_error_test(trees,psll.tree_traversal,TypeError)
 
-class StingExpansion(unittest.TestCase):
+class StingExpansion(unittest.TestCase,MetaTests):
 
     def test_string_expansion(self):
         ''' > Make sure the prompt is expanded '''
@@ -228,6 +228,20 @@ class StingExpansion(unittest.TestCase):
                 ast = [f'"{prompt}"']
                 est = psll.expand_sting_literals([f'"{prompt}"'])
                 self.assertGreater(depth(est),depth(ast))
+
+    def test_empty(self):
+        ''' > Empty string expands to 'eps' '''
+        target = [['eps']]
+        for quote in '\'"':
+            tree = [f'{quote*2}']
+            with self.subTest(tree=tree):
+                self.assertEqual(psll.expand_sting_literals(tree),target)
+
+    def test_single_char(self):
+        ''' > Expand single character strings '''
+        trees = [[f'"{c}"'] for c in ascii_letters]
+        targets = [[['chr',f'{str(ord(c))}']] for c in ascii_letters]
+        self.paired_test(trees,targets,psll.expand_sting_literals)
 
     def test_double_quote(self):
         ''' > Make sure the " sign is *not* is expanded '''
