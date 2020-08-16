@@ -1,7 +1,7 @@
 import unittest
 
 from string import ascii_letters
-from random import choice
+import random
 from itertools import product, permutations
 
 # Add '.' to path so running this file by itself also works
@@ -12,10 +12,21 @@ import psll
 
 from contextlib import contextmanager
 
-random_string = lambda N: ''.join(choice(ascii_letters) for _ in range(N)) 
+random_string = lambda N: ''.join(random.choice(ascii_letters) for _ in range(N)) 
+
+def random_tree(max_depth=10,str_prob=0.6):
+    ''' Make up a random tree '''
+    ast = [random_string(random.randrange(4))]
+    for _ in range(2):
+        if random.random()<str_prob or max_depth==1:
+            node = random_string(random.randrange(4))
+        else:
+            node = random_tree(max_depth=max_depth-1)
+        ast.append(node)
+    return ast
 
 def depth(tree):
-    ''' Calc the depth of a tree '''
+    ''' Calculate the depth of a tree '''
     if isinstance(tree,str):
         return 0
     elif isinstance(tree,list):
@@ -167,6 +178,52 @@ class Split(unittest.TestCase,MetaTests):
 #                                                                                                     
 #=====================================================================================================
 
+class TreeTraversal(unittest.TestCase,MetaTests):
+
+    def test_string_fun(self):
+        ''' Test that the string function is applied a correct number of times '''
+        trees = [['a'],['a','b'],['a','b','c'],
+        ['Quick',[['brown','fox'],['jumped',[['over']]],'a'],['lazy'],'dog']]
+        counts = [1,2,3,8]
+
+        def counter(node):
+            global count
+            count += 1
+            return node
+
+        def count_strings(tree):
+            global count
+            count = 0
+            psll.tree_traversal(tree,str_fun=counter)
+            return count
+        
+        self.paired_test(trees,counts,count_strings)
+
+    def test_list_fun(self):
+        ''' Test that the list function is applied a correct number of times '''
+        trees = [['a'],['a','b'],['a','b','c'],
+        ['Quick',[['brown','fox'],['jumped',[['over']]],'a'],['lazy'],'dog']]
+        counts = [0,0,0,6]
+
+        def counter(node):
+            global count
+            count += 1
+            return node
+
+        def count_lists(tree):
+            global count
+            count = 0
+            psll.tree_traversal(tree,list_fun=counter)
+            return count
+        
+        self.paired_test(trees,counts,count_lists)
+
+    def test_tyep_error(self):
+        ''' All elements of the tree must be strings or other trees '''
+        trees = [[1,'int'],[set(),'set'],[{},'dict'],[(),'tuple'],
+        ['Quick',[['brown','fox'],['jumped',[('over',)]],'a'],['lazy'],'dog']]
+        self.syntax_error_test(trees,psll.tree_traversal,TypeError)
+
 class StingExpansion(unittest.TestCase):
 
     def test_string_expansion(self):
@@ -186,18 +243,28 @@ class StingExpansion(unittest.TestCase):
 
     def test_quote_combinations(self):
         ''' > Expand some more strings as subtrees '''
-        trees1 = [['.hi.'],['out','.hi.'],['.one.','.two.'],
+        trees = [['.hi.'],['out','.hi.'],['.one.','.two.'],
             ['set','a','.hello.'],['set','.a.','hello'],
             ['.set.','a','hello']]
-        for quote,ast in product('"\'',trees1):
+        for quote,ast in product('"\'',trees):
             ast = [t.replace('.',quote) for t in ast]
             with self.subTest(ast=ast):
                 est = psll.expand_all_stings(ast)
                 self.assertGreater(depth(est),depth(ast))
+    
+    def test_mixed_quotes(self):
+        ''' > Mix correct quote pairs in one tree '''
         ast = ['"one"','\'two\'']
-        with self.subTest(ast=ast):
-            est = psll.expand_all_stings(ast)
-            self.assertGreater(depth(est),depth(ast))
+        est = psll.expand_all_stings(ast)
+        self.assertGreater(depth(est),depth(ast))
+    
+    def test_nested(self):
+        ''' > Expand strings in nested trees '''
+        trees = [[['\'hi\'']],[['"hi"']],['set','a',['+','a','\'hi\'']],['set','a',['+','a','"hi"']]]
+        for ast in trees:
+            with self.subTest(ast=ast):
+                est = psll.expand_all_stings(ast)
+                self.assertGreater(depth(est),depth(ast))
 
 #=======================================================================
 #                                                                       

@@ -112,12 +112,6 @@ def split_into_subtrees(line):
 #                                                                                                     
 #=====================================================================================================
 
-def is_psll_string(x):
-    ''' Check whether x is a psll string '''
-    if not isinstance(x,str):
-        return false # Is a tree
-    return re.match('(\'.*\'|".*")',x)
-
 def expand_string_to_tree(string):
     ''' Expand psll string to an appropriate tree '''
     tree = [];
@@ -126,17 +120,24 @@ def expand_string_to_tree(string):
         tree = subtree if not tree else ['+', tree, subtree]
     return tree
 
-def expand_all_stings(ast):
-    ''' Walk through the abstract syntax tree and expand all the psll string objects into pyramid scheme trees '''
+def tree_traversal(ast, str_fun=None, list_fun=None):
+    ''' Walk through the abstract syntax tree and apply appropriate functions '''
     ast2 = []
     for node in ast:
         if isinstance(node,str):
-            ast2.append(expand_string_to_tree(node) if is_psll_string(node) else node)
+            ast2.append(str_fun(node) if str_fun else node)
         elif isinstance(node,list):
-            ast2.append(expand_all_stings(node))
+            node = tree_traversal(node, str_fun=str_fun, list_fun=list_fun)
+            ast2.append(list_fun(node) if list_fun else node)
         else:
             raise TypeError
     return ast2
+
+def expand_all_stings(ast):
+    ''' Expand all the psll string objects into pyramid scheme trees '''
+    is_psll_string = lambda node: isinstance(node,str) and re.match('(\'.*\'|".*")',node)
+    str_fun = lambda node: expand_string_to_tree(node) if is_psll_string(node) else node
+    return tree_traversal(ast,str_fun=str_fun)
 
 def pair_up(iterable):
     ''' Pair up elements in the array '''
