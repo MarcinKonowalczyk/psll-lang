@@ -102,6 +102,12 @@ def split_into_subtrees(line):
 
     return tree
 
+def lex(text):
+    ''' Compose a basic abstract syntax tree from the reduced source '''
+    trees = split_into_trees(text)
+    ast = [split_into_subtrees(tree) for tree in trees]
+    return ast
+
 #=====================================================================================================
 #                                                                                                     
 #  #####   #####    #####            #####   #####     #####    ####                                
@@ -122,7 +128,7 @@ def tree_traversal(ast, str_fun=None, list_fun=None):
             node = tree_traversal(node, str_fun=str_fun, list_fun=list_fun)
             ast2.append(list_fun(node) if list_fun else node)
         else:
-            raise TypeError
+            raise TypeError(f'The abstract syntax tree can contain only strins or other, smaller, trees, not {type(node)}')
     return ast2
 
 def expand_sting_literals(ast):
@@ -229,12 +235,8 @@ def build_tree(ast):
 #                                                                                         
 #=========================================================================================
 
-def compile(text):
-    ''' Compile text into trees '''
-    # Lex
-    trees = split_into_trees(text)
-    ast = [split_into_subtrees(tree) for tree in trees]
-    
+def compile(ast):
+    ''' Compile text into trees '''    
     # Pre-process
     ast = expand_sting_literals(ast)
     ast = expand_overfull_brackets(ast)
@@ -246,7 +248,7 @@ def compile(text):
     for tree in trees[1:]:
         program += tree
 
-    # Post-processing
+    # Post-process
     program = str(program)
     program = '\n'.join(re.sub('\s*(?=$)','',line[1:]) for line in program.split('\n'))
     # Regex '^(.*?)\s*$' would probably work too
@@ -261,7 +263,7 @@ def main(args):
     text = readfile(args.input)
     if args.verbose: print('Reduced source:',text)
     
-    program = compile(text)
+    program = compile(lex(text))
     if args.verbose: print('Pyramid scheme:',program,sep='\n')
     
     if args.output:

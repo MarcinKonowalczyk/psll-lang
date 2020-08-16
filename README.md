@@ -139,7 +139,8 @@ This is not a real-purpose language. In this section the 'optimisation' refers t
 - [ ] Easier to use installation. Maybe a make-script which makes a symlink in the correct place...?
 - [ ] Improve test coverage
   - [x] Make the coverage count only the tests for that file
- - [ ] Have a look at (optionally!) using `anytree` package...?
+- [ ] Have a look at (optionally!) using `anytree` package...?
+- [ ] Make PsllSyntaxError class do more?
 
 ## Bugs
 - [x] `compact` option breaks when `N`th triangle is wider than all the `1..N-1`s.
