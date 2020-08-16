@@ -147,36 +147,18 @@ def pair_up(iterable):
         value = [j,k] if k else j
         yield value
 
-# def expand_overfull_brackets(ast):
-#     ''' Recursively expand lists of many lists into lists of length 2 '''
-
-#     def overful_expander(node):
-#         if all(map(lambda x: isinstance(x,list),node)):
-#             while len(node)>2:
-#                 node = [p for p in pair_up(node)]
-#         elif len(node)>3:
-#             raise PsllSyntaxError(f'Invalid bracket structure. Can only expand lists of lists. Node = \'{node}\'')
-#         return node
-        
-#     ast = tree_traversal(ast,list_fun=overful_expander)
-
 def expand_overfull_brackets(ast):
     ''' Recursively expand lists of many lists into lists of length 2 '''
-    ast2 = []
-    for node in ast:
-        if isinstance(node,str):
-            ast2.append(node)
-        elif isinstance(node,list):
-            node = expand_overfull_brackets(node)
-            if all(map(lambda x: isinstance(x,list),node)):
-                while len(node)>2:
-                    node = [p for p in pair_up(node)]
-            elif len(node)>3:
-                raise PsllSyntaxError(f'Invalid bracket structure. Can only expand lists of lists. Node = \'{node}\'')
-            ast2.append(node)
-        else:
-            raise TypeError
-    return ast2
+
+    def expander(node):
+        if all(map(lambda x: isinstance(x,list),node)):
+            while len(node)>2:
+                node = [p for p in pair_up(node)]
+        elif len(node)>3:
+            raise PsllSyntaxError(f'Invalid bracket structure. Can only expand lists of lists. Node = \'{node}\'')
+        return node
+        
+    return tree_traversal(ast,list_fun=expander)
 
 def fill_in_empty_trees(ast):
     ''' Fill in the implicit empty strings in brackets with only lists '''
