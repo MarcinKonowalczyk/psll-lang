@@ -3,6 +3,10 @@
 import re
 from itertools import zip_longest
 
+from pitchforked import pitchforked
+from itertools import chain
+from functools import partial
+
 from tree_repr import Pyramid
 
 SPACE = ' '
@@ -255,6 +259,39 @@ def compile(ast):
 
     return program
 
+#===============================================================================================================================
+#                                                                                                                               
+#   #####   #####   ######  ##  ###    ###  ##   ####    ###    ######  ##   #####   ##     ##                                
+#  ##   ##  ##  ##    ##    ##  ## #  # ##  ##  ##      ## ##     ##    ##  ##   ##  ####   ##                                
+#  ##   ##  #####     ##    ##  ##  ##  ##  ##   ###   ##   ##    ##    ##  ##   ##  ##  ## ##                                
+#  ##   ##  ##        ##    ##  ##      ##  ##     ##  #######    ##    ##  ##   ##  ##    ###                                
+#   #####   ##        ##    ##  ##      ##  ##  ####   ##   ##    ##    ##   #####   ##     ##                                
+#                                                                                                                               
+#===============================================================================================================================
+
+def root_level_bracket_optimisation(ast):
+    ''' '''
+    
+    every_partition = lambda seq: chain(*map(
+        partial(pitchforked,seq),range(2,len(seq))))
+
+    while True:
+        N = len(compile(ast))
+        changed = False
+        for pre,hay,suf in every_partition(ast):
+            new_ast = list(pre) + [list(hay)] + list(suf);
+            M = len(compile(new_ast))
+            if M < N:
+                print(f'New ast partitioning found. Old len: {N}, New len: {M}')
+                changed = True
+                ast = new_ast
+                break
+        if not changed:
+            break
+
+    return ast
+
+
 def main(args):
     ''' Main function for the command-line operation '''
     if args.verbose: print('Input filename:',args.input)
@@ -263,7 +300,11 @@ def main(args):
     text = readfile(args.input)
     if args.verbose: print('Reduced source:',text)
     
-    program = compile(lex(text))
+    ast = lex(text)
+    if args.root_level_optimisation:
+        ast = root_level_bracket_optimisation(ast)
+
+    program = compile(ast)
     if args.verbose: print('Pyramid scheme:',program,sep='\n')
     
     if args.output:
@@ -309,11 +350,12 @@ if __name__ == "__main__":
     parser.add_argument('-f', '--force', action='store_true',
         help='Force file overwrite.')
     
+    parser.add_argument('-rlo','--root-level-optimisation', action='store_true',
+        help='Minimise the size of the resulting code by inserting blank pyramids at the root level of the scheme.')
+    
     # Compiler options
     # parser.add_argument('-nt','--null-trees', action='store_true',
     #     help='Use null (height 0) trees.')
-    # parser.add_argument('-nc','--no-compact', action='store_true',
-    #     help="Don't compact the output trees")
     # parser.add_argument('--dot-spaces', action='store_true',
     #     help='Render spaces as dots')
 
