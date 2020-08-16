@@ -6,10 +6,10 @@ A lisp-like language which compiles to [pyramid scheme](https://github.com/Conor
 
 ## Installation
 
-Make  `ll2pyra` executable:
+Make  `psll.py` executable:
 
 ```
-chmod u+x ll2pyra.py
+chmod u+x psll.py
 ```
 or use the `psll` bash script (which you might want to edit to make it point to the correct files) which compiles and runs a program.
 
@@ -17,12 +17,12 @@ or use the `psll` bash script (which you might want to edit to make it point to 
 
 Read the help:
 ```
-./ll2pyra.py -h
+./psll.py -h
 ```
 
 Verbose output and save to the file:
 ```
-./ll2pyra.py  array_sum_golf.psll -v -o
+./psll.py ./examples/bubble_sort.psll -o -v
 ```
 
 ## Examples
@@ -32,33 +32,33 @@ The following is an example lisp-like pyramid scheme which counts the number of 
 N.b. C# highlighting seems to look fine for most intensions and purposes (at lest in vscode). Lisp-highlighting somehow looks worse in my opinion.
 
 ```cs
-// Count the number of input arguments
-
-(set nil (arg 99)) // Make nil
+// Make nil by asking for the 999'th input argument
+(set nil (arg 999))
 
 // Count the number of input arguments - n
 (set nargin 0)
-(do
-    cond
-    (
-        (set nargin (+ nargin 1))
-        (set cond (! (= (arg nargin) nil)))
-    )
-)
+(do cond (
+    (set nargin (+ nargin 1))
+    (set cond (! (= (arg nargin) nil)))
+))
 (set nargin (- nargin 1))
 
-// Print 'nargin: #'
-((out (chr 110) (chr 97)) (out (chr 114) (chr 103)))
-((out (chr 105) (chr 110)) (out (chr 58) (chr 32)))
-(out nargin)
+(out "nargin: " nargin) // Print
 ```
 
 It can be compiled and run as follows:
 
 ```
-./ll2pyra.py nargin_counter.psll -o -f
-ruby ./Pyramid-Scheme/pyra.rb nargin_counter.pyra 4 3 5 2 4
+./psll.py ./examples/nargin_counter.psll -o -f
+ruby ./Pyramid-Scheme/pyra.rb ./exmaples/nargin_counter.pyra 4 3 5 2 4
 ```
+
+or with the `psll` bash script:
+
+```
+./psll ./examples/nargin_counter.psll 4 3 5 2 4
+```
+
 The output is `nargin: 5`
 
 ## Finer points
@@ -87,6 +87,7 @@ will get interpreted as:
   (out 5)
 )
 ```
+
 The elements are taken from the list pairwise, and put into sub-lists recursively, until the root list has length of 2 or less. Because of order of subtree evaluation in pyramid scheme, this preserves the execution order. Note that arbitrary indentation, and mid-line comments are allowed.
 
 This feature is useful, for example, for keeping tidy the body of a for-loop:
@@ -124,14 +125,15 @@ This is not a real-purpose language. In this section the 'optimisation' refers t
   - [x] Subtree packing <s><- !!! (work on this next!)</s>
   - [ ] Left/right subnode packing
     - [ ] Support for left/right singleton children
-  - [ ] Packing with null-tree snakes
+  - [x] <s>Packing with null-tree snakes</s> kindof
+  - [ ] Better (non-greedy?) optimisation
   - [ ] Variable name optimisation
     - [ ] Automatic shortening
     - [x] Packing into the upper parts of the triangles too
-- [ ] Pre-compile code optimisations?? <s>Not sure what that would be though, tbh.</s>
+- [x] Pre-compile code optimisations?? <s>Not sure what that would be though, tbh.</s>
   - [x] Move string expansion to pre-proc
-  - [ ] Move binary bracket expansion to pre-proc
-  - [ ] Move null-trees to pre-proc <s><- (work on this next, because it's broken...)</s>
+  - [x] Move binary bracket expansion to pre-proc
+  - [x] Move null-trees to pre-proc <s><- (work on this next, because it's broken...)</s>
 - [x] Syntactic sugar?
   - [x] Simpler writing of strings
   - [x] Simpler writing of nested nil pyramids
@@ -141,8 +143,11 @@ This is not a real-purpose language. In this section the 'optimisation' refers t
   - [x] Make the coverage count only the tests for that file
 - [ ] Have a look at (optionally!) using `anytree` package...?
 - [ ] Make PsllSyntaxError class do more?
+- [ ] Add testing psll bash script to tests (and somehow coverage?)
+- [ ] Add option to force a node with one child to make it a right child. Maybe will need to add None (or None-like) values to the abstract syntax tree representation
+  - [ ] Therefore optimise `chr` in string expansion
 
 ## Bugs
-- [x] `compact` option breaks when `N`th triangle is wider than all the `1..N-1`s.
-  - [ ] `compact` option does nothing
+- [x] <s>`compact` option breaks when `N`th triangle is wider than all the `1..N-1`s.</s>
+- [x] `compact` option does nothing
 - [ ] Strings do not support escape characters (And maybe they never will! Ha! They're just sugar anyway...)
