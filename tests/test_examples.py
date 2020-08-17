@@ -8,11 +8,13 @@ shell = partial(subprocess.call,shell=True)
 
 pyra_path = os.getcwd() + '/Pyramid-Scheme/pyra.rb'
 pyra_exists = exists(pyra_path)
-print('pyra.rb path:', pyra_path, pyra_exists)
+print('pyra.rb path:', pyra_path)
+print('exists:', pyra_exists)
 
 ruby_path = os.popen('which ruby').read().replace('\n','')
 ruby_exists = exists(ruby_path)
-print('ruby path:', ruby_path, ruby_exists)
+print('ruby path:', ruby_path)
+print('exists:', ruby_exists)
 
 import unittest
 
@@ -52,6 +54,7 @@ class MetaTest:
         if exists(pyra_filename):
             shell(f'python psll.py {self.filename} -o -f')
         
+        # TODO What if the script takes a command line input? (Add timeout?)
         # TODO Capture stdout better
         command = f'{ruby_path} {pyra_path} {pyra_filename}'
         if shell(command) != 0:
