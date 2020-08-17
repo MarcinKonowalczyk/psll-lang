@@ -8,9 +8,11 @@ shell = partial(subprocess.call,shell=True)
 
 pyra_path = '../Pyramid-Scheme/pyra.rb'
 pyra_exists = exists(pyra_path)
+print(pyra_path, pyra_exists)
 
 ruby_path = os.popen('which ruby').read().replace('\n','')
 ruby_exists = exists(ruby_path)
+print(ruby_path, ruby_exists)
 
 import unittest
 
@@ -27,11 +29,7 @@ def skipUnlessExampleExists(filename):
             return unittest.skip(reason)(obj)
     return obj_wrapper
 
-def skipUnlessRuby(obj):
-    return unittest.skipUnless(ruby_exists,'No ruby found')(obj)
-
 # TODO This is somewhat messy with all those paths...
-@unittest.skipUnless(pyra_exists,'No pyra.rb found')
 class MetaTest:
 
     def test_compiles(self):
@@ -46,7 +44,8 @@ class MetaTest:
             exists(pyra_filename),
             '.pyra file not generated')
     
-    @skipUnlessRuby
+    @unittest.skipUnless(ruby_exists,'No ruby found')
+    @unittest.skipUnless(pyra_exists,'No pyra.rb found')
     def test_runs(self):
         path, ext = splitext(self.filename)
         pyra_filename = path + '.pyra'
