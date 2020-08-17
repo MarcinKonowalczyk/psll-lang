@@ -9,7 +9,15 @@ python:
 
 install:
   - pip install coveralls
-  
+
+before_script:
+  - ls -lh
+  - ls Pyramid-Scheme/ -lh
+  - git submodule status
+  - git submodule update --init
+  - ls -lh
+  - ls Pyramid-Scheme/ -lh
+
 script:
   - python -c "import sys; print(sys.version, '\n', sys.prefix)"
   - bash run_coverage # <- This runs tests for the main files too
