@@ -6,13 +6,13 @@ import subprocess
 from functools import partial
 shell = partial(subprocess.call,shell=True)
 
-pyra_path = '../Pyramid-Scheme/pyra.rb'
+pyra_path = os.getcwd() + '/Pyramid-Scheme/pyra.rb'
 pyra_exists = exists(pyra_path)
-print(pyra_path, pyra_exists)
+print('pyra.rb path:', pyra_path, pyra_exists)
 
 ruby_path = os.popen('which ruby').read().replace('\n','')
 ruby_exists = exists(ruby_path)
-print(ruby_path, ruby_exists)
+print('ruby path:', ruby_path, ruby_exists)
 
 import unittest
 
