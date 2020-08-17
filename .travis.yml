@@ -12,8 +12,8 @@ install:
   
 script:
   - python -c "import sys; print(sys.version, '\n', sys.prefix)"
-  # - coverage run -m unittest discover tests -v
-  - bash run_coverage
+  - bash run_coverage # <- This runs tests for the main files too
+  - python -m unittest discover -p "test_examples.py" tests -v
 
 after_success:
   - echo == ALL TESTS PASSED ==
