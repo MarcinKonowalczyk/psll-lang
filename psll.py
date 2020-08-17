@@ -269,7 +269,7 @@ def compile(ast):
 #                                                                                                                               
 #===============================================================================================================================
 
-def root_level_bracket_optimisation(ast):
+def greedy_optimisation(ast):
     ''' '''
     
     every_partition = lambda seq: chain(*map(
@@ -277,16 +277,14 @@ def root_level_bracket_optimisation(ast):
 
     while True:
         N = len(compile(ast))
-        changed = False
         for pre,hay,suf in every_partition(ast):
             new_ast = list(pre) + [list(hay)] + list(suf);
             M = len(compile(new_ast))
             if M < N:
                 print(f'New ast partitioning found. Old len: {N}, New len: {M}')
-                changed = True
                 ast = new_ast
                 break
-        if not changed:
+        else:
             break
 
     return ast
@@ -301,8 +299,8 @@ def main(args):
     if args.verbose: print('Reduced source:',text)
     
     ast = lex(text)
-    if args.root_level_optimisation:
-        ast = root_level_bracket_optimisation(ast)
+    if args.greedy_optimisation:
+        ast = greedy_optimisation(ast)
 
     program = compile(ast)
     if args.verbose: print('Pyramid scheme:',program,sep='\n')
@@ -344,14 +342,14 @@ if __name__ == "__main__":
         help='Input file written in the pyramid scheme (lisp (like)) syntax, with the .psll expension.')
     parser.add_argument('-o', dest='output', required=False,
         metavar='output', nargs='?', default = None, const = ' ',
-        help='Output pyramid scheme. If "output" is supplied, the pyramid scheme is saved to that filename. If no "output" is supplied (aka just the  -o option) the pyramid scheme is saved to the filename matching the input filename, with the .pyra extension.')
+        help='Output pyramid scheme. If "output" is supplied, the pyramid scheme is saved to that filename. If no "output" is supplied (aka just the -o option) the pyramid scheme is saved to the filename matching the input filename, with the .pyra extension.')
     parser.add_argument('-v', '--verbose', action='store_true',
         help='Run in the verbose mode.')
     parser.add_argument('-f', '--force', action='store_true',
         help='Force file overwrite.')
     
-    parser.add_argument('-rlo','--root-level-optimisation', action='store_true',
-        help='Minimise the size of the resulting code by inserting blank pyramids at the root level of the scheme.')
+    parser.add_argument('-go','--greedy-optimisation', action='store_true',
+        help='Minimise the size of the resulting code by attempting blank pyramid inserts. This is a greedy strategy which inserts the pyramid at the very first place it finds which is beneficial. This tends to result in tall source code.')
     
     # Compiler options
     # parser.add_argument('-nt','--null-trees', action='store_true',
