@@ -269,8 +269,8 @@ def compile(ast):
 #                                                                                                                               
 #===============================================================================================================================
 
-def greedy_optimisation(ast):
-    ''' '''
+def greedy_optimisation(ast, verbose=True):
+    ''' Greedily insert empty trees into the abstract syntax tree '''
     
     every_partition = lambda seq: chain(*map(
         partial(pitchforked,seq),range(2,len(seq))))
@@ -278,15 +278,15 @@ def greedy_optimisation(ast):
     while True:
         N = len(compile(ast))
         for pre,hay,suf in every_partition(ast):
-            new_ast = list(pre) + [list(hay)] + list(suf);
+            # new_ast = list(pre) + [list(hay)] + list(suf);
+            new_ast = [*pre,[*hay],*suf]
             M = len(compile(new_ast))
             if M < N:
-                print(f'New ast partitioning found. Old len: {N}, New len: {M}')
+                if verbose: print(f'New ast partitioning found. Old len: {N}, New len: {M}')
                 ast = new_ast
-                break
+                break # Accept the new ast
         else:
-            break
-
+            break # Break from the while loop
     return ast
 
 
