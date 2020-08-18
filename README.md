@@ -122,30 +122,40 @@ Psll expands a string literal into such construct, so its enough to write:
 This is not a real-purpose language. In this section the 'optimisation' refers to obtaining nicer-looking and more compact pyramids, *not* not efficient code.
 
 - [ ] More compiler optimisations
-  - [x] Subtree packing <s><- !!! (work on this next!)</s>
-  - [ ] Left/right subnode packing
-    - [ ] Support for left/right singleton children
+  - [x] !! Subtree packing <s><- !!! (work on this next!)</s>
   - [x] <s>Packing with null-tree snakes</s> kindof
   - [ ] Better (non-greedy?) optimisation
   - [ ] Variable name optimisation
     - [ ] Automatic shortening
-    - [x] Packing into the upper parts of the triangles too
-- [x] Pre-compile code optimisations?? <s>Not sure what that would be though, tbh.</s>
+    - [x] Packing into the upper parts of the triangles
+- [x] ?? Pre-compile code optimisations <s>Not sure what that would be though, tbh.</s>
   - [x] Move string expansion to pre-proc
   - [x] Move binary bracket expansion to pre-proc
   - [x] Move null-trees to pre-proc <s><- (work on this next, because it's broken...)</s>
-- [x] Syntactic sugar?
+- [x] ?? Syntactic sugar
   - [x] Simpler writing of strings
+    - [ ] Add support for escape characters
   - [x] Simpler writing of nested nil pyramids
+  - [ ] `def` keyword
+  - [ ] ?? `_` keyword
+  - [ ] ?? Arrays / Linked lists
 - [x] Compiler optimisation takes a long time
-- [ ] Easier to use installation. Maybe a make-script which makes a symlink in the correct place...?
+- [ ] ?? Easier to use installation. Maybe a make-script which makes a symlink in the correct place...
 - [ ] Improve test coverage
   - [x] Make the coverage count only the tests for that file
-- [ ] Have a look at (optionally!) using `anytree` package...?
-- [ ] Make PsllSyntaxError class do more?
-- [ ] Add testing psll bash script to tests (and somehow coverage?)
-- [ ] Add option to force a node with one child to make it a right child. Maybe will need to add None (or None-like) values to the abstract syntax tree representation
+- [ ] ?? Tree rendering
+  - [ ] ?? Have a look at (optionally!) using `anytree` package for visualisation
+  - [ ] ?? Ascii art to LaTeX
+- [ ] ?? Make PsllSyntaxError class do more
+  - [ ] ?? Backtrace
+- [x] Add testing psll bash script to tests
+  - [ ] ?? And somehow coverage
+- [ ] Add option to force a node with one child to make it a right child
+  - [ ] ?? Add None (or None-like) values to the abstract syntax tree representation
+  - [ ] ?? Interpret `_` as not-a-tree
   - [ ] Therefore optimise `chr` in string expansion
+  - [ ] Also add this to the snake optimiser
+- [ ] !! Add memoisation to `build_tree`
 
 ## Bugs
 - [x] <s>`compact` option breaks when `N`th triangle is wider than all the `1..N-1`s.</s>

@@ -11,7 +11,7 @@ install:
   - pip install coveralls
 
 before_script:
-  - git submodule update --init
+  - git submodule update --init # Make sure Pyramid-Scheme submodule is up to date
   - ls -lh
   - ls Pyramid-Scheme/ -lh
   - python -c "import sys; print(sys.version, '\n', sys.prefix)"

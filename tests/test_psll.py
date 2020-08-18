@@ -9,6 +9,7 @@ import os, sys
 sys.path.append(os.path.realpath('.'))
 
 import psll
+from psll import depth
 
 from contextlib import contextmanager
 
@@ -24,15 +25,6 @@ def random_tree(max_depth=10,str_prob=0.6):
             node = random_tree(max_depth=max_depth-1)
         ast.append(node)
     return ast
-
-def depth(tree):
-    ''' Calculate the depth of a tree '''
-    if isinstance(tree,str):
-        return 0
-    elif isinstance(tree,list):
-        return max(depth(node) for node in tree) + 1
-    else:
-        raise TypeError
 
 @contextmanager
 def psll_file(content,filename=None):

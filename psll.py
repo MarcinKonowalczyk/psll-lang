@@ -11,6 +11,18 @@ from tree_repr import Pyramid
 
 SPACE = ' '
 
+def depth(tree):
+    ''' Calculate the depth of a tree '''
+    if isinstance(tree,str):
+        return 0
+    elif isinstance(tree,list):
+        if len(tree)==0:
+            return 0
+        else:
+            return max(depth(node) for node in tree) + 1
+    else:
+        raise TypeError(f'The abstract syntax tree can contain only strins or other, smaller, trees, not {type(tree)}')
+
 class PsllSyntaxError(SyntaxError):
     pass
 
@@ -269,26 +281,68 @@ def compile(ast):
 #                                                                                                                               
 #===============================================================================================================================
 
-def greedy_optimisation(ast, verbose=True):
+def greedy_optimisation(ast, verbose=True,max_iter=None):
     ''' Greedily insert empty trees into the abstract syntax tree '''
     
     every_partition = lambda seq: chain(*map(
         partial(pitchforked,seq),range(2,len(seq))))
 
+    iter_count = 0
+    if verbose: print('Greedy tree optimisation')
     while True:
+        iter_count += 1
+        if max_iter and iter_count>max_iter:
+            break
+
         N = len(compile(ast))
         for pre,hay,suf in every_partition(ast):
-            # new_ast = list(pre) + [list(hay)] + list(suf);
             new_ast = [*pre,[*hay],*suf]
             M = len(compile(new_ast))
             if M < N:
-                if verbose: print(f'New ast partitioning found. Old len: {N}, New len: {M}')
+                if verbose: print(f'{iter_count} | Old len: {N} | New len: {M}')
                 ast = new_ast
                 break # Accept the new ast
         else:
             break # Break from the while loop
     return ast
 
+def repeat(func, n, arg):
+    if n < 0: raise ValueError
+    if n == 0: return arg
+    out = func(arg)
+    for _ in range(n-1):
+        out = func(out)
+    return out
+
+def singleton_optimisation(ast,verbose=True,max_iter=None):
+    '''  '''
+
+    # TODO Work In Progress
+    
+    iter_count = 0
+    if verbose: print('Singleton optimisation')
+    while True:
+        iter_count += 1
+        if max_iter and iter_count>max_iter:
+            break
+
+        N = len(compile(ast))
+        new_asts = []
+        for pre,hay,suf in chain(pitchforked(ast,1),pitchforked(ast,2)):
+            for d in range(1,10+1): # Add up to 5 levels of pyramids
+                new_hay = repeat(lambda x: [x],d,list(hay))
+                new_asts.append([*pre,[*new_hay],*suf])
+        lengths = list(len(compile(a)) for a in new_asts)
+        print('len:',len(lengths))
+        M, I = min((v,i) for (i,v) in enumerate(lengths))
+        if M < N:
+            if verbose:
+                print(f'{iter_count} | Old len: {N} | New len: {M} | Insert: {I+1}')
+            ast = new_asts[I]
+            # break # Accept the new ast
+        else:
+            break # Break from the while loop
+    return ast
 
 def main(args):
     ''' Main function for the command-line operation '''
@@ -299,8 +353,10 @@ def main(args):
     if args.verbose: print('Reduced source:',text)
     
     ast = lex(text)
+    if args.singleton_optimisation:
+        ast = singleton_optimisation(ast,max_iter=None)
     if args.greedy_optimisation:
-        ast = greedy_optimisation(ast)
+        ast = greedy_optimisation(ast,max_iter=2000)
 
     program = compile(ast)
     if args.verbose: print('Pyramid scheme:',program,sep='\n')
@@ -350,7 +406,8 @@ if __name__ == "__main__":
     
     parser.add_argument('-go','--greedy-optimisation', action='store_true',
         help='Minimise the size of the resulting code by attempting blank pyramid inserts. This is a greedy strategy which inserts the pyramid at the very first place it finds which is beneficial. This tends to result in tall source code.')
-    
+    parser.add_argument('-so','--singleton-optimisation', action='store_true',
+        help='Experimental')
     # Compiler options
     # parser.add_argument('-nt','--null-trees', action='store_true',
     #     help='Use null (height 0) trees.')
