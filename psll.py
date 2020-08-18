@@ -266,8 +266,7 @@ def compile(ast):
 
     # Post-process
     program = str(program)
-    program = '\n'.join(re.sub('\s*(?=$)','',line[1:]) for line in program.split('\n'))
-    # Regex '^(.*?)\s*$' would probably work too
+    program = '\n'.join(line[1:].rstrip() for line in program.split('\n'))
 
     return program
 
