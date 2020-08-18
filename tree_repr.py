@@ -358,41 +358,12 @@ class Tree(AbstractTree):
 #======================================================================
 
 if __name__ == '__main__':
-    # p1 = Tree.from_keyword('Quick brown fox jumped over a lazy god'*10)
-    # p1 = Tree.from_keyword('Quick brown fox jumped over a lazy god')
     p0 = Pyramid.from_text('')
     p1 = Pyramid.from_text('set')
-    p2 = Pyramid.from_text('Greetings traveller! Where goes thee this fine morning?'*3,remove_spaces=False)
-
-    # print(p0,p1,p2)
-    # p2 = Tree.from_text('Greetings traveller! Where goes thee this fine morning?')
-    # p2 = Tree.from_keyword('hello')
-    # print(p1 + p2 + p1 + p1 + p1 + p2)
-
-    # for j,k in product((p1,p2),repeat=2):
-        # print(j.toTree().add_side_by_side(k,min_width=10))
-    
+    text = 'Greetings traveller! Where goes thee this fine morning?'*3
+    p2 = Pyramid.from_text(text,remove_spaces=False)
     p3 = (p1+p1+p1)+p2
-    # p3 = (p1+p1+p1+p1+p1+p1)+(p2+p2+p1+p2)
-    # p3 = p1 + (None,p1)
-    # print(p3)
-    # print(p3+(p1,p2))
-
-    # for i,j,k,l,m in product((p1,p2),repeat=5):
-        # print(i + j + k + l + m)
-
+    
     for i,j,k in product((p0,p1,p2),repeat=3):
-    #     print(j + (k,None))
-    #     print(j + (None,k))
         print()
         print(i + (j,k))
-        # break
-
-
-    # print('\n'*10)
-    # text = ('','1','12','set','seto','hello','hellos','1234567','12345678','123456789','0123456789','Are you Arron Burr, Sir?')
-    # for t,mw in product(text,range(10)):
-    #     tree = Tree.from_text(t,min_width=mw)
-    #     print(f'text = {t} | mw = {mw} | actual = {len(tree[-1][1])}')
-    #     print(tree)
-    #     print()
