@@ -7,3 +7,4 @@ htmlcov
 .pytest_cache
 __pycache__
 tree_repr
+tictoc.py

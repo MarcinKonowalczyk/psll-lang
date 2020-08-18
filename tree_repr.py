@@ -121,6 +121,9 @@ class AbstractTree(ABC):
     def __setitem__(self,key,value):
         self.grid[key] = value
 
+    def __hash__(self):
+        return hash(tuple(self.grid)) # Trees hash the same if their grids are the same
+
 #==============================================================================================
 #                                                                                              
 #  #####   ##    ##  #####      ###    ###    ###  ##  ####                                  

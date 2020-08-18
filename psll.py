@@ -6,22 +6,24 @@ from itertools import zip_longest
 from pitchforked import pitchforked
 from itertools import chain
 from functools import partial
+from functools import lru_cache as cached
 
 from tree_repr import Pyramid
 
 SPACE = ' '
 
+# TODO Test depth
 def depth(tree):
     ''' Calculate the depth of a tree '''
     if isinstance(tree,str):
         return 0
-    elif isinstance(tree,list):
+    elif isinstance(tree,tuple):
         if len(tree)==0:
             return 0
         else:
             return max(depth(node) for node in tree) + 1
     else:
-        raise TypeError(f'The abstract syntax tree can contain only strins or other, smaller, trees, not {type(tree)}')
+        raise TypeError(f'The abstract syntax tree can contain only strings or other, smaller, trees, not {type(tree).__name__}')
 
 class PsllSyntaxError(SyntaxError):
     pass
@@ -66,8 +68,9 @@ def readfile(filename):
 #                                                             
 #=============================================================
 
-def split_into_trees(text):
-    ''' Split the text into major trees '''
+@cached(maxsize=1000)
+def split_into_lines(text):
+    ''' Split the reduced source into 1st-level brackets (aka major trees) '''
     # Split into lines at first level brackets
     count, last_count, last_break = (0,0,0)
     lines = []
@@ -87,7 +90,7 @@ def split_into_trees(text):
     if count != 0: # Check the final count is 0
         raise PsllSyntaxError('Invalid bracket parity.')
 
-    return lines
+    return tuple(lines)
 
 def split_into_subtrees(line):
     ''' Split each tree into subtrees '''
@@ -114,14 +117,11 @@ def split_into_subtrees(line):
             last_break = j+1
     
     # Recursively split parts of self 
-    tree = [split_into_subtrees(subtree) if re.match('\(.*\)',subtree) else subtree for subtree in tree]
-
-    return tree
+    return tuple(split_into_subtrees(subtree) if re.match('\(.*\)',subtree) else subtree for subtree in tree)
 
 def lex(text):
     ''' Compose a basic abstract syntax tree from the reduced source '''
-    trees = split_into_trees(text)
-    ast = [split_into_subtrees(tree) for tree in trees]
+    ast = tuple(split_into_subtrees(line) for line in split_into_lines(text))
     return ast
 
 #=====================================================================================================
@@ -134,71 +134,66 @@ def lex(text):
 #                                                                                                     
 #=====================================================================================================
 
-def tree_traversal(ast, str_fun=None, list_fun=None):
+def tree_traversal(ast, str_fun=None, tuple_fun=None):
     ''' Walk through the abstract syntax tree and apply appropriate functions '''
     ast2 = []
     for node in ast:
         if isinstance(node,str):
             ast2.append(str_fun(node) if str_fun else node)
-        elif isinstance(node,list):
-            node = tree_traversal(node, str_fun=str_fun, list_fun=list_fun)
-            ast2.append(list_fun(node) if list_fun else node)
+        elif isinstance(node,tuple):
+            node = tree_traversal(node, str_fun=str_fun, tuple_fun=tuple_fun)
+            ast2.append(tuple_fun(node) if tuple_fun else node)
         else:
-            raise TypeError(f'The abstract syntax tree can contain only strins or other, smaller, trees, not {type(node)}')
-    return ast2
+            raise TypeError(f'The abstract syntax tree can contain only strings or other, smaller, trees, not {type(node)}')
+    return tuple(ast2) # Return ast back as a tuple
 
 def expand_sting_literals(ast):
     ''' Expand all the psll string literals objects into pyramid scheme trees '''
     
     def expand(string):
         if re.match('(\'.+\'|".+")',string):
-            tree = []
+            tree = ()
             for character in string[1:-1]:
-                subtree = ['chr', str(ord(character))]
-                tree = subtree if not tree else ['+', tree, subtree]
+                subtree = ('chr', str(ord(character)))
+                tree = subtree if not tree else ('+', tree, subtree)
             return tree
         elif re.match('(\'\'|"")',string):
             # TODO Is there a more robust way of making an empty string in pyramid scheme??
-            return ['eps'] # 'eps' is an empty string
+            return ('eps',) # 'eps' is an empty string
         else:
             return string
 
     return tree_traversal(ast,str_fun=expand)
 
 def pair_up(iterable):
-    ''' Pair up elements in the array '''
+    ''' Pair up elements in the array. (s1,s2,s3,s4,s5) -> ((s1,s2),(s3,s4),s5) '''
     args = [iter(iterable)] * 2
     for j,k in zip_longest(*args, fillvalue=None):
-        value = [j,k] if k else j
+        value = (j,k) if k else j
         yield value
 
 def expand_overfull_brackets(ast):
     ''' Recursively expand lists of many lists into lists of length 2 '''
 
     def expander(node):
-        if all(map(lambda x: isinstance(x,list),node)):
+        if all(map(lambda x: isinstance(x,tuple),node)):
             while len(node)>2:
-                node = [p for p in pair_up(node)]
+                node = tuple(p for p in pair_up(node))
         elif len(node)>3:
             raise PsllSyntaxError(f'Invalid bracket structure. Can only expand lists of lists. Node = \'{node}\'')
         return node
         
-    return tree_traversal(ast,list_fun=expander)
+    return tree_traversal(ast,tuple_fun=expander)
 
 def fill_in_empty_trees(ast):
     ''' Fill in the implicit empty strings in brackets with only lists '''
-    ast2 = []
-    for node in ast:
-        if isinstance(node,str):
-            ast2.append(node)
-        elif isinstance(node,list):
-            node = fill_in_empty_trees(node)
-            if not isinstance(node[0],str):
-                node = [''] + node
-            ast2.append(node)
-        else:
-            raise TypeError
-    return ast2
+    
+    def filler(node):
+        if not isinstance(node[0],str):
+            node = ('',*node)
+        return node
+
+    return tree_traversal(ast,tuple_fun=filler)
 
 #=======================================================================
 #                                                                       
@@ -210,15 +205,18 @@ def fill_in_empty_trees(ast):
 #                                                                       
 #=======================================================================
 
+@cached(maxsize=10000)
 def build_tree(ast):
     ''' Build the call tree from the leaves to the root '''
 
     if isinstance(ast,str):
         return Pyramid.from_text(ast)
     
-    elif isinstance(ast,list):
-        assert len(ast)>0, 'Invalid abstract syntax tree. Abstract syntax tree cannot be empty'
-        assert isinstance(ast[0],str), 'Invalid abstract syntax tree. The first element of each node must be a string.'
+    elif isinstance(ast,tuple):
+        if not len(ast)>0:
+            raise AssertionError('Invalid abstract syntax tree. Abstract syntax tree cannot be empty')
+        if not isinstance(ast[0],str):
+            raise AssertionError(f'Invalid abstract syntax tree. The first element of each node must be a string, not a {type(ast[0])}')
 
         if len(ast)==1:
             tree = build_tree(ast[0])
@@ -295,7 +293,8 @@ def greedy_optimisation(ast, verbose=True,max_iter=None):
 
         N = len(compile(ast))
         for pre,hay,suf in every_partition(ast):
-            new_ast = [*pre,[*hay],*suf]
+            # TODO Find a non-hacky way to do this
+            new_ast = (*pre,tuple(x for x in hay),*suf)
             M = len(compile(new_ast))
             if M < N:
                 if verbose: print(f'{iter_count} | Old len: {N} | New len: {M}')
@@ -324,13 +323,14 @@ def singleton_optimisation(ast,verbose=True,max_iter=None):
         iter_count += 1
         if max_iter and iter_count>max_iter:
             break
-
+        
         N = len(compile(ast))
         new_asts = []
         for pre,hay,suf in chain(pitchforked(ast,1),pitchforked(ast,2)):
-            for d in range(1,10+1): # Add up to 5 levels of pyramids
-                new_hay = repeat(lambda x: [x],d,list(hay))
-                new_asts.append([*pre,[*new_hay],*suf])
+            for d in range(1,20+1): # Add up to 5 levels of pyramids
+                new_hay = repeat(lambda x: (x,),d,(hay))
+                new_ast = (*pre,tuple(x for x in new_hay),*suf)
+                new_asts.append(new_ast)
         lengths = list(len(compile(a)) for a in new_asts)
         print('len:',len(lengths))
         M, I = min((v,i) for (i,v) in enumerate(lengths))
@@ -355,7 +355,7 @@ def main(args):
     if args.singleton_optimisation:
         ast = singleton_optimisation(ast,max_iter=None)
     if args.greedy_optimisation:
-        ast = greedy_optimisation(ast,max_iter=2000)
+        ast = greedy_optimisation(ast,max_iter=None)
 
     program = compile(ast)
     if args.verbose: print('Pyramid scheme:',program,sep='\n')

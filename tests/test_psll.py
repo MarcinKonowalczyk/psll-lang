@@ -122,42 +122,42 @@ class Split(unittest.TestCase,MetaTests):
     def test_simple(self):
         ''' > Simple inputs '''
         texts = ['','()','() ()','(hi)','(out 1)','(set a 1)']
-        targets = [[],['()'],['()','()'],['(hi)'],['(out 1)'],['(set a 1)']]
-        self.paired_test(texts,targets,psll.split_into_trees)
+        targets = [(),('()',),('()','()'),('(hi)',),('(out 1)',),('(set a 1)',)]
+        self.paired_test(texts,targets,psll.split_into_lines)
 
     def test_nested(self):
         ''' > Nested inputs '''
         texts = ['(())','(()) ()','(((hi)))','(() () hi)','(() ()) (()) ()']
-        targets = [['(())'],['(())','()'],['(((hi)))'],['(() () hi)'],['(() ())','(())','()']]
-        self.paired_test(texts,targets,psll.split_into_trees)
+        targets = [('(())',),('(())','()'),('(((hi)))',),('(() () hi)',),('(() ())','(())','()')]
+        self.paired_test(texts,targets,psll.split_into_lines)
 
     def test_string(self):
         ''' > Bracket parity error '''
         texts = ['(',')',')(','(hi))','((hi)','((','))','((()())','(()()))']
-        self.syntax_error_test(texts,psll.split_into_trees,psll.PsllSyntaxError)
+        self.syntax_error_test(texts,psll.split_into_lines,psll.PsllSyntaxError)
 
     def test_simple_subtrees(self):
         ''' > Simple subtrees'''
         texts = ['(hi)','(set a 1)','(one two three four)']
-        targets = [['hi'],['set','a','1'],['one','two','three','four']]
+        targets = [('hi',),('set','a','1'),('one','two','three','four')]
         self.paired_test(texts,targets,psll.split_into_subtrees)
 
     def test_nested_subtrees(self):
         ''' > Nested subtrees'''
         texts = ['(set a (= b 1))','(a (b (() c)))']
-        targets = [['set','a',['=','b','1']],['a',['b',[[''],'c']]]]
+        targets = [('set','a',('=','b','1')),('a',('b',(('',),'c')))]
         self.paired_test(texts,targets,psll.split_into_subtrees)
 
     def test_blank(self):
         ''' > Trees with blank elements '''
         texts = ['()','(())','(() hi)','(1 2)','((hi 1) (hi 2))']
-        targets = [[''],[['']],[[''], 'hi'],['1','2'],[['hi','1'],['hi','2']]]
+        targets = [('',),(('',),),(('',), 'hi'),('1','2'),(('hi','1'),('hi','2'))]
         self.paired_test(texts,targets,psll.split_into_subtrees)
 
     def test_quotes(self):
         ''' > Don't split quotes '''
-        texts = ['("hi")','(\'hello\')','(set a \'one\')','(set b "two")']
-        targets = [['"hi"'],['\'hello\''],['set','a','\'one\''],['set','b','"two"']]
+        texts = ['("hi")','(\'hello\')','(set a \'one\')','(set b "two")','("string with spaces")']
+        targets = [('"hi"',),('\'hello\'',),('set','a','\'one\''),('set','b','"two"'),('"string with spaces"',)]
         self.paired_test(texts,targets,psll.split_into_subtrees)
 
 #=====================================================================================================
@@ -180,7 +180,7 @@ class TreeTraversal(unittest.TestCase,MetaTests):
 
     def test_string_fun(self):
         ''' > Test that the string function is applied a correct number of times '''
-        trees = [['a'],['a','b'],['a','b','c'],['a',['b','c'],'d'],['Quick',[['brown','fox'],['jumped',[['over']]],'a'],['lazy'],'dog']]
+        trees = [('a',),('a','b'),('a','b','c'),('a',('b','c'),'d'),('Quick',(('brown','fox'),('jumped',(('over',),)),'a'),('lazy',),'dog')]
         counts = [1,2,3,4,8]
 
         def count_strings(tree):
@@ -193,74 +193,73 @@ class TreeTraversal(unittest.TestCase,MetaTests):
 
     def test_list_fun(self):
         ''' > Test that the list function is applied a correct number of times '''
-        trees = [['a'],['a','b'],['a','b','c'],['a',['b','c'],'d'],['Quick',[['brown','fox'],['jumped',[['over']]],'a'],['lazy'],'dog']]
+        trees = [('a',),('a','b'),('a','b','c'),('a',('b','c'),'d'),('Quick',(('brown','fox'),('jumped',(('over',),)),'a'),('lazy',),'dog')]
         counts = [0,0,0,1,6]
 
         def count_lists(tree):
             global count
             count = 0
-            psll.tree_traversal(tree,list_fun=self.counter)
+            psll.tree_traversal(tree,tuple_fun=self.counter)
             return count
         
         self.paired_test(trees,counts,count_lists)
 
     def test_type_error(self):
         ''' > All elements of the tree must be strings or other trees '''
-        trees = [[1,'int'],[set(),'set'],[{},'dict'],[(),'tuple'],
-        ['Quick',[['brown','fox'],['jumped',[('over',)]],'a'],['lazy'],'dog']]
+        trees = [(1,'int'),(set(),'set'),({},'dict'),([],'list'),('Quick',(('brown','fox'),('jumped',(['over'],)),'a'),('lazy',),'dog')]
         self.syntax_error_test(trees,psll.tree_traversal,TypeError)
 
 class StingExpansion(unittest.TestCase,MetaTests):
 
     def test_string_expansion(self):
         ''' > Make sure the prompt is expanded '''
-        prompts = [random_string(N+1) for N in range(10)]
+        prompts = (random_string(N+1) for N in range(10))
         for prompt in prompts:
             with self.subTest(prompt=prompt):
-                ast = [f'"{prompt}"']
-                est = psll.expand_sting_literals([f'"{prompt}"'])
+                ast = (f'"{prompt}"',)
+                est = psll.expand_sting_literals(ast)
                 self.assertGreater(depth(est),depth(ast))
 
     def test_empty(self):
         ''' > Empty string expands to 'eps' '''
-        target = [['eps']]
+        target = (('eps',),)
         for quote in '\'"':
-            tree = [f'{quote*2}']
-            with self.subTest(tree=tree):
-                self.assertEqual(psll.expand_sting_literals(tree),target)
+            ast = (f'{quote*2}',)
+            with self.subTest(ast=ast):
+                self.assertEqual(psll.expand_sting_literals(ast),target)
 
     def test_single_char(self):
         ''' > Expand single character strings '''
-        trees = [[f'"{c}"'] for c in ascii_letters]
-        targets = [[['chr',f'{str(ord(c))}']] for c in ascii_letters]
+        trees = [(f'"{c}"',) for c in ascii_letters]
+        targets = [(('chr',f'{str(ord(c))}'),) for c in ascii_letters]
         self.paired_test(trees,targets,psll.expand_sting_literals)
 
     def test_double_quote(self):
         ''' > Make sure the " sign is *not* is expanded '''
-        ast = ['"']
+        ast = ('"',)
         est = psll.expand_sting_literals(ast)
         self.assertEqual(ast,est)
 
     def test_quote_combinations(self):
         ''' > Expand some more strings as subtrees '''
-        trees = [['.hi.'],['out','.hi.'],['.one.','.two.'],
-            ['set','a','.hello.'],['set','.a.','hello'],
-            ['.set.','a','hello']]
+        trees = [('.hi.',),('out','.hi.'),('.one.','.two.'),
+            ('set','a','.hello.'),('set','.a.','hello'),
+            ('.set.','a','hello')]
         for quote,ast in product('"\'',trees):
-            ast = [t.replace('.',quote) for t in ast]
+            ast = tuple(t.replace('.',quote) for t in ast)
             with self.subTest(ast=ast):
                 est = psll.expand_sting_literals(ast)
                 self.assertGreater(depth(est),depth(ast))
     
     def test_mixed_quotes(self):
         ''' > Mix correct quote pairs in one tree '''
-        ast = ['"one"','\'two\'']
+        ast = ('"one"','\'two\'')
         est = psll.expand_sting_literals(ast)
         self.assertGreater(depth(est),depth(ast))
     
     def test_nested(self):
         ''' > Expand strings in nested trees '''
-        trees = [[['\'hi\'']],[['"hi"']],['set','a',['+','a','\'hi\'']],['set','a',['+','a','"hi"']]]
+        trees = [(('\'hi\'',),),(('"hi"',),),('set','a',('+','a','\'hi\'')),('set','a',('+','a','"hi"'))]
         for ast in trees:
             with self.subTest(ast=ast):
                 est = psll.expand_sting_literals(ast)
@@ -270,23 +269,23 @@ class BracketExpansion(unittest.TestCase,MetaTests):
 
     def test_1st_level(self):
         ''' > Don't expand 1st level brackets (trees wich are side-by-side) '''
-        trees = [[['a']],[['a'],['b']],[['a'],['b'],['c']],[['a'],['b'],['c'],['d']]]
+        trees = [(('a',),),(('a',),('b',)),(('a',),('b',),('c',)),(('a',),('b',),('c',),('d',))]
         self.paired_test(trees,trees,psll.expand_overfull_brackets)
 
     def test_small_brackets(self):
         ''' > Don't expand 2nd level brackets and beyond if they are less than 2 items '''
-        trees = [['hi',[['a']]],['hello',[['a'],['b']]]]
+        trees = [('hi',(('a',),)),('hello',(('a',),('b',)))]
         self.paired_test(trees,trees,psll.expand_overfull_brackets)
 
     def test_large_brackets(self):
         ''' > Expand 2nd level brackets and beyond '''
-        trees = [['hi',[['a'],['b'],['c']]],['hello',[['a'],['b'],['c'],['d']]],['greetings',[['a'],['b'],['c'],['d'],['e']]]]
-        targets = [['hi',[[['a'],['b']],['c']]],['hello',[[['a'],['b']],[['c'],['d']]]],['greetings',[[[['a'],['b']],[['c'],['d']]],['e']]]]
+        trees = [('hi',(('a',),('b',),('c',))),('hello',(('a',),('b',),('c',),('d',))),('greetings',(('a',),('b',),('c',),('d',),('e',)))]
+        targets = [('hi',((('a',),('b',)),('c',))),('hello',((('a',),('b',)),(('c',),('d',)))),('greetings',(((('a',),('b',)),(('c',),('d',))),('e',)))]
         self.paired_test(trees,targets,psll.expand_overfull_brackets)
 
     def test_syntax_error(self):
         ''' > Throw a syntax error when the overfull bracket is not entirely filled with lists '''
-        trees = [['hello',['a',['b'],['c'],['d']]],['greetings',[['a'],'b',['c'],['d'],['e']]]]
+        trees = (('hello',('a',('b',),('c',),('d',))),('greetings',(('a',),'b',('c',),('d',),('e',))))
         self.syntax_error_test(trees,psll.expand_overfull_brackets,psll.PsllSyntaxError)
 
 #=======================================================================
@@ -304,7 +303,7 @@ class BuildTree(unittest.TestCase,MetaTests):
 
     def test_simple(self):
         ''' > Simple trees '''
-        trees = [[''],[' '],['hi'],['out','a'],['set','a','1']]
+        trees = [('',),(' ',),('hi',),('out','a'),('set','a','1')]
         targets = [' ^ \n - ',
             '  ^  \n / \\ \n --- ',
             '   ^   \n  / \\  \n /hi \\ \n ----- ',
@@ -315,14 +314,14 @@ class BuildTree(unittest.TestCase,MetaTests):
 
     def test_nested(self):
         ''' > Nested trees '''
-        trees = [[' ',['sup']],['set','a',['+','1','1']],['out',['chr','32'],'b'],['loop',['!',['<=>','n','N']],['set','a',['+','a','1']]]]
+        trees = [(' ',('sup',)),('set','a',('+','1','1')),('out',('chr','32'),'b'),('loop',('!',('<=>','n','N')),('set','a',('+','a','1')))]
         targets = ['     ^  \n    / \\ \n   ^--- \n  / \\   \n /sup\\  \n -----  ','     ^       \n    / \\      \n   /set\\     \n  ^-----^    \n /a\\   /+\\   \n ---  ^---^  \n     /1\\ /1\\ \n     --- --- ','         ^     \n        / \\    \n       /out\\   \n      ^-----^  \n     / \\   /b\\ \n    /chr\\  --- \n   ^-----      \n  / \\          \n /32 \\         \n -----         ','           ^           \n          / \\          \n         /   \\         \n        /loop \\        \n       ^-------^       \n      /!\\     / \\      \n     ^---    /set\\     \n    / \\     ^-----^    \n   /<=>\\   /a\\   /+\\   \n  ^-----^  ---  ^---^  \n /n\\   /N\\     /a\\ /1\\ \n ---   ---     --- --- ']
         fun = lambda tree: str(psll.build_tree(tree))
         self.paired_test(trees,targets,fun)
 
     def test_too_many(self):
         ''' > Invalid number of keywords in a bracket '''
-        trees = [['one','two','three','four'],['1','2','3','4','5']]
+        trees = [('one','two','three','four'),('1','2','3','4','5')]
         fun = psll.build_tree
         self.syntax_error_test(trees,fun,psll.PsllSyntaxError)
 
@@ -330,10 +329,10 @@ class BuildTree(unittest.TestCase,MetaTests):
         ''' > Invalid trees '''
         fun = psll.build_tree
         
-        trees = [1,(),{},set,['set','a',1]]
+        trees = [1,[],{},set,('set','a',1)]
         self.syntax_error_test(trees,fun,TypeError)
         # TODO Split this into multiple tests
-        trees = [[],[['set'],'a','1']]
+        trees = [(),(('set',),'a','1')]
         self.syntax_error_test(trees,fun,AssertionError)
 
 if __name__ == '__main__':
