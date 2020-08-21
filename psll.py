@@ -3,7 +3,7 @@
 import re
 from itertools import zip_longest
 
-from pitchforked import pitchforked
+from windowed_complete import windowed_complete
 from itertools import chain
 from functools import partial
 from functools import lru_cache as cached
@@ -282,7 +282,7 @@ def greedy_optimisation(ast, verbose=True,max_iter=None):
     ''' Greedily insert empty trees into the abstract syntax tree '''
     
     every_partition = lambda seq: chain(*map(
-        partial(pitchforked,seq),range(2,len(seq))))
+        partial(windowed_complete,seq),range(2,len(seq))))
 
     iter_count = 0
     if verbose: print('Greedy tree optimisation')
@@ -326,7 +326,7 @@ def singleton_optimisation(ast,verbose=True,max_iter=None):
         
         N = len(compile(ast))
         new_asts = []
-        for pre,hay,suf in chain(pitchforked(ast,1),pitchforked(ast,2)):
+        for pre,hay,suf in chain(windowed_complete(ast,1),windowed_complete(ast,2)):
             for d in range(1,20+1): # Add up to 5 levels of pyramids
                 new_hay = repeat(lambda x: (x,),d,(hay))
                 new_ast = (*pre,tuple(x for x in new_hay),*suf)
