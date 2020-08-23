@@ -199,7 +199,7 @@ class TreeTraversal(unittest.TestCase,MetaTests):
         def count_lists(tree):
             global count
             count = 0
-            psll.tree_traversal(tree,tuple_fun=self.counter)
+            psll.tree_traversal(tree,post_fun=self.counter)
             return count
         
         self.paired_test(trees,counts,count_lists)

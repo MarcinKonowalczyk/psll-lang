@@ -1,45 +1,41 @@
-// This code:
-(def f (set a 10))
 (set a 0)
-(f) // Invoke by 
-(out "a: " a)
 
-// Becomes this:
-// ()
-// (set a 0)
-// (set a 10)
-// (out "a: " a)
+////// Basic definition //////
+(def incr (set a (+ a 1))) // Increment a
+(incr) // This now becomes (set a (+ a 1))
+(out "a: " a) (out (chr 10))
 
+////// Redefinition //////
+(def incr ( // Redefine 'incr' as itself + printing
+    (incr)
+    (out "<incr> a: " a)
+    (out (chr 10)) // Newline
+))
+(incr) // This now dies the original incr + print
 
-// This code:
-(def my_setter (set a))
-// 'my_setter' must be a string, not a pyramid, therefore no dynamically named functions. This *would* work iff 'def' was a pyramid scheme keyword evaluating the left pyramid. Psll will throw an error though.
-(my_setter 10)
-(out "a: " a)
+////// Aliasing //////
+(def f (incr)) // 'f' is an alias for 'incr'
+(f) // This now behaves as 'incr'
 
-// Becomes this:
-(set a 10)
-(out "a: " a)
+////// Scope //////
+(
+    (out "entering scope 1" (chr 10))
+    (def f (out "Vikings approaching!" (chr 10))) // Redefine f as somethign else within the scope
+    (f)
+    (f)
+    (f)
+    (out "leaving scope 1" (chr 10))
+)
+(out "a: " a) (out (chr 10)) // But 'a' remains unchanged
+(f) // 'f' works the same way as before the scope
+(incr) // and 'incr' also works the same way
 
-//==========
-// THOUGHTS
-//==========
+// This is a bit of a technical point. Basically, empty brackets don't break it.
+(
+    (out "entering scope 2" (chr 10))
+    () // Empty brackets don't pop the stack of defs
+    (out "leaving scope 2" (chr 10))
+)
 
-// If set to a list, expand one bracket
-(def my_setter (set a))
-(my_setter 10)
-(set a 10)
-
-// If set to a string, don't
-(def my_setter set)
-(my_setter a 10)
-(set a 10)
-
-// Add compiler option to understand the -def keyword or not
-
-// Throw error because must be a list
-(def (...) (set a))
-
-// Don't consume the partent bracket
-(def my_function (set a))
-() // <- Becomes this, not empty space
+(incr)
+(incr)

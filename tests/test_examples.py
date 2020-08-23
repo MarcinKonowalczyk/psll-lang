@@ -76,6 +76,9 @@ class TestIsInArray(unittest.TestCase,MetaTest):
 class TestBubbleSort(unittest.TestCase,MetaTest):
     pass
 
+@skipUnlessExampleExists(examples + 'def_keyword.psll')
+class TestDefKeyword(unittest.TestCase,MetaTest):
+    pass
 
 if __name__=="__main__":
     unittest.main()

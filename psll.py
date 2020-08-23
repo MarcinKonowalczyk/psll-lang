@@ -134,18 +134,74 @@ def lex(text):
 #                                                                                                     
 #=====================================================================================================
 
-def tree_traversal(ast, str_fun=None, tuple_fun=None):
-    ''' Walk through the abstract syntax tree and apply appropriate functions '''
-    ast2 = []
+def tree_traversal(ast, str_fun=None, post_fun=None, pre_fun=None,final_fun=None):
+    ''' (Depth-first) walk through the abstract syntax tree and apply appropriate functions '''
+    ast2 = [] # Build a new ast
     for node in ast:
         if isinstance(node,str):
             ast2.append(str_fun(node) if str_fun else node)
         elif isinstance(node,tuple):
-            node = tree_traversal(node, str_fun=str_fun, tuple_fun=tuple_fun)
-            ast2.append(tuple_fun(node) if tuple_fun else node)
+            node = pre_fun(node) if pre_fun else node
+            node = tree_traversal(node, pre_fun=pre_fun, str_fun=str_fun, post_fun=post_fun, final_fun=final_fun)
+            # TODO Nicer way of passing many kwargs...? ^
+            node = post_fun(node) if post_fun else node
+            ast2.append(node)
         else:
             raise TypeError(f'The abstract syntax tree can contain only strings or other, smaller, trees, not {type(node)}')
+    if final_fun:
+        final_fun(ast2)
     return tuple(ast2) # Return ast back as a tuple
+
+def def_keyword(ast):
+    ''' Search for ('def','something',(...)) keywords '''
+
+    defs = []
+    def replacer(node):
+        if len(defs)>0:
+            for b,m,e in windowed_complete(reversed(defs),1):
+                value,definition = m[0]
+                if node==value: # Node needs to be replaced
+                    return definition
+        return node
+
+    def find_defs(node):
+        if len(node)>0 and node[0]=='def':
+            if not len(node)==3:
+                raise PsllSyntaxError(f"'def' statement must have 3 members, not {len(node)} (node = {node})")
+            if not isinstance(node[1],str) or not isinstance(node[2],tuple):
+                raise PsllSyntaxError(f"'def' statement can only assign brackets to values, not {type(node[2])} to {type(node[1])}")
+            if node[1]=='def':
+                raise PsllSyntaxError("Hic sunt dracones")
+                # TODO ^ rename, although I find it very funny
+            defs.append([node[1],apply_replacement_rules(node[2],dict(defs))])
+            return () # Return empty tuple
+        return node
+    
+    def pop_def_stack(ast):
+        for node in ast:
+            if node == ():
+                defs.pop()
+
+    return tree_traversal(ast,
+        str_fun=replacer,
+        pre_fun=find_defs,
+        final_fun=pop_def_stack)
+
+def apply_replacement_rules(ast,rules):
+    ''' Apply replacement rules to the abstract syntax tree '''
+    def replace_rules(node):
+        if len(node)==1 and node[0] in rules.keys():
+            return rules[node[0]]
+        return node
+    ast = tree_traversal(ast,post_fun=replace_rules)
+
+    def replace_rules(node):
+        if node in rules.keys():
+            return rules[node]
+        return node
+    ast = tree_traversal(ast,str_fun=replace_rules)
+
+    return ast
 
 def expand_sting_literals(ast):
     ''' Expand all the psll string literals objects into pyramid scheme trees '''
@@ -183,17 +239,20 @@ def expand_overfull_brackets(ast):
             raise PsllSyntaxError(f'Invalid bracket structure. Can only expand lists of lists. Node = \'{node}\'')
         return node
         
-    return tree_traversal(ast,tuple_fun=expander)
+    return tree_traversal(ast,post_fun=expander)
 
 def fill_in_empty_trees(ast):
     ''' Fill in the implicit empty strings in brackets with only lists '''
     
     def filler(node):
-        if not isinstance(node[0],str):
-            node = ('',*node)
+        if node:
+            if not isinstance(node[0],str):
+                node = ('',*node)
+        else:
+            node = ('',)
         return node
 
-    return tree_traversal(ast,tuple_fun=filler)
+    return tree_traversal(ast,post_fun=filler)
 
 #=======================================================================
 #                                                                       
@@ -252,9 +311,12 @@ def build_tree(ast):
 def compile(ast):
     ''' Compile text into trees '''    
     # Pre-process
+    # print('Raw:\n',ast,end='\n\n')
+    # print('Def-replacement:\n',ast,end='\n\n')
     ast = expand_sting_literals(ast)
     ast = expand_overfull_brackets(ast)
     ast = fill_in_empty_trees(ast)
+    # print('End of pre-proc:\n',ast,end='\n\n')
 
     # Build
     trees = [build_tree(a) for a in ast]
@@ -278,7 +340,7 @@ def compile(ast):
 #                                                                                                                               
 #===============================================================================================================================
 
-def greedy_optimisation(ast, verbose=True,max_iter=None):
+def greedy_optimisation(ast, verbose=True, max_iter=None):
     ''' Greedily insert empty trees into the abstract syntax tree '''
     
     every_partition = lambda seq: chain(*map(
@@ -343,6 +405,16 @@ def singleton_optimisation(ast,verbose=True,max_iter=None):
             break # Break from the while loop
     return ast
 
+#======================================================================
+#                                                                      
+#  ###    ###    ###    ##  ##     ##                                
+#  ## #  # ##   ## ##   ##  ####   ##                                
+#  ##  ##  ##  ##   ##  ##  ##  ## ##                                
+#  ##      ##  #######  ##  ##    ###                                
+#  ##      ##  ##   ##  ##  ##     ##                                
+#                                                                      
+#======================================================================
+
 def main(args):
     ''' Main function for the command-line operation '''
     if args.verbose: print('Input filename:',args.input)
@@ -352,6 +424,8 @@ def main(args):
     if args.verbose: print('Reduced source:',text)
     
     ast = lex(text)
+    ast = def_keyword(ast)
+    # TODO ^ find better place
     if args.singleton_optimisation:
         ast = singleton_optimisation(ast,max_iter=None)
     if args.greedy_optimisation:
@@ -363,6 +437,19 @@ def main(args):
     if args.output:
         with open(args.output,'w') as f:
             f.write(program)
+
+if False: #__name__ == "__main__":
+    import argparse
+    args = argparse.Namespace(
+        greedy_optimisation=False,
+        singleton_optimisation=False,
+        input='./examples/def_keyword.psll',
+        output='./examples/def_keyword.pyra',
+        force=True,
+        verbose=False
+        )
+    main(args)
+    print('done')
 
 if __name__ == "__main__":
 
@@ -416,4 +503,5 @@ if __name__ == "__main__":
     args = parser.parse_args()
     valid_output_file(args)
 
+    # print(args)
     main(args)
