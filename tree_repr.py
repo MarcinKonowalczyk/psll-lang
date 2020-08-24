@@ -97,7 +97,7 @@ class AbstractTree(ABC):
     @classmethod
     def from_str(self,string):
         ''' Initialise from string representation '''
-        grid = string2grid(string)
+        grid = self.string2grid(string)
         return self(grid)
         
     @abstractmethod
@@ -304,7 +304,7 @@ class Tree(AbstractTree):
             try:
                 parent = self.toPyramid()
             except:
-                raise TypeError('Cannot expand non-singleton Trees')
+                raise RuntimeError('Cannot expand non-singleton Trees')
             parent = Tree.from_text(parent.content,min_width=actual_children_width)
         else:
             parent = self

@@ -81,12 +81,14 @@ class PyramidTests(unittest.TestCase):
                 self.assertEqual(p.content,c)
 
     def test_toPyramid(self):
+        ''' Pyramid to Pyramid '''
         for c in TEST_CONTENT:
             with self.subTest(content=c):
                 p = Pyramid.from_text(c)
                 self.assertEqual(p,p.toPyramid())
 
     def test_toTree(self):
+        ''' Pyramid to Tree '''
         for c in TEST_CONTENT:
             with self.subTest(content=c):
                 p = Pyramid.from_text(c)
@@ -94,22 +96,46 @@ class PyramidTests(unittest.TestCase):
                 self.assertIsInstance(t,Tree)
                 self.assertEqual(hash(p),hash(t))
 
+    def test_from_str(self):
+        ''' > Make pyramids from string representation '''
+        for p in TEST_PYRAMIDS:
+            with self.subTest():
+                self.assertEqual(str(Pyramid.from_str(p)),p)
+
 class TreeTests(unittest.TestCase):
-    
+
+    def test_toPyramid(self):
+        ''' > Tree to Pyramid '''
+        for c in TEST_CONTENT:
+            with self.subTest(content=c):
+                t = Tree.from_text(c)
+                p = t.toPyramid()
+                self.assertIsInstance(p,Pyramid)
+                self.assertEqual(hash(p),hash(t))
+
+    def test_toTree(self):
+        ''' > Tree to Tree '''
+        for c in TEST_CONTENT:
+            with self.subTest(content=c):
+                t = Tree.from_text(c)
+                self.assertEqual(t,t.toTree())
+
     def test_add_side_by_side(self):
-        for c1,c2 in product(TEST_CONTENT,repeat=2):
-            p1, p2 = tuple(map(Pyramid.from_text,(c1,c2)))
-            with self.subTest(c1=c1,c2=c2):
+        ''' > Basic add_side_by_side usage '''
+        for c in product(TEST_CONTENT,repeat=2):
+            p1, p2 = tuple(map(Pyramid.from_text,c))
+            with self.subTest(contents=c):
                 t = p1 + p2
                 self.assertIsInstance(t,Tree)
     
     def test_side_by_side_options(self):
-        for c1,c2 in product(TEST_CONTENT,repeat=2):
-            p1, p2 = tuple(map(Pyramid.from_text,(c1,c2)))
+        ''' > Options of the add_side_by_side method '''
+        for c in product(TEST_CONTENT,repeat=2):
+            p1, p2 = tuple(map(Pyramid.from_text,c))
             for tight,odd in product((True,False),repeat=2):
                 for min_spacing in range(10):
                     kwargs = {'tight':tight,'min_spacing':min_spacing,'odd_spacing':odd}
-                    with self.subTest(c1=c1,c2=c2,**kwargs):
+                    with self.subTest(contents=c,**kwargs):
                         t = p1.toTree().add_side_by_side(p2,**kwargs)
                         self.assertIsInstance(t,Tree)
                         top_row = str(t).split('\n')[0]
@@ -119,6 +145,47 @@ class TreeTests(unittest.TestCase):
                         self.assertGreaterEqual(actual_spacing,min_spacing)
                         if odd: # Make sure the spacing is actually odd
                             self.assertTrue((actual_spacing) % 2)
+    
+    def test_invalid_type(self):
+        ''' > Type error is raised when attempting to add wrong types '''
+        p = Pyramid.from_text('hello')
+        for o in ('',1,{},[],()):
+            with self.subTest(other=o):  
+                with self.assertRaises(TypeError):
+                    p + o
+                    p.toTree() + o
+
+    def test_add_one_child(self):
+        ''' > Add one child on both left and right '''
+        for c in product(TEST_CONTENT,repeat=2):
+            p1, p2 = tuple(map(Pyramid.from_text,c))
+            for which in ('left','right'):
+                with self.subTest(contents=c,which=which):
+                    if which=='left':
+                        t = p1 + (p2,None)
+                    else:
+                        t = p1 + (None,p2)
+                    self.assertIsInstance(t,Tree)
+    
+    def test_add_two_children(self):
+        ''' > Add two children '''
+        for c in product(TEST_CONTENT,repeat=3):
+            p1, p2, p3 = tuple(map(Pyramid.from_text,c))
+            with self.subTest(contents=c):
+                t = p1 + (p2,p3)
+                self.assertIsInstance(t,Tree)
+
+    @unittest.skip('Work in progress')
+    def test_cannot_expand_trees(self):
+        ''' > '''
+        p3 = Pyramid.from_text('Quick brown fox jumped over a lazy dog'*10)
+        for c in product(TEST_CONTENT,repeat=2):
+            p1, p2 = tuple(map(Pyramid.from_text,c))
+            with self.subTest(contents=c):
+                t = p1 + (None,p2)
+                print(t)
+                with self.assertRaises(RuntimeError):
+                    t + (p3,p3)
 
 if __name__ == '__main__':
     unittest.main()
