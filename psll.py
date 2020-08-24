@@ -134,8 +134,8 @@ def lex(text):
 #                                                                                                     
 #=====================================================================================================
 
-def tree_traversal(ast, str_fun=None, post_fun=None, pre_fun=None,final_fun=None):
-    ''' (Depth-first) walk through the abstract syntax tree and apply appropriate functions '''
+def tree_traversal(ast, str_fun=None, post_fun=None, pre_fun=None, final_fun=None):
+    ''' (Depth-first) walk through the abstract syntax tree and application of appropriate functions '''
     ast2 = [] # Build a new ast
     for node in ast:
         if isinstance(node,str):
@@ -143,7 +143,6 @@ def tree_traversal(ast, str_fun=None, post_fun=None, pre_fun=None,final_fun=None
         elif isinstance(node,tuple):
             node = pre_fun(node) if pre_fun else node
             node = tree_traversal(node, pre_fun=pre_fun, str_fun=str_fun, post_fun=post_fun, final_fun=final_fun)
-            # TODO Nicer way of passing many kwargs...? ^
             node = post_fun(node) if post_fun else node
             ast2.append(node)
         else:
@@ -171,8 +170,7 @@ def def_keyword(ast):
             if not isinstance(node[1],str) or not isinstance(node[2],tuple):
                 raise PsllSyntaxError(f"'def' statement can only assign brackets to values, not {type(node[2])} to {type(node[1])}")
             if node[1]=='def':
-                raise PsllSyntaxError("Hic sunt dracones")
-                # TODO ^ rename, although I find it very funny
+                raise PsllSyntaxError(f"('def' 'def' (...)) structure is not allowed")
             defs.append([node[1],apply_replacement_rules(node[2],dict(defs))])
             return () # Return empty tuple
         return node
@@ -189,19 +187,14 @@ def def_keyword(ast):
 
 def apply_replacement_rules(ast,rules):
     ''' Apply replacement rules to the abstract syntax tree '''
-    def replace_rules(node):
-        if len(node)==1 and node[0] in rules.keys():
-            return rules[node[0]]
-        return node
-    ast = tree_traversal(ast,post_fun=replace_rules)
+    def singleton_tuple_replacer(node):
+        return rules[node[0]] if len(node)==1 and node[0] in rules.keys() else node
+    def string_replacer(node):
+        return rules[node] if node in rules.keys() else node
 
-    def replace_rules(node):
-        if node in rules.keys():
-            return rules[node]
-        return node
-    ast = tree_traversal(ast,str_fun=replace_rules)
-
-    return ast
+    return tree_traversal(ast,
+        pre_fun=singleton_tuple_replacer,
+        str_fun=string_replacer)
 
 def expand_sting_literals(ast):
     ''' Expand all the psll string literals objects into pyramid scheme trees '''
