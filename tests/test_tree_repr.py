@@ -98,11 +98,27 @@ class TreeTests(unittest.TestCase):
     
     def test_add_side_by_side(self):
         for c1,c2 in product(TEST_CONTENT,repeat=2):
-            p1 = Pyramid.from_text(c1)
-            p2 = Pyramid.from_text(c2)
+            p1, p2 = tuple(map(Pyramid.from_text,(c1,c2)))
             with self.subTest(c1=c1,c2=c2):
                 t = p1 + p2
                 self.assertIsInstance(t,Tree)
+    
+    def test_side_by_side_options(self):
+        for c1,c2 in product(TEST_CONTENT,repeat=2):
+            p1, p2 = tuple(map(Pyramid.from_text,(c1,c2)))
+            for tight,odd in product((True,False),repeat=2):
+                for min_spacing in range(10):
+                    kwargs = {'tight':tight,'min_spacing':min_spacing,'odd_spacing':odd}
+                    with self.subTest(c1=c1,c2=c2,**kwargs):
+                        t = p1.toTree().add_side_by_side(p2,**kwargs)
+                        self.assertIsInstance(t,Tree)
+                        top_row = str(t).split('\n')[0]
+                        I1 = top_row.find('^')
+                        I2 = top_row.find('^',I1+1)
+                        actual_spacing = I2-I1-1
+                        self.assertGreaterEqual(actual_spacing,min_spacing)
+                        if odd: # Make sure the spacing is actually odd
+                            self.assertTrue((actual_spacing) % 2)
 
 if __name__ == '__main__':
     unittest.main()
