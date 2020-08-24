@@ -1,19 +1,10 @@
 import os
 from os.path import exists, splitext
 
-from platform import python_version_tuple 
-version = tuple(int(x) for x in python_version_tuple())
-assert version[0]==3
-
 # TODO change to subprocess.run
 import subprocess
 from functools import partial
-if version[1] <= 6:
-    print('Python 3.6 -')
-    shell = partial(subprocess.run,shell=True,stdout=subprocess.PIPE)
-else:
-    print('Python 3.7 +')
-    shell = partial(subprocess.run,shell=True,capture_output=True)
+shell = partial(subprocess.run,shell=True,stdout=subprocess.PIPE)
 
 pyra_path = os.getcwd() + '/Pyramid-Scheme/pyra.rb'
 pyra_exists = exists(pyra_path)
