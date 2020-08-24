@@ -10,7 +10,7 @@ import os, sys
 sys.path.append(os.path.realpath('.'))
 
 import tree_repr
-from tree_repr import Pyramid
+from tree_repr import Pyramid, Tree
 
 from contextlib import contextmanager
 from io import StringIO
@@ -39,7 +39,7 @@ TEST_PYRAMIDS = [' ^ \n - ',
 '    ^    \n   /H\\   \n  /owd\\  \n /y\'ll \\ \n ------- ',
 '    ^    \n   /g\\   \n  /ree\\  \n /tings\\ \n ------- ']
 
-class Pyramids(unittest.TestCase):
+class PyramidTests(unittest.TestCase):
 
     def test_creation(self):
         ''' > Create few pyramids '''
@@ -72,6 +72,37 @@ class Pyramids(unittest.TestCase):
         with capture_output() as output:
             print(p,end='')
         self.assertEqual(output.getvalue(),target)
+
+    def test_content(self):
+        ''' > Pyramid returning its own content '''
+        for c in TEST_CONTENT:
+            with self.subTest(content=c):
+                p = Pyramid.from_text(c)
+                self.assertEqual(p.content,c)
+
+    def test_toPyramid(self):
+        for c in TEST_CONTENT:
+            with self.subTest(content=c):
+                p = Pyramid.from_text(c)
+                self.assertEqual(p,p.toPyramid())
+
+    def test_toTree(self):
+        for c in TEST_CONTENT:
+            with self.subTest(content=c):
+                p = Pyramid.from_text(c)
+                t = p.toTree()
+                self.assertIsInstance(t,Tree)
+                self.assertEqual(hash(p),hash(t))
+
+class TreeTests(unittest.TestCase):
+    
+    def test_add_side_by_side(self):
+        for c1,c2 in product(TEST_CONTENT,repeat=2):
+            p1 = Pyramid.from_text(c1)
+            p2 = Pyramid.from_text(c2)
+            with self.subTest(c1=c1,c2=c2):
+                t = p1 + p2
+                self.assertIsInstance(t,Tree)
 
 if __name__ == '__main__':
     unittest.main()

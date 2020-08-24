@@ -149,11 +149,13 @@ class Pyramid(AbstractTree):
         content = []
         for row in self:
             row_content = row[1][1:-1]
-            if row_content.replace(BOTTOM,''):
+            row_content = row_content.replace(BOTTOM,'')
+            row_content = row_content.replace(SPACE,'')
+            if row_content:
                 content.append(row_content)
         content = ''.join(content)
 
-        # Trim leadgin and trainling space
+        # Trim leading and trailing space
         i1, i2 = 0, len(content)
         for i,(l1,l2) in enumerate(pairwise(content)):
             if l1==SPACE and l2!=SPACE and not i1: i1 = i+1
