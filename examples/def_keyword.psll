@@ -11,7 +11,7 @@
     (out "<incr> a: " a)
     (out (chr 10)) // Newline
 ))
-(incr) // This now dies the original incr + print
+(incr) // This now does the original incr + print
 
 ////// Aliasing //////
 (def f (incr)) // 'f' is an alias for 'incr'
@@ -20,7 +20,7 @@
 ////// Scope //////
 (
     (out "entering scope 1" (chr 10))
-    (def f (out "Vikings approaching!" (chr 10))) // Redefine f as somethign else within the scope
+    (def f (out "Vikings approaching!" (chr 10))) // Redefine f as something else within the scope
     (f)
     (f)
     (f)
