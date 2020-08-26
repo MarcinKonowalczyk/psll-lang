@@ -234,7 +234,7 @@ def expand_overfull_brackets(ast):
             while len(node)>2:
                 node = tuple(p for p in pair_up(node))
         elif len(node)>3:
-            raise PsllSyntaxError(f'Invalid bracket structure. Can only expand lists of lists. Node = \'{node}\'')
+            raise PsllSyntaxError(f'Invalid bracket structure. Can only expand lists of lists.')
         return node
         
     return tree_traversal(ast,post_fun=expander)

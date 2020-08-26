@@ -172,6 +172,10 @@ The following is, for example, a *postfix* implementation of the modulo function
 (set a 11) (set b 7) (mod)
 ```
 
+### Underscore keyword
+
+The underscore `_` can be used to explicitly specify an empty slot where a pyramid could be. It is not particularly useful from the user point of view (maybe except for fine-tuning the position of the pyramids for code golf), but it is very helpful for the compiler. All the leaves are eventually terminated with `_`, and string expansion used the `_` keyword to help pack the code a bit better.
+
 ## ToDo's
 
 This is not a real-purpose language. In this section the 'optimisation' refers to obtaining nicer-looking and more compact pyramids, *not* not efficient code.
@@ -218,3 +222,4 @@ This is not a real-purpose language. In this section the 'optimisation' refers t
 - [x] <s>`compact` option breaks when `N`th triangle is wider than all the `1..N-1`s.</s>
 - [x] `compact` option does nothing
 - [ ] Strings do not support escape characters (And maybe they never will! Ha! They're just sugar anyway...)
+- [ ] `(_)` breaks the compiler (Why would someone decide to write this though...?)
