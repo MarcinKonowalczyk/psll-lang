@@ -348,6 +348,8 @@ class Tree(AbstractTree):
             elif r:
                 return self.add_one_child(r,left=False)
                 # raise NotImplementedError('"Tree.add_right_child()" not yet implemented')
+            else: # self + (None,None)
+                return self
         else:
             raise TypeError(f"unsupported operand type for +: '{type(self).__name__}' and '{type(other).__name__}'")
 

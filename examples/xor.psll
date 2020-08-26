@@ -7,12 +7,12 @@
 
 (set a 1) (set b 0)
 (out "xor(1,0) = " (! (<=> (+ a b) 1)))
-(out newline)
+(out _ newline)
 
 (set a 0) (set b 1)
 (out "xor(0,1) = " (! (<=> (+ a b) 1)))
-(out newline)
+(out _ newline)
 
 (set a 1) (set b 1)
 (out "xor(1,1) = " (! (<=> (+ a b) 1)))
-(out newline)
+(out _ newline)

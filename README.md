@@ -192,7 +192,7 @@ This is not a real-purpose language. In this section the 'optimisation' refers t
     - [ ] Add support for escape characters
   - [x] Simpler writing of nested nil pyramids
   - [x] `def` keyword
-  - [ ] ?? `_` keyword
+  - [x] ?? `_` keyword
   - [ ] ?? Arrays / Linked lists
 - [x] Compiler optimisation takes a long time
 - [ ] ?? Easier to use installation. Maybe a make-script which makes a symlink in the correct place...
@@ -207,10 +207,10 @@ This is not a real-purpose language. In this section the 'optimisation' refers t
   - [ ] ?? Backtrace
 - [x] Add testing psll bash script to tests
   - [ ] ?? And somehow coverage
-- [ ] Add option to force a node with one child to make it a right child
-  - [ ] ?? Add None (or None-like) values to the abstract syntax tree representation
-  - [ ] ?? Interpret `_` as not-a-tree
-  - [ ] Therefore optimise `chr` in string expansion
+- [x] Add option to force a node with one child to make it a right child
+  - [x] ?? Add None (or None-like) values to the abstract syntax tree representation
+  - [x] ?? Interpret `_` as not-a-tree
+  - [x] Therefore optimise `chr` in string expansion
   - [ ] Also add this to the snake optimiser
 - [x] !! Add memoisation to `build_tree`
 

@@ -1,13 +1,13 @@
 #!/usr/bin/python3
 
 import re
-from itertools import zip_longest
+from itertools import zip_longest, chain
 
-from windowed_complete import windowed_complete
-from itertools import chain
-from functools import partial
+from functools import partial, reduce
+import operator
 from functools import lru_cache as cached
 
+from windowed_complete import windowed_complete
 from tree_repr import Pyramid
 
 SPACE = ' '
@@ -138,7 +138,9 @@ def tree_traversal(ast, str_fun=None, post_fun=None, pre_fun=None, final_fun=Non
     ''' (Depth-first) walk through the abstract syntax tree and application of appropriate functions '''
     ast2 = [] # Build a new ast
     for node in ast:
-        if isinstance(node,str):
+        if node is None:
+            ast2.append(node)
+        elif isinstance(node,str):
             ast2.append(str_fun(node) if str_fun else node)
         elif isinstance(node,tuple):
             node = pre_fun(node) if pre_fun else node
@@ -147,9 +149,10 @@ def tree_traversal(ast, str_fun=None, post_fun=None, pre_fun=None, final_fun=Non
             ast2.append(node)
         else:
             raise TypeError(f'The abstract syntax tree can contain only strings or other, smaller, trees, not {type(node)}')
+    ast2 = tuple(ast2)
     if final_fun:
         final_fun(ast2)
-    return tuple(ast2) # Return ast back as a tuple
+    return ast2 # Return ast back as a tuple
 
 def def_keyword(ast):
     ''' Search for ('def','something',(...)) keywords '''
@@ -187,15 +190,16 @@ def def_keyword(ast):
 
 def apply_replacement_rules(ast,rules):
     ''' Apply replacement rules to the abstract syntax tree '''
-    def singleton_tuple_replacer(node):
+    def singleton_tuple_replacer(node): #  Replace (f) by def of f
         return rules[node[0]] if len(node)==1 and node[0] in rules.keys() else node
-    def string_replacer(node):
+    def string_replacer(node): #  Replace f by def of f
         return rules[node] if node in rules.keys() else node
 
     return tree_traversal(ast,
         pre_fun=singleton_tuple_replacer,
         str_fun=string_replacer)
 
+## TESTED
 def expand_sting_literals(ast):
     ''' Expand all the psll string literals objects into pyramid scheme trees '''
     
@@ -203,7 +207,7 @@ def expand_sting_literals(ast):
         if re.match('(\'.+\'|".+")',string):
             tree = ()
             for character in string[1:-1]:
-                subtree = ('chr', str(ord(character)))
+                subtree = ('chr', '_', str(ord(character)))
                 tree = subtree if not tree else ('+', tree, subtree)
             return tree
         elif re.match('(\'\'|"")',string):
@@ -214,16 +218,17 @@ def expand_sting_literals(ast):
 
     return tree_traversal(ast,str_fun=expand)
 
-def pair_up(iterable):
-    ''' Pair up elements in the array. (s1,s2,s3,s4,s5) -> ((s1,s2),(s3,s4),s5) '''
-    args = [iter(iterable)] * 2
-    for j,k in zip_longest(*args, fillvalue=None):
-        value = (j,k) if k else j
-        yield value
-
+## TESTED
 def expand_overfull_brackets(ast):
     ''' Recursively expand lists of many lists into lists of length 2 '''
 
+    def pair_up(iterable):
+        ''' Pair up elements in the array. (s1,s2,s3,s4,s5) -> ((s1,s2),(s3,s4),s5) '''
+        args = [iter(iterable)] * 2
+        for j,k in zip_longest(*args, fillvalue=None):
+            value = (j,k) if k else j
+            yield value
+        
     def expander(node):
         if all(map(lambda x: isinstance(x,tuple),node)):
             while len(node)>2:
@@ -236,16 +241,38 @@ def expand_overfull_brackets(ast):
 
 def fill_in_empty_trees(ast):
     ''' Fill in the implicit empty strings in brackets with only lists '''
-    
     def filler(node):
         if node:
             if not isinstance(node[0],str):
                 node = ('',*node)
         else:
-            node = ('',)
+            node = ('')
         return node
 
     return tree_traversal(ast,post_fun=filler)
+
+def fill_in_underscores(ast):
+    def filler(node):
+        if len(node)==3:
+            if isinstance(node[1],str) and node[1] is not '_':
+                node = (node[0], (node[1], '_', '_'), node[2])
+            if isinstance(node[2],str) and node[2] is not '_':
+                node = (node[0], node[1], (node[2], '_', '_'))
+            pass
+        elif len(node)==2:
+            if isinstance(node[1],str) and node[1] is not '_':
+                node = (node[0], (node[1], '_', '_'), '_')
+            else:
+                node = (*node,'_')
+        elif len(node)==1 and node[0] is not '_':
+            node = (*node,'_','_')
+        return node
+    return tree_traversal(ast,post_fun=filler)
+
+def underscore_keyword(ast):
+    def replacer(node):
+        return None if node is '_' else node
+    return tree_traversal(ast,str_fun=replacer)
 
 #=======================================================================
 #                                                                       
@@ -263,33 +290,16 @@ def build_tree(ast):
 
     if isinstance(ast,str):
         return Pyramid.from_text(ast)
-    
+    elif ast is None:
+        return None
     elif isinstance(ast,tuple):
-        if not len(ast)>0:
-            raise AssertionError('Invalid abstract syntax tree. Abstract syntax tree cannot be empty')
+        if len(ast) != 3:
+            raise RuntimeError(f'Invalid structure of the abstract syntax tree. ({ast})')
         if not isinstance(ast[0],str):
-            raise AssertionError(f'Invalid abstract syntax tree. The first element of each node must be a string, not a {type(ast[0])}')
-
-        if len(ast)==1:
-            tree = build_tree(ast[0])
-
-        elif len(ast)==2:
-            # TODO Choice (left/right) trees...?
-            root = build_tree(ast[0])
-            left_leaf = build_tree(ast[1])
-            tree = root + (left_leaf,None)
-
-        elif len(ast)==3:
-            root = build_tree(ast[0])
-            left_leaf = build_tree(ast[1])
-            right_leaf = build_tree(ast[2])
-            tree = root + (left_leaf,right_leaf)
-
-        else:
-            raise PsllSyntaxError('Invalid number of input arguments')
+            raise RuntimeError(f'Invalid abstract syntax tree. The first element of each node must be a string, not a {type(ast[0])}')
+        return build_tree(ast[0]) + (build_tree(ast[1]),build_tree(ast[2]))
     else:
         raise TypeError(f'Abstract syntax tree must be represented by a list (or just a string) not a {type(ast)}')
-    return tree
 
 #=========================================================================================
 #                                                                                         
@@ -301,26 +311,11 @@ def build_tree(ast):
 #                                                                                         
 #=========================================================================================
 
+# TODO Refactor
 def compile(ast):
     ''' Compile text into trees '''    
-    # Pre-process
-    # print('Raw:\n',ast,end='\n\n')
-    # print('Def-replacement:\n',ast,end='\n\n')
-    ast = expand_sting_literals(ast)
-    ast = expand_overfull_brackets(ast)
-    ast = fill_in_empty_trees(ast)
-    # print('End of pre-proc:\n',ast,end='\n\n')
-
-    # Build
-    trees = [build_tree(a) for a in ast]
-    program = trees[0]
-    for tree in trees[1:]:
-        program += tree
-
-    # Post-process
-    program = str(program)
-    program = '\n'.join(line[1:].rstrip() for line in program.split('\n'))
-
+    program = str(reduce(operator.add,(build_tree(a) for a in ast)))
+    program = '\n'.join(line[1:].rstrip() for line in program.split('\n')) # Remove excessive whitespace
     return program
 
 #===============================================================================================================================
@@ -335,65 +330,63 @@ def compile(ast):
 
 def greedy_optimisation(ast, verbose=True, max_iter=None):
     ''' Greedily insert empty trees into the abstract syntax tree '''
-    
-    every_partition = lambda seq: chain(*map(
-        partial(windowed_complete,seq),range(2,len(seq))))
+
+    def candidates(ast):
+        for b,m,e in windowed_complete(ast,2):
+            yield (*b,('',m[0],m[1]),*e)
 
     iter_count = 0
     if verbose: print('Greedy tree optimisation')
     while True:
         iter_count += 1
-        if max_iter and iter_count>max_iter:
-            break
+        if max_iter and iter_count>max_iter: break
 
         N = len(compile(ast))
-        for pre,hay,suf in every_partition(ast):
-            # TODO Find a non-hacky way to do this
-            new_ast = (*pre,tuple(x for x in hay),*suf)
-            M = len(compile(new_ast))
+        for candidate in candidates(ast):
+            M = len(compile(candidate))
             if M < N:
                 if verbose: print(f'{iter_count} | Old len: {N} | New len: {M}')
-                ast = new_ast
-                break # Accept the new ast
+                ast = candidate
+                break # Greedilly accept the new ast
         else:
             break # Break from the while loop
     return ast
 
-def repeat(func, n, arg):
-    if n < 0: raise ValueError
-    if n == 0: return arg
-    out = func(arg)
-    for _ in range(n-1):
-        out = func(out)
-    return out
+def considerate_optimisation(ast,verbose=True,max_iter=None,max_depth=10):
+    ''' Consider all the possible places to insert a tree up to ``max_depth`` '''
 
-def singleton_optimisation(ast,verbose=True,max_iter=None):
-    '''  '''
-
+    import warnings
+    warnings.warn('Work in progress. This function is not done yet.')
     # TODO Work In Progress
+
+    def repeat(func, n, arg):
+        if n < 0: raise ValueError
+        if n == 0: return arg
+        out = func(arg)
+        for _ in range(n-1):
+            out = func(out)
+        return out
     
+    wrap = lambda node: ('',node,None) # Wrap a node
+
+    def candidates(ast):
+        for b,m,e in chain(windowed_complete(ast,1),windowed_complete(ast,2)):
+            m = ('',m[0],m[1]) if len(m)==2 else wrap(m[0]) # Wrap in a node
+            for d in range(max_depth):
+                yield (*b,repeat(wrap,d,m),*e)
+
     iter_count = 0
-    if verbose: print('Singleton optimisation')
+    if verbose: print('Considerate optimisation')
     while True:
         iter_count += 1
-        if max_iter and iter_count>max_iter:
-            break
-        
+        if max_iter and iter_count>max_iter: break
+
         N = len(compile(ast))
-        new_asts = []
-        for pre,hay,suf in chain(windowed_complete(ast,1),windowed_complete(ast,2)):
-            for d in range(1,20+1): # Add up to 5 levels of pyramids
-                new_hay = repeat(lambda x: (x,),d,(hay))
-                new_ast = (*pre,tuple(x for x in new_hay),*suf)
-                new_asts.append(new_ast)
-        lengths = list(len(compile(a)) for a in new_asts)
-        print('len:',len(lengths))
-        M, I = min((v,i) for (i,v) in enumerate(lengths))
+        M, candidate = min( (len(compile(c)),c) for c in candidates(ast) )
         if M < N:
             if verbose:
-                print(f'{iter_count} | Old len: {N} | New len: {M} | Insert: {I+1}')
-            ast = new_asts[I]
-            # break # Accept the new ast
+                print(f'{iter_count} | Old len: {N} | New len: {M}')
+            ast = candidate
         else:
             break # Break from the while loop
     return ast
@@ -417,10 +410,19 @@ def main(args):
     if args.verbose: print('Reduced source:',text)
     
     ast = lex(text)
+    
+    # Part of pre-process
     ast = def_keyword(ast)
-    # TODO ^ find better place
-    if args.singleton_optimisation:
-        ast = singleton_optimisation(ast,max_iter=None)
+    ast = expand_sting_literals(ast)
+    ast = expand_overfull_brackets(ast)
+    ast = fill_in_empty_trees(ast)
+    ast = fill_in_underscores(ast)
+    ast = underscore_keyword(ast)
+    # TODO ^ find better place ??
+
+    # TODO  Make optimisation options mutually exclusive
+    if args.considerate_optimisation:
+        ast = considerate_optimisation(ast,max_iter=None)
     if args.greedy_optimisation:
         ast = greedy_optimisation(ast,max_iter=None)
 
@@ -430,19 +432,6 @@ def main(args):
     if args.output:
         with open(args.output,'w') as f:
             f.write(program)
-
-if False: #__name__ == "__main__":
-    import argparse
-    args = argparse.Namespace(
-        greedy_optimisation=False,
-        singleton_optimisation=False,
-        input='./examples/def_keyword.psll',
-        output='./examples/def_keyword.pyra',
-        force=True,
-        verbose=False
-        )
-    main(args)
-    print('done')
 
 if __name__ == "__main__":
 
@@ -484,9 +473,10 @@ if __name__ == "__main__":
         help='Force file overwrite.')
     
     parser.add_argument('-go','--greedy-optimisation', action='store_true',
-        help='Minimise the size of the resulting code by attempting blank pyramid inserts. This is a greedy strategy which inserts the pyramid at the very first place it finds which is beneficial. This tends to result in tall source code.')
-    parser.add_argument('-so','--singleton-optimisation', action='store_true',
-        help='Experimental')
+        help='Greedilly insert an empty pyramid the very first place which minimised the size is beneficial. This tends to result in tall source code.')
+    parser.add_argument('-co','--considerate-optimisation', action='store_true',
+        help='Consider all the possible places to insert a pyramid, up to certain depth. Choose the most beneficial. This tends to result in wide source code.')
+
     # Compiler options
     # parser.add_argument('-nt','--null-trees', action='store_true',
     #     help='Use null (height 0) trees.')
@@ -496,5 +486,4 @@ if __name__ == "__main__":
     args = parser.parse_args()
     valid_output_file(args)
 
-    # print(args)
     main(args)
