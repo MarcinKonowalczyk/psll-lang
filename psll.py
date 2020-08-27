@@ -4,8 +4,9 @@ import re
 from itertools import zip_longest, chain
 
 from functools import partial, reduce
-import operator
 from functools import lru_cache as cached
+import operator
+from string import ascii_letters
 
 from windowed_complete import windowed_complete
 from tree_repr import Pyramid
@@ -124,15 +125,15 @@ def lex(text):
     ast = tuple(split_into_subtrees(line) for line in split_into_lines(text))
     return ast
 
-#=====================================================================================================
-#                                                                                                     
-#  #####   #####    #####            #####   #####     #####    ####                                
-#  ##  ##  ##  ##   ##               ##  ##  ##  ##   ##   ##  ##                                   
-#  #####   #####    #####  ########  #####   #####    ##   ##  ##                                   
-#  ##      ##  ##   ##               ##      ##  ##   ##   ##  ##                                   
-#  ##      ##   ##  #####            ##      ##   ##   #####    ####                                
-#                                                                                                     
-#=====================================================================================================
+#==================================================================================================================================================
+#                                                                                                                                                  
+#  ######  #####    #####  #####        ######  #####      ###    ##   ##  #####  #####     ####    ###    ##                                    
+#    ##    ##  ##   ##     ##             ##    ##  ##    ## ##   ##   ##  ##     ##  ##   ##      ## ##   ##                                    
+#    ##    #####    #####  #####          ##    #####    ##   ##  ##   ##  #####  #####     ###   ##   ##  ##                                    
+#    ##    ##  ##   ##     ##             ##    ##  ##   #######   ## ##   ##     ##  ##      ##  #######  ##                                    
+#    ##    ##   ##  #####  #####          ##    ##   ##  ##   ##    ###    #####  ##   ##  ####   ##   ##  ######                                
+#                                                                                                                                                  
+#==================================================================================================================================================
 
 def tree_traversal(ast, str_fun=None, post_fun=None, pre_fun=None, final_fun=None):
     ''' (Depth-first) walk through the abstract syntax tree and application of appropriate functions '''
@@ -154,6 +155,72 @@ def tree_traversal(ast, str_fun=None, post_fun=None, pre_fun=None, final_fun=Non
         final_fun(ast2)
     return ast2 # Return ast back as a tuple
 
+#=====================================================================================================
+#                                                                                                     
+#  #####   #####    #####            #####   #####     #####    ####                                
+#  ##  ##  ##  ##   ##               ##  ##  ##  ##   ##   ##  ##                                   
+#  #####   #####    #####  ########  #####   #####    ##   ##  ##                                   
+#  ##      ##  ##   ##               ##      ##  ##   ##   ##  ##                                   
+#  ##      ##   ##  #####            ##      ##   ##   #####    ####                                
+#                                                                                                     
+#=====================================================================================================
+
+def variable_names(ast):
+    ''' Find all the variable names used in the code '''
+    names = set()
+    def variable_finder(node):
+        if len(node)==3:
+            if node[0] == 'set' and isinstance(node[1],str):
+                names.add(node[1])
+    tree_traversal(ast,post_fun=variable_finder)
+    return names
+
+def shorten_variable_names(ast):
+    ''' Shorten variable names to single letter, is possible '''
+    names = variable_names(ast)
+    future_names = {}
+    rules = {}
+    for name in names:
+        if len(name)==1: # Name is already short
+            rules[name] = name
+            future_names.add(name)
+        else:
+            all_names = names.union(future_names)
+            for letter in name:
+                if letter not in all_names:
+                    rules[name]=letter
+                    future_names.add(letter)
+                    break # Go to the next name
+            else: # No break, aka all single letters in the variable name already used
+                for letter in ascii_letters:
+                    if letter not in all_names:
+                        rules[name]=letter
+                        future_names.add(letter)
+                        break # Go to the next name
+                else: # No break, aka all single letter names already taken
+                    if len(name)==4: # Name already pretty short
+                        rules[name] = name
+                        future_names.add(name)
+                    else:
+                        name_parts = lambda name: chain(*map(partial(windowed_complete,name),range(2,4)))
+                        for _,m,_ in name_parts(name):
+                            new_name = ''.join(m)
+                            if new_name not in all_names:
+                                rules[name]=letter
+                                future_names.add(letter)
+                                break # Go to the next name
+                        else:
+                            for m in product(ascii_letters,repeat=3):
+                                new_name = ''.join(m)
+                                if new_name not in all_names:
+                                    rules[name]=letter
+                                    future_names.add(letter)
+                                    break # Go to the next name
+                            else: # Give up and don't shorten the name
+                                rules[name]=name
+                                future_names.add(name)
+
+        
 def def_keyword(ast):
     ''' Search for ('def','something',(...)) keywords '''
 
@@ -407,15 +474,18 @@ def main(args):
     
     ast = lex(text)
     
-    # Part of pre-process
-    ast = def_keyword(ast)
-    ast = expand_sting_literals(ast)
-    ast = expand_overfull_brackets(ast)
-    ast = fill_in_empty_trees(ast)
-    ast = fill_in_underscores(ast)
-    ast = underscore_keyword(ast)
-    # TODO ^ find better place ??
+    variables = variable_names(ast)
+    print('variables:',variables)
 
+    stack = [ # Pre-processing stack
+        def_keyword,
+        expand_sting_literals,
+        expand_overfull_brackets,
+        fill_in_empty_trees,
+        fill_in_underscores,
+        underscore_keyword]
+    ast = reduce(lambda x,y: y(x),[ast] + stack)
+    
     # TODO  Make optimisation options mutually exclusive
     if args.considerate_optimisation:
         ast = considerate_optimisation(ast,max_iter=None)
