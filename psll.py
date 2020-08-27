@@ -165,7 +165,7 @@ def tree_traversal(ast, str_fun=None, post_fun=None, pre_fun=None, final_fun=Non
 #                                                                                                     
 #=====================================================================================================
 
-def variable_names(ast):
+def find_variable_names(ast):
     ''' Find all the variable names used in the code '''
     names = set()
     def variable_finder(node):
@@ -177,13 +177,12 @@ def variable_names(ast):
 
 def shorten_variable_names(ast):
     ''' Shorten variable names to single letter, is possible '''
-    names = variable_names(ast)
-    future_names = {}
+    names = find_variable_names(ast)
+    future_names = set(n for n in names if len(n)==1)
     rules = {}
     for name in names:
         if len(name)==1: # Name is already short
             rules[name] = name
-            future_names.add(name)
         else:
             all_names = names.union(future_names)
             for letter in name:
@@ -198,27 +197,14 @@ def shorten_variable_names(ast):
                         future_names.add(letter)
                         break # Go to the next name
                 else: # No break, aka all single letter names already taken
-                    if len(name)==4: # Name already pretty short
-                        rules[name] = name
-                        future_names.add(name)
-                    else:
-                        name_parts = lambda name: chain(*map(partial(windowed_complete,name),range(2,4)))
-                        for _,m,_ in name_parts(name):
-                            new_name = ''.join(m)
-                            if new_name not in all_names:
-                                rules[name]=letter
-                                future_names.add(letter)
-                                break # Go to the next name
-                        else:
-                            for m in product(ascii_letters,repeat=3):
-                                new_name = ''.join(m)
-                                if new_name not in all_names:
-                                    rules[name]=letter
-                                    future_names.add(letter)
-                                    break # Go to the next name
-                            else: # Give up and don't shorten the name
-                                rules[name]=name
-                                future_names.add(name)
+                    # Give up and don't shorten the name
+                    rules[name]=name
+                    future_names.add(name)
+
+    def string_replacer(node): # Shorten the names
+        return rules[node] if node in rules.keys() else node
+
+    return tree_traversal(ast,str_fun=string_replacer)
 
         
 def def_keyword(ast):
@@ -474,16 +460,19 @@ def main(args):
     
     ast = lex(text)
     
-    variables = variable_names(ast)
-    print('variables:',variables)
+    # names = find_ariable_names(ast)
+    # print('variables:',variables)
 
-    stack = [ # Pre-processing stack
+    stack = [ # Pre-processing function stack
+        shorten_variable_names,
         def_keyword,
         expand_sting_literals,
         expand_overfull_brackets,
         fill_in_empty_trees,
         fill_in_underscores,
         underscore_keyword]
+    if args.full_names:
+        stack = stack[1:]
     ast = reduce(lambda x,y: y(x),[ast] + stack)
     
     # TODO  Make optimisation options mutually exclusive
@@ -538,6 +527,9 @@ if __name__ == "__main__":
     parser.add_argument('-f', '--force', action='store_true',
         help='Force file overwrite.')
     
+    parser.add_argument('--full-names', action='store_true',
+        help='Don\'t shorten variable names when compiling the pyramid scheme. This will result in longer, but potentially more readable source code. Usefull for either compiler or pyramid scheme debugging.')
+
     parser.add_argument('-go','--greedy-optimisation', action='store_true',
         help='Greedilly insert an empty pyramid the very first place which minimised the size is beneficial. This tends to result in tall source code.')
     parser.add_argument('-co','--considerate-optimisation', action='store_true',

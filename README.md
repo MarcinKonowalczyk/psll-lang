@@ -180,25 +180,13 @@ The underscore `_` can be used to explicitly specify an empty slot where a pyram
 
 This is not a real-purpose language. In this section the 'optimisation' refers to obtaining nicer-looking and more compact pyramids, *not* not efficient code.
 
-- [ ] More compiler optimisations
-  - [x] !! Subtree packing <s><- !!! (work on this next!)</s>
-  - [x] <s>Packing with null-tree snakes</s> kindof
-  - [ ] Better (non-greedy?) optimisation
-  - [ ] Variable name optimisation
-    - [ ] Automatic shortening
-    - [x] Packing into the upper parts of the triangles
-- [x] ?? Pre-compile code optimisations <s>Not sure what that would be though, tbh.</s>
-  - [x] Move string expansion to pre-proc
-  - [x] Move binary bracket expansion to pre-proc
-  - [x] Move null-trees to pre-proc <s><- (work on this next, because it's broken...)</s>
 - [x] ?? Syntactic sugar
   - [x] Simpler writing of strings
     - [ ] Add support for escape characters
   - [x] Simpler writing of nested nil pyramids
   - [x] `def` keyword
   - [x] ?? `_` keyword
-  - [ ] ?? Arrays / Linked lists
-- [x] Compiler optimisation takes a long time
+- [ ] ?? Arrays / Linked lists
 - [ ] ?? Easier to use installation. Maybe a make-script which makes a symlink in the correct place...
 - [ ] Improve test coverage
   - [x] Make the coverage count only the tests for that file
@@ -216,9 +204,28 @@ This is not a real-purpose language. In this section the 'optimisation' refers t
   - [x] ?? Interpret `_` as not-a-tree
   - [x] Therefore optimise `chr` in string expansion
   - [ ] Also add this to the snake optimiser
+
+## Done's
+
+Bullet points get moved here from the above section when they get finished. (It's nice to keep a history of past ideas and goals)
+
+- [x] Compiler optimisation takes a long time
 - [x] !! Add memoisation to `build_tree`
+- [x] More compiler optimisations
+  - [x] !! Subtree packing <s><- !!! (work on this next!)</s>
+  - [x] <s>Packing with null-tree snakes</s> kindof
+  - [x] Better (non-greedy?) optimisation
+  - [x] Variable name optimisation
+    - [x] Automatic shortening
+    - [x] Packing into the upper parts of the triangles
+- [x] ?? Pre-compile code optimisations <s>Not sure what that would be though, tbh.</s>
+  - [x] Move string expansion to pre-proc
+  - [x] Move binary bracket expansion to pre-proc
+  - [x] Move null-trees to pre-proc <s><- (work on this next, because it's broken...)</s>
+
 
 ## Bugs
+
 - [x] <s>`compact` option breaks when `N`th triangle is wider than all the `1..N-1`s.</s>
 - [x] `compact` option does nothing
 - [ ] Strings do not support escape characters (And maybe they never will! Ha! They're just sugar anyway...)
