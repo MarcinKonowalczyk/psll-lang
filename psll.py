@@ -355,10 +355,6 @@ def greedy_optimisation(ast, verbose=True, max_iter=None):
 def considerate_optimisation(ast,verbose=True,max_iter=None,max_depth=10):
     ''' Consider all the possible places to insert a tree up to ``max_depth`` '''
 
-    import warnings
-    warnings.warn('Work in progress. This function is not done yet.')
-    # TODO Work In Progress
-
     def repeat(func, n, arg):
         if n < 0: raise ValueError
         if n == 0: return arg

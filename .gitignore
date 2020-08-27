@@ -6,5 +6,5 @@ examples/*.pyra
 htmlcov
 .pytest_cache
 __pycache__
-tictoc.py
-recursive_kwargs.py
+.pytest_cache
+python_tests
