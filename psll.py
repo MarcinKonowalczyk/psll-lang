@@ -295,11 +295,12 @@ def expand_overfull_brackets(ast):
 def fill_in_empty_trees(ast):
     ''' Fill in the implicit empty strings in brackets with only lists '''
     def filler(node):
-        if node:
-            if not isinstance(node[0],str):
-                node = ('',*node)
-        else:
-            node = ('')
+        if node is ():
+            return ('')
+        elif not isinstance(node[0],str):
+            return ('',*node)
+        elif node[0] == '_':
+            return ('',*node)
         return node
 
     return tree_traversal(ast,post_fun=filler)
