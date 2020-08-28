@@ -366,15 +366,6 @@ class Tree(AbstractTree):
 #======================================================================
 
 if __name__ == '__main__':
-    p = Pyramid.from_text
-    p0 = p('') + ( None,p('!') )
-    p1 = p('chr'*100)
-
-    p2 = p0 + (p1,p1)
-    for row in p2:
-        print(row[0]*'_' + row[1] + row[2]*'_')
-
-if False: #__name__ == '__main__':
     p0 = Pyramid.from_text('')
     p1 = Pyramid.from_text('set')
     text = 'Greetings traveller! Where goes thee this fine morning?'*3

@@ -9,7 +9,7 @@ import operator
 from string import ascii_letters
 
 from windowed_complete import windowed_complete
-from tree_repr import Pyramid
+from ascii_trees import Pyramid
 
 SPACE = ' '
 

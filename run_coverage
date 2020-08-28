@@ -1,6 +1,6 @@
 #!/bin/bash
 
-declare -a FILES_TO_TEST=("psll" "tree_repr")
+declare -a FILES_TO_TEST=("psll" "ascii_trees")
 
 rm -f .coverage # Clear any previous .coverage report files
 

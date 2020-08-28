@@ -9,8 +9,8 @@ from itertools import product, permutations
 import os, sys
 sys.path.append(os.path.realpath('.'))
 
-import tree_repr
-from tree_repr import Pyramid, Tree
+import ascii_trees
+from ascii_trees import Pyramid, Tree
 
 from contextlib import contextmanager
 from io import StringIO
@@ -49,7 +49,7 @@ class PyramidTests(unittest.TestCase):
 
     def test_default_space(self):
         ''' > Make sure the default space is a space '''
-        self.assertEqual(tree_repr.SPACE,' ')
+        self.assertEqual(ascii_trees.SPACE,' ')
     
     def test_output(self):
         ''' > Check output is what it is supposed to be '''
