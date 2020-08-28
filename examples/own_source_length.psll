@@ -1,0 +1,23 @@
+// This program prints the length of its own pyramid scheme source code.
+// The actual length may vary with specific optimisation options.
+
+(out (_ 431) " ") // Print 431 and a space
+// Print each letter of "bytes" separatelly
+(out _ "b")
+(out _ "y")
+(out _ "t")
+(out _ "e")
+(out _ "s")
+
+// Pyramid scheme source code:
+//      ^   ^       ^   ^       ^   ^
+//     ^-  / \     ^-  / \     ^-  / \
+//    / \ /out\   / \ /out\   / \ /out\
+//   /out\-----^ /out\-----^ /out\-----^
+//  ^-----^   / \-----^   / \-----^   / \
+//  -^   / \ /chr\   / \ /chr\   / \ /chr\
+//  / \ /chr\-----^ /chr\-----^ /chr\-----^
+// /431\-----^   / \-----^   / \-----^   / \
+// -----    / \ /98 \   / \ /116\   / \ /115\
+//         /32 \-----  /121\-----  /101\-----
+//         -----       -----       -----

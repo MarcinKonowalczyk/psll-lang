@@ -247,3 +247,4 @@ Bullet points get moved here from the above section when they get finished. (It'
 - [ ] Strings do not support escape characters (And maybe they never will! Ha! They're just sugar anyway...)
 - [ ] `(_)` breaks the compiler (Why would someone decide to write this though...?)
 - [x] Asymmetric children cause issues in `tree_repr` in `add_one_child`
+- [ ] Bug in greedy optimisation for source code with one major tree

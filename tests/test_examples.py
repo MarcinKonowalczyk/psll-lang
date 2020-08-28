@@ -98,5 +98,9 @@ class TestBubbleSort(unittest.TestCase,MetaTest):
 class TestDefKeyword(unittest.TestCase,MetaTest):
     pass
 
+@skipUnlessExampleExists(examples + 'own_source_length.psll')
+class TestDefKeyword(unittest.TestCase,MetaTest):
+    pass
+
 if __name__=="__main__":
     unittest.main()
