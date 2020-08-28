@@ -176,6 +176,22 @@ The following is, for example, a *postfix* implementation of the modulo function
 
 The underscore `_` can be used to explicitly specify an empty slot where a pyramid could be. It is not particularly useful from the user point of view (maybe except for fine-tuning the position of the pyramids for code golf), but it is very helpful for the compiler. All the leaves are eventually terminated with `_`, and string expansion used the `_` keyword to help pack the code a bit better.
 
+## Code optimisation
+
+Psll compiler allows for some code optimisation. Optimising the code for speed would be, let's be honest with ourselves, a bit silly at this point. Psll optimisation attempts, therefore, to minimise number of bytes in the source code, such that the result can be used in [code golf challenges](https://codegolf.stackexchange.com/a/208938/68200).
+
+### Greedy optimisation
+
+Attempt to package each pair of root nodes in the abstract syntax tree. Insert an empty pyramid in the very first place which is beneficial (hence _greedy_). If all such places have been exhausted, try all teh possible insertions of a single pyramid.
+
+This optimisation technique tends to result in tall pyramid scheme. It is very fast, and produces intermediate-quality results.
+
+### Considerate optimisation
+
+Consider all the possible places to either insert a single pyramid, or package two adjacent pyramids up to certain depth (10). Choose the most beneficial.
+
+This optimisation technique tends to result in wide pyramid scheme. It is slower than the greedy optimisation, but very often results in a smaller pyramid scheme.
+
 ## ToDo's
 
 This is not a real-purpose language. In this section the 'optimisation' refers to obtaining nicer-looking and more compact pyramids, *not* not efficient code.
@@ -192,7 +208,7 @@ This is not a real-purpose language. In this section the 'optimisation' refers t
   - [x] Make the coverage count only the tests for that file
   - [x] tree_repr coverage
   - [ ] psll coverage
-  - [ ] Test *asymmetric* children in `tree_repr`
+  - [x] Test *asymmetric* children in `tree_repr`
 - [ ] ?? Tree rendering
   - [ ] ?? Have a look at (optionally!) using `anytree` package for visualisation
   - [ ] ?? Ascii art to LaTeX
@@ -200,11 +216,6 @@ This is not a real-purpose language. In this section the 'optimisation' refers t
   - [ ] ?? Backtrace
 - [x] Add testing psll bash script to tests
   - [ ] ?? And somehow coverage
-- [x] Add option to force a node with one child to make it a right child
-  - [x] ?? Add None (or None-like) values to the abstract syntax tree representation
-  - [x] ?? Interpret `_` as not-a-tree
-  - [x] Therefore optimise `chr` in string expansion
-  - [ ] Also add this to the snake optimiser
 
 ## Done's
 
@@ -223,7 +234,11 @@ Bullet points get moved here from the above section when they get finished. (It'
   - [x] Move string expansion to pre-proc
   - [x] Move binary bracket expansion to pre-proc
   - [x] Move null-trees to pre-proc <s><- (work on this next, because it's broken...)</s>
-
+- [x] Add option to force a node with one child to make it a right child
+  - [x] ?? Add None (or None-like) values to the abstract syntax tree representation
+  - [x] ?? Interpret `_` as not-a-tree
+  - [x] Therefore optimise `chr` in string expansion
+  - [x] <s>Also add this to the snake optimiser</s>
 
 ## Bugs
 
@@ -231,4 +246,4 @@ Bullet points get moved here from the above section when they get finished. (It'
 - [x] `compact` option does nothing
 - [ ] Strings do not support escape characters (And maybe they never will! Ha! They're just sugar anyway...)
 - [ ] `(_)` breaks the compiler (Why would someone decide to write this though...?)
-- [ ] Asymmetric children cause issues in `tree_repr` in `add_one_child`
+- [x] Asymmetric children cause issues in `tree_repr` in `add_one_child`

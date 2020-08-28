@@ -385,8 +385,11 @@ def greedy_optimisation(ast, verbose=True, max_iter=None):
     ''' Greedily insert empty trees into the abstract syntax tree '''
 
     def candidates(ast):
-        for b,m,e in windowed_complete(ast,2):
+        for b,m,e in windowed_complete(ast,2): # Try all the pairs
             yield (*b,('',m[0],m[1]),*e)
+        for b,m,e in windowed_complete(ast,1): # Finally try all the single pyramids
+            yield (*b,('',m[0],None),*e)
+            yield (*b,('',None,m[0]),*e)
 
     iter_count = 0
     if verbose: print('Greedy tree optimisation')
@@ -416,47 +419,19 @@ def repeat(func, n, arg):
 def considerate_optimisation(ast,verbose=True,max_iter=None,max_depth=10):
     ''' Consider all the possible places to insert a tree up to ``max_depth`` '''
     
-    wrap = lambda node: ('',node,None) # Wrap a node
-
-    def candidates(ast):
-        for b,m,e in chain(windowed_complete(ast,1),windowed_complete(ast,2)):
-            m = ('',m[0],m[1]) if len(m)==2 else wrap(m[0]) # Wrap in a node
-            for d in range(max_depth):
-                yield (*b,repeat(wrap,d,m),*e)
-
-    iter_count = 0
-    if verbose: print('Considerate optimisation')
-    while True:
-        iter_count += 1
-        if max_iter and iter_count>max_iter: break
-
-        N = len(compile(ast))
-        lengths = ((len(compile(c)),c) for c in candidates(ast))
-        M, candidate = min(lengths, key=operator.itemgetter(0))
-        if M < N:
-            if verbose:
-                print(f'{iter_count} | Old len: {N} | New len: {M}')
-            ast = candidate
-        else:
-            break # Break from the while loop
-    return ast
-
-def snake_optimisation(ast,verbose=True,max_iter=None,max_depth=10):
-    ''' Snakes! '''
-
-    wrap_left = lambda node: ('',node,None)
-    wrap_right = lambda node: ('',None,node)
+    wrap_left = lambda node: ('',node,None) # Wrap a node
+    wrap_right = lambda node: ('',None,node) # Wrap a node
 
     def candidates(ast):
         for b,m,e in chain(windowed_complete(ast,1),windowed_complete(ast,2)):
             m = ('',m[0],m[1]) if len(m)==2 else m[0]
             for d in range(1,max_depth):
-                wraps = [wrap_right,wrap_left,wrap_left,wrap_right]*d
-                nm = reduce(lambda x,y:y(x), [m,*wraps])
-                yield (*b,nm,*e)
+                yield (*b,repeat(wrap_left,d,m),*e)
+            for d in range(1,max_depth):
+                yield (*b,repeat(wrap_right,d,m),*e)
 
     iter_count = 0
-    if verbose: print('Sssnake optimisation!')
+    if verbose: print('Considerate optimisation')
     while True:
         iter_count += 1
         if max_iter and iter_count>max_iter: break
@@ -508,8 +483,6 @@ def main(args):
     ast = reduce(lambda x,y: y(x), [ast] + stack)
     
     # TODO  Make optimisation options mutually exclusive
-    if args.snake_optimisation:
-        ast = snake_optimisation(ast,max_iter=None)
     if args.considerate_optimisation:
         ast = considerate_optimisation(ast,max_iter=None)
     if args.greedy_optimisation:
@@ -565,11 +538,9 @@ if __name__ == "__main__":
         help='Don\'t shorten variable names when compiling the pyramid scheme. This will result in longer, but potentially more readable source code. Usefull for either compiler or pyramid scheme debugging.')
 
     parser.add_argument('-go','--greedy-optimisation', action='store_true',
-        help='Greedilly insert an empty pyramid the very first place which minimised the size is beneficial. This tends to result in tall source code.')
+        help='Greedily insert an empty pyramid the very first place which minimised the size is beneficial. This tends to result in tall source code.')
     parser.add_argument('-co','--considerate-optimisation', action='store_true',
         help='Consider all the possible places to insert a pyramid, up to certain depth. Choose the most beneficial. This tends to result in wide source code.')
-    parser.add_argument('-so','--snake-optimisation', action='store_true',
-        help='Work in progress...')
 
     # Compiler options
     # parser.add_argument('-nt','--null-trees', action='store_true',
