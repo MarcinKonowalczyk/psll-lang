@@ -192,6 +192,7 @@ This is not a real-purpose language. In this section the 'optimisation' refers t
   - [x] Make the coverage count only the tests for that file
   - [x] tree_repr coverage
   - [ ] psll coverage
+  - [ ] Test *asymmetric* children in `tree_repr`
 - [ ] ?? Tree rendering
   - [ ] ?? Have a look at (optionally!) using `anytree` package for visualisation
   - [ ] ?? Ascii art to LaTeX
@@ -230,3 +231,4 @@ Bullet points get moved here from the above section when they get finished. (It'
 - [x] `compact` option does nothing
 - [ ] Strings do not support escape characters (And maybe they never will! Ha! They're just sugar anyway...)
 - [ ] `(_)` breaks the compiler (Why would someone decide to write this though...?)
+- [ ] Asymmetric children cause issues in `tree_repr` in `add_one_child`

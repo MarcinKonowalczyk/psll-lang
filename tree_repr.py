@@ -83,9 +83,13 @@ class AbstractTree(ABC):
         
         for row in grid: # Sanity check on rows of the grid
             assert isinstance(row,tuple), 'All rows of the grid must be tuples'
-            assert len(row)==3, 'All rows must be 3-length tuples'
-            assert rowlen(row)==self.width, 'All rows must specify entries of the same length'
-        
+            if not len(row)==3:
+                raise AssertionError('All rows must be 3-length tuples')
+            if not rowlen(row)==self.width:
+                for row in grid:
+                    print(row[0]*'_' + row[1] + row[2]*'_')
+                raise AssertionError('All rows must specify entries of the same length')
+
         self.grid = grid
         
     @classmethod
@@ -273,7 +277,7 @@ class Tree(AbstractTree):
         p,c = (self[-1], child[0]) # Last row of parent and first of the child
         parent_pad = c[0]
         overhang = c[2]-(len(p[1])+p[2])
-
+        print(c)
         grid = []
         for p,c in self.child_row_iterator(self,child):
             if p and not c:
@@ -365,6 +369,15 @@ class Tree(AbstractTree):
 #======================================================================
 
 if __name__ == '__main__':
+    p = Pyramid.from_text
+    p0 = p('')
+    p1 = p('set') + ( p('n'), p('chr')+(p('10'),None) )
+
+    p0 + (None,p1)
+    print(p0)
+    print(p1)
+
+if False: #__name__ == '__main__':
     p0 = Pyramid.from_text('')
     p1 = Pyramid.from_text('set')
     text = 'Greetings traveller! Where goes thee this fine morning?'*3
