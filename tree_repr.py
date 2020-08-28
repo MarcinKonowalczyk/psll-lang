@@ -83,30 +83,25 @@ class AbstractTree(ABC):
         
         for row in grid: # Sanity check on rows of the grid
             assert isinstance(row,tuple), 'All rows of the grid must be tuples'
-            if not len(row)==3:
-                raise AssertionError('All rows must be 3-length tuples')
-            if not rowlen(row)==self.width:
-                for row in grid:
-                    print(row[0]*'_' + row[1] + row[2]*'_')
-                raise AssertionError('All rows must specify entries of the same length')
+            assert len(row)==3, 'All rows must be 3-length tuples'
+            assert rowlen(row)==self.width, 'All rows must specify entries of the same length'
 
         self.grid = grid
         
     @classmethod
-    def from_text(self,text,**kwargs):
+    def from_text(cls,text,**kwargs):
         ''' Initialise from keyword text '''
-        grid = self.text2pyramid(text,**kwargs)
-        return self(grid)
+        grid = cls.text2pyramid(text,**kwargs)
+        return cls(grid)
     
     @classmethod
-    def from_str(self,string):
+    def from_str(cls,string):
         ''' Initialise from string representation '''
-        grid = self.string2grid(string)
-        return self(grid)
+        grid = cls.string2grid(string)
+        return cls(grid)
         
     @abstractmethod
     def toTree(self):
-        ''' Convert self to a tree '''
         return
     
     @abstractmethod
@@ -145,6 +140,7 @@ class Pyramid(AbstractTree):
         super().__init__(grid)
         assert self[0][1] == TOP, 'Pyramid has an invalid top'
         for row,next_row in pairwise(self):
+            assert row[0]==row[2], 'Not a pyramid'
             if not (row[0]==1 and next_row[0]==1):
                 assert (row[0]-1)==next_row[0], 'Not a pyramid'
 
@@ -198,12 +194,9 @@ class Tree(AbstractTree):
     def distance_row_iterator(left,right):
         ''' Return distance of closest approach of each pair of rows '''
         for l,r in zip(left,right):
-            # TODO: Add more detailed checking (making sure pyramids don't interfere)
             distance = l[2]+r[0]
             lc, rc = l[1][-1], r[1][0]
             if (lc==TOP and rc == BOTTOM) or (lc==BOTTOM and rc == TOP):
-                # print('Careful!',lc,rc)
-                # TODO ^ replace with warning...?
                 distance -= 1
             yield distance
 
@@ -222,7 +215,7 @@ class Tree(AbstractTree):
             p2p_distance = l[2]+r[0]-squeeze
 
         # Width of the squeezed pyramid
-        squeezed_width = self.width+other.width-squeeze
+        squeezed_width = self.width + other.width - squeeze
 
         # Make sure spacing between the peaks is an odd
         if odd_spacing and not (p2p_distance%2):
@@ -274,10 +267,10 @@ class Tree(AbstractTree):
         # child = child.toTree() # The child doesn't actually need to be a tree
 
         # Figure out the padding and overhang spacing
-        p,c = (self[-1], child[0]) # Last row of parent and first of the child
-        parent_pad = c[0]
-        overhang = c[2]-(len(p[1])+p[2])
-        print(c)
+        p, c = self[-1], child[0] # Last row of parent and first of the child
+        parent_pad = c[0] if left else c[2]
+        overhang = c[2]-(len(p[1])+p[2]) if left else c[0]-(len(p[1])+p[2])
+        
         grid = []
         for p,c in self.child_row_iterator(self,child):
             if p and not c:
@@ -298,17 +291,21 @@ class Tree(AbstractTree):
 
     def add_two_children(self,left,right):
         ''' Add left and right child to a tree '''
+
+        try: # Parent *must* be a single pyramid, even if children would fit
+            parent = self.toPyramid()
+        except:
+            raise RuntimeError('Cannot expand non-singleton Trees')
+
         parent_width = len(self[-1][1])//2*2+1 # Make sure parent width is odd
+
         # Put children together with minimum width of a parent, make sure they're odd
         left, right = left.toTree(), right.toTree()
         children = left.add_side_by_side(right,min_spacing=parent_width,odd_spacing=True)
         actual_children_width = len(children[0][1])-2
+
         # Try to expand oneself to accommodate the width of the children
         if (actual_children_width > parent_width) or (parent_width>len(self[-1][1])):
-            try:
-                parent = self.toPyramid()
-            except:
-                raise RuntimeError('Cannot expand non-singleton Trees')
             parent = Tree.from_text(parent.content,min_width=actual_children_width)
         else:
             parent = self
@@ -370,12 +367,12 @@ class Tree(AbstractTree):
 
 if __name__ == '__main__':
     p = Pyramid.from_text
-    p0 = p('')
-    p1 = p('set') + ( p('n'), p('chr')+(p('10'),None) )
+    p0 = p('') + ( None,p('!') )
+    p1 = p('chr'*100)
 
-    p0 + (None,p1)
-    print(p0)
-    print(p1)
+    p2 = p0 + (p1,p1)
+    for row in p2:
+        print(row[0]*'_' + row[1] + row[2]*'_')
 
 if False: #__name__ == '__main__':
     p0 = Pyramid.from_text('')

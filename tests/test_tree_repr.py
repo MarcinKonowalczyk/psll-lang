@@ -167,6 +167,19 @@ class TreeTests(unittest.TestCase):
                         t = p1 + (None,p2)
                     self.assertIsInstance(t,Tree)
     
+    def test_asymmetric_children(self):
+        ''' Test adding one child which is asymmetric '''
+        p = Pyramid.from_text
+        p1 = p('') # Tiny parent
+        p2 = p('set') + ( p('n'), p('chr'*100) ) # Heavily asymmetric child 
+        for which in ('left','right'):
+            with self.subTest(which=which):
+                if which=='left':
+                    t = p1 + (p2,None)
+                else:
+                    t = p1 + (None,p2)
+                self.assertIsInstance(t,Tree)
+
     def test_add_two_children(self):
         ''' > Add two children '''
         for c in product(TEST_CONTENT,repeat=3):
@@ -175,17 +188,19 @@ class TreeTests(unittest.TestCase):
                 t = p1 + (p2,p3)
                 self.assertIsInstance(t,Tree)
 
-    @unittest.skip('Work in progress')
     def test_cannot_expand_trees(self):
-        ''' > '''
+        ''' > Make sure only trees can get expanded '''
         p3 = Pyramid.from_text('Quick brown fox jumped over a lazy dog'*10)
         for c in product(TEST_CONTENT,repeat=2):
             p1, p2 = tuple(map(Pyramid.from_text,c))
             with self.subTest(contents=c):
-                t = p1 + (None,p2)
-                print(t)
+                t = p1 + (None,p2) # Make a tree
                 with self.assertRaises(RuntimeError):
-                    t + (p3,p3)
+                    r = t + (p3,p3)
+                    self.assertIsInstance(t,Tree)
+                    print('Oops:')
+                    print(t)
+                    print(r)
 
 if __name__ == '__main__':
     unittest.main()
