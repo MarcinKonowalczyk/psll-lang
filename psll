@@ -15,7 +15,6 @@ PSLL_FILE="$PWD/${1%.*}.psll"
 PYRA_FILE="$PWD/${1%.*}.pyra"
 echo "Compiling psll to pyramid scheme"
 python $PSLL_COMPILER $PSLL_FILE -o $PYRA_FILE -f -go #-co #-v
-# python -c 'raise SyntaxError' # <- For testing
 RESULT=$?
 
 if [ "$RESULT" -ne 0 ]; then

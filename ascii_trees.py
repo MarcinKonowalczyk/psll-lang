@@ -1,4 +1,4 @@
-from itertools import zip_longest, tee, product
+from itertools import zip_longest, tee, product, islice
 from abc import ABC, abstractmethod
 
 def pairwise(iterable):
@@ -146,21 +146,9 @@ class Pyramid(AbstractTree):
 
     @property
     def content(self):
-        content = []
-        for row in self:
-            row_content = row[1][1:-1]
-            row_content = row_content.replace(BOTTOM,'')
-            row_content = row_content.replace(SPACE,'')
-            if row_content:
-                content.append(row_content)
-        content = ''.join(content)
-
-        # Trim leading and trailing space
-        i1, i2 = 0, len(content)
-        for i,(l1,l2) in enumerate(pairwise(content)):
-            if l1==SPACE and l2!=SPACE and not i1: i1 = i+1
-            if l1!=SPACE and l2==SPACE: i2 = i+1
-        return content[i1:i2]
+        content = ''.join(row[1:-1].replace(SPACE,'')
+            for _,row,_ in islice(self,1,self.height-1))
+        return content.strip()
 
     def toTree(self):
         return Tree(self.grid)

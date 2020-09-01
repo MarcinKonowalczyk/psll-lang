@@ -202,6 +202,7 @@ This is not a real-purpose language. In this section the 'optimisation' refers t
   - [x] Simpler writing of nested nil pyramids
   - [x] `def` keyword
   - [x] ?? `_` keyword
+  - [ ] Implicit expansion of `out` command, such that one can write `(out "j: " j " | k: " k newline)` and it gets expanded into a pile of `out` commands
 - [ ] ?? Arrays / Linked lists
 - [ ] ?? Easier to use installation. Maybe a make-script which makes a symlink in the correct place...
 - [ ] Improve test coverage

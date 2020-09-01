@@ -80,6 +80,22 @@ class PyramidTests(unittest.TestCase):
                 p = Pyramid.from_text(c)
                 self.assertEqual(p.content,c)
 
+    def test_content_minus(self):
+        ''' > Test a specific bug where a tree with just a '-' would not get expanded correctly '''
+        contents = ['-',' '*10 + '-' + ' '*10]
+        for c in contents:
+            with self.subTest(contents=c):
+                p = Pyramid.from_text(c,remove_spaces=False)
+                self.assertEqual(p.content,'-')
+
+    def test_content_minus_expansion(self):
+        ''' > Test a specific bug where a tree with just a '-' would not get expanded correctly '''
+        p0 = Pyramid.from_text('-')
+        p1 = Pyramid.from_text('long_variable_name')
+        p2 = Pyramid.from_text('another_long_name')
+        t = p0 + (p1,p2)
+        self.assertIsInstance(t,Tree)
+
     def test_toPyramid(self):
         ''' Pyramid to Pyramid '''
         for c in TEST_CONTENT:
