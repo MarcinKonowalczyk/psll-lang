@@ -1,0 +1,99 @@
+(set newline (chr 10))
+(def print ( // Helper to print 'a'
+    (out "a: " a) (out newline)
+))
+
+////// simple array declaration //////
+(out newline)
+
+(set a (1 2)) (print)
+
+// This results in nested arrays
+(set a (3 (1 2))) (print)
+(set a ((1 2) 3)) (print)
+
+// Add arrays to make longer ones
+(set a (+ (1 2) (3 4))) (print)
+
+// A trick to make length-1 arrays
+(set a (- (0 1) (1 1))) (print)
+
+// Similarly, empty arrays
+(set a (- (1 1) (1 1))) (print)
+
+////// array literal //////
+(out newline)
+
+// Both of these work
+(set a [1,2,3,4,5,6,7]) (print)
+(set a [1 2 3 4 5 6 7]) (print)
+// But not mix of commas and spaces
+// (set a [1,2 3 4 5 6 7]) (print)
+
+(set a []) (print)
+(set a [1]) (print)
+
+////// mixed input //////
+(out newline)
+
+// Arrays can have ints, floats or strings
+(set a [1 "hello" "farewell" 3.3]) (print)
+
+////// range keyword //////
+(out newline)
+
+// This: ...
+// (set a (range 1 5))
+// Expands into this:
+(set a
+    (+ (1 2) // Array [1,2]
+        (+ (3 4) // Array [3,4]
+            (- (5 1) (1 1)) // Array [5]
+        )
+    )
+)
+(print)
+
+////// star (*) operator //////
+(out newline)
+
+(set a [1,2,3,4])
+
+// * overloads concatenation
+(out (* a 3)) (out newline)
+
+// as well as .join with string
+(out (* a ",")) (out newline)
+(out (* a " -> ")) (out newline)
+
+(set a ("one" "two"))
+(out (* a " -> ")) (out newline)
+
+// String concatenation
+(set a 'Quick') (set b 'ly')
+(out (* (a b) '')) (out newline)
+(out (+ a b)) (out newline) // But this is simpler
+
+////// Add to array //////
+(out newline)
+
+(set a [1,2,3,4])
+(set a (+ a [5])) (print) // Append
+(set a (+ [0] a)) (print) // Prepend
+
+////// Array elements //////
+(out newline)
+
+// Arrays are zero-indexed
+(set a [1,2,3,4]) (print)
+(out "a[0]: " (arg a 0)) (out newline)
+(out "a[1]: " (arg a 1)) (out newline)
+
+// Negative indices go from the end
+(out "a[-1]: " (arg a -1)) (out newline)
+(out "a[-2]: " (arg a -2)) (out newline)
+
+// Too large indices give 'nil'
+(out "a[4]: " (arg a 4)) (out newline)
+(out "a[-5]: " (arg a -5)) (out newline)
+

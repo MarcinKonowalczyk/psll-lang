@@ -166,16 +166,21 @@ class Split(unittest.TestCase,MetaTests):
         texts = ['("hi")','(\'hello\')','(set a \'one\')','(set b "two")','("string with spaces")']
         targets = [('"hi"',),('\'hello\'',),('set','a','\'one\''),('set','b','"two"'),('"string with spaces"',)]
         self.paired_test(texts,targets,psll.split_into_subtrees)
+    
+    @unittest.skip('Currently broken')
+    def test_double_quote_command(self):
+        ''' > Make sure " command is not broken (aka it does not start an unnecessary string) '''
+        pass
 
-#=====================================================================================================
-#                                                                                                     
-#  #####   #####    #####            #####   #####     #####    ####                                
-#  ##  ##  ##  ##   ##               ##  ##  ##  ##   ##   ##  ##                                   
-#  #####   #####    #####  ########  #####   #####    ##   ##  ##                                   
-#  ##      ##  ##   ##               ##      ##  ##   ##   ##  ##                                   
-#  ##      ##   ##  #####            ##      ##   ##   #####    ####                                
-#                                                                                                     
-#=====================================================================================================
+#==================================================================================================================================================
+#                                                                                                                                                  
+#  ######  #####    #####  #####        ######  #####      ###    ##   ##  #####  #####     ####    ###    ##                                    
+#    ##    ##  ##   ##     ##             ##    ##  ##    ## ##   ##   ##  ##     ##  ##   ##      ## ##   ##                                    
+#    ##    #####    #####  #####          ##    #####    ##   ##  ##   ##  #####  #####     ###   ##   ##  ##                                    
+#    ##    ##  ##   ##     ##             ##    ##  ##   #######   ## ##   ##     ##  ##      ##  #######  ##                                    
+#    ##    ##   ##  #####  #####          ##    ##   ##  ##   ##    ###    #####  ##   ##  ####   ##   ##  ######                                
+#                                                                                                                                                  
+#==================================================================================================================================================
 
 class TreeTraversal(unittest.TestCase,MetaTests):
 
@@ -262,6 +267,74 @@ class TreeTraversal(unittest.TestCase,MetaTests):
         trees = [(1,'int'),(set(),'set'),({},'dict'),([],'list'),('Quick',(('brown','fox'),('jumped',(['over'],)),'a'),('lazy',),'dog')]
         self.error_test(trees,psll.tree_traversal,TypeError)
 
+#=====================================================================================================
+#                                                                                                     
+#  #####   #####    #####            #####   #####     #####    ####                                
+#  ##  ##  ##  ##   ##               ##  ##  ##  ##   ##   ##  ##                                   
+#  #####   #####    #####  ########  #####   #####    ##   ##  ##                                   
+#  ##      ##  ##   ##               ##      ##  ##   ##   ##  ##                                   
+#  ##      ##   ##  #####            ##      ##   ##   #####    ####                                
+#                                                                                                     
+#=====================================================================================================
+
+class ArrayExpansion(unittest.TestCase,MetaTests):
+
+    def test_empty(self):
+        ''' > Empty array literals '''
+        strings = [('set','a',x) for x in ['[]',"[ ]","[   ]"]]
+        targets = [('set','a',('-',('0','0'),('0','0')))]*len(strings)
+        self.paired_test(strings,targets,psll.expand_array_literals)
+
+    def test_single_char(self):
+        ''' > Array literals with one element '''
+        strings = [('set','a',x) for x in ["[1]","[1 ]","[ 1]","[ 1 ]"]]
+        targets = [('set','a',('-',('1','0'),('0','0')))]*len(strings)
+        self.paired_test(strings,targets,psll.expand_array_literals)
+        strings = [('set','a',x) for x in ["[0]","[0 ]","[ 0]","[ 0 ]"]]
+        targets = [('set','a',('-',('0','1'),('1','1')))]*len(strings)
+        self.paired_test(strings,targets,psll.expand_array_literals)
+    
+    def test_more_elements(self):
+        ''' > Actually useful arrays '''
+        strings = [('set','a',x) for x in ["[1,2]","[1,2,3]","[1,2,3,4]","[1,2,3,4,5]"]]
+        targets = [
+            ('set','a',('1','2')),
+            ('set','a',('+',('1','2'),('-',('3','0'),('0','0')))),
+            ('set','a',('+',('1','2'),('3','4'))),
+            ('set','a',('+',('1','2'),('+',('3','4'),('-',('5','0'),('0','0')))))]
+        self.paired_test(strings,targets,psll.expand_array_literals)
+
+    def test_last_zero(self):
+        ''' > Make sure last zero in odd-length arrays also works '''
+        strings = [('set','a',x) for x in ["[1,2,0]","[1,2,3,4,0]"]]
+        targets = [
+            ('set','a',('+',('1','2'),('-',('0','1'),('1','1')))),
+            ('set','a',('+',('1','2'),('+',('3','4'),('-',('0','1'),('1','1')))))]
+        self.paired_test(strings,targets,psll.expand_array_literals)
+
+    def test_delimiters(self):
+        ''' > Different delimiter patterns '''
+        strings = [('set','a',x) for x in ["[1]","[1 ]","[ 1]","[ 1 ]"]]
+        targets = [('set','a',('-',('1','0'),('0','0')))]*len(strings)
+        self.paired_test(strings,targets,psll.expand_array_literals)
+        
+        strings = [('set','a',x) for x in ["[1,2]","[1, 2]","[1 ,2]","[ 1,2 ]","[    1   ,  2  ]"]]
+        targets = [('set','a',('1','2'))]*len(strings)
+        self.paired_test(strings,targets,psll.expand_array_literals)
+
+        strings = [('set','a',x) for x in ["[1 2]","[1  2]","[ 1 2 ]","[    1     2  ]"]]
+        targets = [('set','a',('1','2'))]*len(strings)
+        self.paired_test(strings,targets,psll.expand_array_literals)
+
+    def test_strings(self):
+        ''' > Make sure psll strings are not expanded '''
+        strings = [('set','a',x) for x in ['["hellos"]','["hi","sup"]','["13", angry, men]']]
+        targets = [
+            ('set','a',('-',('"hellos"','0'),('0','0'))),
+            ('set','a',('"hi"','"sup"')),
+            ('set','a',('+',('"13"','angry'),('-',('men','0'),('0','0'))))]
+        self.paired_test(strings,targets,psll.expand_array_literals)
+
 class StingExpansion(unittest.TestCase,MetaTests):
 
     def test_string_expansion(self):
@@ -270,7 +343,7 @@ class StingExpansion(unittest.TestCase,MetaTests):
         for prompt in prompts:
             with self.subTest(prompt=prompt):
                 ast = (f'"{prompt}"',)
-                est = psll.expand_sting_literals(ast)
+                est = psll.expand_string_literals(ast)
                 self.assertGreater(depth(est),depth(ast))
 
     def test_empty(self):
@@ -279,18 +352,18 @@ class StingExpansion(unittest.TestCase,MetaTests):
         for quote in '\'"':
             ast = (f'{quote*2}',)
             with self.subTest(ast=ast):
-                self.assertEqual(psll.expand_sting_literals(ast),target)
+                self.assertEqual(psll.expand_string_literals(ast),target)
 
     def test_single_char(self):
         ''' > Expand single character strings '''
         trees = [(f'"{c}"',) for c in ascii_letters]
         targets = [(('chr','_',f'{str(ord(c))}'),) for c in ascii_letters]
-        self.paired_test(trees,targets,psll.expand_sting_literals)
+        self.paired_test(trees,targets,psll.expand_string_literals)
 
     def test_double_quote(self):
         ''' > Make sure the " sign is *not* is expanded '''
         ast = ('"',)
-        est = psll.expand_sting_literals(ast)
+        est = psll.expand_string_literals(ast)
         self.assertEqual(ast,est)
 
     def test_quote_combinations(self):
@@ -301,13 +374,13 @@ class StingExpansion(unittest.TestCase,MetaTests):
         for quote,ast in product('"\'',trees):
             ast = tuple(t.replace('.',quote) for t in ast)
             with self.subTest(ast=ast):
-                est = psll.expand_sting_literals(ast)
+                est = psll.expand_string_literals(ast)
                 self.assertGreater(depth(est),depth(ast))
     
     def test_mixed_quotes(self):
         ''' > Mix correct quote pairs in one tree '''
         ast = ('"one"','\'two\'')
-        est = psll.expand_sting_literals(ast)
+        est = psll.expand_string_literals(ast)
         self.assertGreater(depth(est),depth(ast))
     
     def test_nested(self):
@@ -315,7 +388,7 @@ class StingExpansion(unittest.TestCase,MetaTests):
         trees = [(('\'hi\'',),),(('"hi"',),),('set','a',('+','a','\'hi\'')),('set','a',('+','a','"hi"'))]
         for ast in trees:
             with self.subTest(ast=ast):
-                est = psll.expand_sting_literals(ast)
+                est = psll.expand_string_literals(ast)
                 self.assertGreater(depth(est),depth(ast))
 
 class BracketExpansion(unittest.TestCase,MetaTests):

@@ -11,7 +11,15 @@ from string import ascii_letters
 from windowed_complete import windowed_complete
 from ascii_trees import Pyramid
 
+def in_pairs(iterable):
+    ''' Pair up elements in the array. (s1,s2,s3,s4,s5) -> ((s1,s2),(s3,s4),s5) '''
+    args = [iter(iterable)] * 2
+    for j,k in zip_longest(*args, fillvalue=None):
+        value = (j,k) if k else j
+        yield value
+
 SPACE = ' '
+PS_KEYWORDS = {'+','*','-','/','^','=','<=>','out','chr','arg','#','"','!','[',']','set','do','loop','?'}
 
 # TODO Test depth
 def depth(tree):
@@ -101,6 +109,7 @@ def split_into_subtrees(line):
 
     bracket_count, last_break = (0,0) # Kepping track of bracket parity
     last_quote = '' # Keeping track of quotation marks
+    in_array = False # Keep track of whether you're in a psll array
 
     tree = []
     for j,char in enumerate(line):
@@ -110,12 +119,16 @@ def split_into_subtrees(line):
             if char==quote:
                 if not last_quote: last_quote = quote # Start a quote
                 elif last_quote==quote: last_quote = '' # End a quote
-
-        # Break at spaces, but not in the middle of brackets of strings
-        if char == SPACE and bracket_count == 0 and not last_quote:
-            part = line[last_break:j]
-            tree.append(part)
-            last_break = j+1
+        
+        if not last_quote: # Not currently inside of a string
+            if char==SPACE: # Break at spaces
+                if bracket_count == 0 and not in_array:
+                    tree.append(line[last_break:j])
+                    last_break = j+1
+            elif char=='[':
+                in_array = True
+            elif char == ']':
+                in_array = False
     
     # Recursively split parts of self 
     return tuple(split_into_subtrees(subtree) if re.match('\(.*\)',subtree) else subtree for subtree in tree)
@@ -206,7 +219,6 @@ def shorten_variable_names(ast):
 
     return tree_traversal(ast,str_fun=string_replacer)
 
-        
 def def_keyword(ast):
     ''' Search for ('def','something',(...)) keywords '''
 
@@ -253,8 +265,63 @@ def apply_replacement_rules(ast,rules):
         str_fun=string_replacer)
 
 ## TESTED
-def expand_sting_literals(ast):
-    ''' Expand all the psll string literals objects into pyramid scheme trees '''
+def expand_array_literals(ast):
+
+    def one_element_array(element):
+        return ('-',(element,'0'),('0','0')) if element is not '0' else ('-',(element,'1'),('1','1'))
+
+    def array_to_tree(string):
+        string = string[1:-1].strip()
+        if not string:
+            return ('-',('0','0'),('0','0')) # Make an empty array
+
+        last_quote = '' # Keep track of quotation marks
+        delimiter = '' # Don't know the delimiter yet
+        found_space = False
+
+        # Figure out the delimiter
+        for j,char in enumerate(string):
+
+            # Enter and exit psll strings
+            for quote in ['"','\'']:
+                if char==quote:
+                    if not last_quote: last_quote = quote # Start a quote
+                    elif last_quote==quote: last_quote = '' # End a quote
+            
+            if not last_quote: # If not in the middle of a psll string
+                if char == ',':
+                    delimiter = ','
+                    break
+                elif char == SPACE: # Keep going to see if there is a comma there
+                    found_space = True
+                elif found_space:
+                    delimiter = SPACE
+                    break
+        else: # No delimiters found, aka, 1-element array
+            return one_element_array(string)
+
+        # Build the tree
+        elements = [e.strip() for e in string.split(delimiter) if e]
+        if len(elements) % 2:
+            tree = one_element_array(elements[-1])
+            elements = elements[:-1]
+        else:
+            tree = ()
+        
+        for e2,e1 in in_pairs(reversed(elements)):
+            tree = ('+', (e1,e2), tree) if tree else (e1,e2)
+
+        return tree
+
+    def array_expander(string):
+        if string and string[0]=='[' and string[-1]==']':
+            return array_to_tree(string)
+        return string
+
+    return tree_traversal(ast,str_fun=array_expander)
+
+## TESTED
+def expand_string_literals(ast):
     
     def expand(string):
         if re.match('(\'.+\'|".+")',string):
@@ -273,19 +340,12 @@ def expand_sting_literals(ast):
 
 ## TESTED
 def expand_overfull_brackets(ast):
-    ''' Recursively expand lists of many lists into lists of length 2 '''
+    ''' Expand lists of many lists into lists of length 2 '''
 
-    def pair_up(iterable):
-        ''' Pair up elements in the array. (s1,s2,s3,s4,s5) -> ((s1,s2),(s3,s4),s5) '''
-        args = [iter(iterable)] * 2
-        for j,k in zip_longest(*args, fillvalue=None):
-            value = (j,k) if k else j
-            yield value
-        
     def expander(node):
-        if all(map(lambda x: isinstance(x,tuple),node)):
+        if all(map(lambda x: isinstance(x,tuple),node)): # All lists
             while len(node)>2:
-                node = tuple(p for p in pair_up(node))
+                node = tuple(p for p in in_pairs(node))
         elif len(node)>3:
             raise PsllSyntaxError(f'Invalid bracket structure. Can only expand lists of lists.')
         return node
@@ -295,13 +355,16 @@ def expand_overfull_brackets(ast):
 def fill_in_empty_trees(ast):
     ''' Fill in the implicit empty strings in brackets with only lists '''
     def filler(node):
-        if node is ():
+        if node is (): # Empty node
             return ('')
-        elif not isinstance(node[0],str):
+        elif all(map(lambda x: isinstance(x,tuple),node)): # All tuples
             return ('',*node)
         elif node[0] == '_':
             return ('',*node)
-        return node
+        elif node[0] in PS_KEYWORDS:
+            return node # Don't add a pad before psll keywords
+        else:
+            return ('',*node) # Add pad before non-keywords (this allows one to make arrays)
 
     return tree_traversal(ast,post_fun=filler)
 
@@ -468,13 +531,14 @@ def main(args):
     
     ast = lex(text)
     
-    # names = find_ariable_names(ast)
+    # names = find_variable_names(ast)
     # print('variables:',variables)
 
     stack = [ # Pre-processing function stack
         shorten_variable_names,
         def_keyword,
-        expand_sting_literals,
+        expand_array_literals,
+        expand_string_literals,
         expand_overfull_brackets,
         fill_in_empty_trees,
         fill_in_underscores,

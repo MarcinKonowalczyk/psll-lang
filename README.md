@@ -203,7 +203,10 @@ This is not a real-purpose language. In this section the 'optimisation' refers t
   - [x] `def` keyword
   - [x] ?? `_` keyword
   - [ ] Implicit expansion of `out` command, such that one can write `(out "j: " j " | k: " k newline)` and it gets expanded into a pile of `out` commands
+  - [ ] Expansion of `+` and `*` commands too
+  - [ ] ?? `*( ... )` construct
 - [ ] ?? Arrays / Linked lists
+  - [ ] `range` keyword
 - [ ] ?? Easier to use installation. Maybe a make-script which makes a symlink in the correct place...
 - [ ] Improve test coverage
   - [x] Make the coverage count only the tests for that file
@@ -249,3 +252,4 @@ Bullet points get moved here from the above section when they get finished. (It'
 - [ ] `(_)` breaks the compiler (Why would someone decide to write this though...?)
 - [x] Asymmetric children cause issues in `tree_repr` in `add_one_child`
 - [ ] Bug in greedy optimisation for source code with one major tree
+- [ ] `"` command doesn't work (it gets recognised as a psll string)

@@ -32,15 +32,15 @@ def skipUnlessExampleExists(filename):
     return obj_wrapper
 
 # TODO This is somewhat messy with all those paths...
-class MetaTest:
+class MetaTests:
 
     def test_compiles(self):
         path, ext = splitext(self.filename)
         pyra_filename = path + '.pyra'
         if exists(pyra_filename): os.remove(pyra_filename)
 
-        com = f'python psll.py {self.filename} -o -f'
-        commands = (com, com + ' -go') #, com + ' -so')
+        commands = [f'python psll.py {self.filename} -o -f']
+        # commands = [commands[0], commands[0] + ' -go'] # Also test with greedy optimisation
         for com in commands:
             with self.subTest(command=com):
                 s = shell(com)
@@ -63,8 +63,8 @@ class MetaTest:
         # TODO What if the script takes a command line input? (Add timeout?)
         # TODO Capture stdout better
 
-        commands = f'python psll.py {self.filename} -o -f'
-        commands = [commands,commands+' -go']
+        commands = [f'python psll.py {self.filename} -o -f']
+        # commands = [commands[0], commands[0] + ' -go'] # Also test with greedy optimisation
         for psll_com in commands:
             rb_com = f'{ruby_path} {pyra_path} {pyra_filename}'
             with self.subTest(command=psll_com):
@@ -79,27 +79,31 @@ class MetaTest:
                     # print('\n'.join(out))
                     pass
 @skipUnlessExampleExists(examples + 'nargin_counter.psll')
-class TestNarginCounter(unittest.TestCase,MetaTest):
+class TestNarginCounter(unittest.TestCase,MetaTests):
     pass
 
 @skipUnlessExampleExists(examples + 'xor.psll')
-class TestXOR(unittest.TestCase,MetaTest):
+class TestXOR(unittest.TestCase,MetaTests):
     pass
 
 @skipUnlessExampleExists(examples + 'is_in_array.psll')
-class TestIsInArray(unittest.TestCase,MetaTest):
+class TestIsInArray(unittest.TestCase,MetaTests):
     pass
 
 @skipUnlessExampleExists(examples + 'bubble_sort.psll')
-class TestBubbleSort(unittest.TestCase,MetaTest):
+class TestBubbleSort(unittest.TestCase,MetaTests):
     pass
 
 @skipUnlessExampleExists(examples + 'def_keyword.psll')
-class TestDefKeyword(unittest.TestCase,MetaTest):
+class TestDefKeyword(unittest.TestCase,MetaTests):
     pass
 
 @skipUnlessExampleExists(examples + 'own_source_length.psll')
-class TestDefKeyword(unittest.TestCase,MetaTest):
+class TestSourceLength(unittest.TestCase,MetaTests):
+    pass
+
+@skipUnlessExampleExists(examples + 'arrays.psll')
+class TestArray(unittest.TestCase,MetaTests):
     pass
 
 if __name__=="__main__":
