@@ -15,6 +15,7 @@ before_script:
   - ls -lh
   - ls Pyramid-Scheme/ -lh
   - python -c "import sys; print(sys.version, '\n', sys.prefix)"
+  - python -m pip install 'more_itertools>=8.5.0'
 
 script:
   - bash run_coverage # <- This runs tests for the main files too

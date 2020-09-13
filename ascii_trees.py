@@ -1,11 +1,7 @@
-from itertools import zip_longest, tee, product, islice
-from abc import ABC, abstractmethod
+from itertools import zip_longest, product, islice
+from more_itertools import pairwise
 
-def pairwise(iterable):
-    ''' s -> (s0,s1), (s1,s2), (s2, s3), ... '''
-    a, b = tee(iterable)
-    next(b, None)
-    return zip(a, b)
+from abc import ABC, abstractmethod
 
 #========================================================================================================================================
 #                                                                                                                                        

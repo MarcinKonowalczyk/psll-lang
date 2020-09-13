@@ -1,22 +1,21 @@
 #!/usr/bin/python3
 
 import re
+
 from itertools import zip_longest, chain, product
+from more_itertools import windowed, windowed_complete
 
 from functools import partial, reduce
 from functools import lru_cache as cached
 import operator
 from string import ascii_letters
 
-from windowed_complete import windowed_complete
 from ascii_trees import Pyramid
 
 def in_pairs(iterable):
     ''' Pair up elements in the array. (s1,s2,s3,s4,s5) -> ((s1,s2),(s3,s4),s5) '''
-    args = [iter(iterable)] * 2
-    for j,k in zip_longest(*args, fillvalue=None):
-        value = (j,k) if k else j
-        yield value
+    for p in windowed(iterable,2,step=2):
+        yield p if p[1] else p[0]
 
 SPACE = ' '
 PS_KEYWORDS = {'+','*','-','/','^','=','<=>','out','chr','arg','#','"','!','[',']','set','do','loop','?'}
@@ -308,7 +307,7 @@ def expand_array_literals(ast):
         else:
             tree = ()
         
-        for e2,e1 in in_pairs(reversed(elements)):
+        for e2,e1 in windowed(reversed(elements),2,step=2):
             tree = ('+', (e1,e2), tree) if tree else (e1,e2)
 
         return tree
@@ -530,7 +529,7 @@ def main(args):
     if args.verbose: print('Reduced source:',text)
     
     ast = lex(text)
-    
+
     # names = find_variable_names(ast)
     # print('variables:',variables)
 
