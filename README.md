@@ -203,9 +203,13 @@ This is not a real-purpose language. In this section the 'optimisation' refers t
   - [x] `def` keyword
   - [x] ?? `_` keyword
   - [ ] Implicit expansion of `out` command, such that one can write `(out "j: " j " | k: " k newline)` and it gets expanded into a pile of `out` commands
+  - [ ] `nil` keyword
+    - Make it more robustly than `(arg 999)`
+    - ?? Allow compiler to insert `def`s into preamble
   - [ ] Expansion of `+` and `*` commands too
   - [ ] ?? `*( ... )` construct
 - [ ] ?? Arrays / Linked lists
+  - [ ] Improve array implementation
   - [ ] `range` keyword
 - [ ] ?? Easier to use installation. Maybe a make-script which makes a symlink in the correct place...
 - [ ] Improve test coverage
@@ -216,10 +220,13 @@ This is not a real-purpose language. In this section the 'optimisation' refers t
 - [ ] ?? Tree rendering
   - [ ] ?? Have a look at (optionally!) using `anytree` package for visualisation
   - [ ] ?? Ascii art to LaTeX
-- [ ] ?? Make PsllSyntaxError class do more
+- [ ] ?? Make `PsllSyntaxError` class do more
   - [ ] ?? Backtrace
+  - [ ] ?? Or, I guess, rip it out and make it a normal `SyntaxError`
 - [x] Add testing psll bash script to tests
   - [ ] ?? And somehow coverage
+- [ ] Redo tree / string parsing with paired delimiter matching
+  - [ ] ?? Have a look at `pyparsing` (`QuotedString`, `nestedExpr`)
 
 ## Done's
 
