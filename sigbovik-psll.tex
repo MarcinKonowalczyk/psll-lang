@@ -1,6 +1,7 @@
 \documentclass[aip,jcp,reprint]{revtex4-1}
 
 \usepackage[utopia]{mathdesign}
+\usepackage{inconsolata}
 \usepackage[utf8]{inputenc} % Unicode input encoding
 \usepackage[T1]{fontenc} % Font encoding
 \usepackage[english]{babel} % English linebrakes, hyphenation etc.
@@ -9,6 +10,7 @@
 	stretch=10,shrink=10,%
 	factor=1100,%
 	]{microtype}
+\microtypecontext{spacing=nonfrench}
 	
 \usepackage{graphicx}% Include figure files
 \graphicspath{ {./figures/} }
@@ -27,18 +29,62 @@
 
 \usepackage{lipsum}
 \usepackage{nopageno}
+\usepackage{enumitem}
+\setlist{nosep}
 
 \raggedbottom
 %\flushbottom
 
 % Placeholders
-\newcommand{\plcite}{{\color{red}\textbf{[???]}}\xspace}
-\newcommand{\plinfo}{{\color[rgb]{0.929,0.694,0.125}\textbf{[info]}}\xspace}
+\newcommand\plcite{{\color{red}\textbf{[???]}}\xspace}
+\newcommand\plinfo{{\color[rgb]{0.929,0.694,0.125}\textbf{[info]}}\xspace}
+\let\tt\texttt
+\newcommand\psll{\texttt{psll}\xspace}
+
+
+
+
+\usepackage{listings}
+\usepackage{color}
+
+\definecolor{lines_blue}{rgb}{0, 0.4470, 0.7410}
+\definecolor{lines_red}{rgb}{0.8500, 0.3250, 0.0980}
+\definecolor{lines_yellow}{rgb}{0.9290, 0.6940, 0.1250}
+\definecolor{lines_purple}{rgb}{0.4940, 0.1840, 0.5560}
+\definecolor{lines_green}{rgb}{0.4660, 0.6740, 0.1880}
+\definecolor{lines_cyan}{rgb}{0.3010, 0.7450, 0.9330}
+\definecolor{lines_burgundy}{rgb}{0.6350, 0.0780, 0.1840}
+
+\lstdefinelanguage{psll} {%
+otherkeywords={+,!,=,<=>},
+morekeywords={set,loop,out,chr}, sensitive=false,
+morecomment=[l]{//},%
+morestring=[b]",%
+}
+
+\lstset{
+  aboveskip=3mm,belowskip=3mm,%
+  columns=flexible,%
+  basicstyle={\small\ttfamily},%
+  numberstyle=\small\normalfont\ttfamily\color{black!25!white},%
+  keywordstyle=\color{lines_blue},%
+  commentstyle=\color{lines_green},%
+  stringstyle=\color{lines_purple},%
+  breaklines=false,
+  numbersep=5pt,
+  tabsize=4,
+}
+
+\newcommand{\ilpsll}[1]{\lstinline[language=psll,columns=flexible]{#1}}
+\newcommand{\ilruby}[1]{\lstinline[language=ruby,columns=flexible]{#1}}
+
+
+
 
 \begin{document}
 \preprint{AIP/123-QED}
 
-\title[Design of a Pyramid Scheme Lisp-like programming language]{Design of a Pyramid Scheme Lisp-like programming language}
+\title{Design and implementation of \psll\ -- Lisp-like programming language which compiles to Pyramid Scheme}
 
 \def\icl{Department of Chemistry, University of Oxford, Inorganic Chemistry Laboratory, Oxford OX1 3QR, U.K.}
 \author{Marcin~Konowalczyk}\email{marcin.konow@lczyk.xyz}\affiliation{\icl}
@@ -56,29 +102,94 @@
 
 \section{Introduction}
 
-Pyramid Scheme is a variant of the Scheme dialect of Lisp, designed by Conor O'Brien \plinfo \plcite.
+Pyramid Scheme (PS) is a variant of the Scheme dialect of Lisp, designed by Conor O'Brien \plinfo \plcite.
+
+Golf
+TiO
+
+\subsection{Implementation of Pyramid Scheme}
+
+Ruby Dictionary Memory (RDM)
+
+\cite{dbeaz2018}
 
 \lipsum[1-5]
 
 \section{Language description}
 \subsection{Bracket structure}
-\subsection{Additional functions}
-\subsection{Sharp edges}
+
+\subsection{Syntactic sugar}\label{sec:sugar}
+The above specification is, in principle, enough to create fully fully functional PS programs. Certain tasks are, however, still rather cumbersome. This section outlines these cases, as well as syntactic sugar constructs introduced to \psll to alleviate them. All of these are implemented as local (or semi-local) expansion macros, as described in Section~\ref{sec:macros}. Despite authors best efforts, this introduces some sharp edges into the language (see Section~\ref{sec:sharp_edges}).
+
+\textbf{Implicit bracket expansion} Each bracket must have exactly three elements. For small expressions this is almost always the case, but becomes problematic for larger, flow-control and loop structures where each such expression can contain an arbitrarily large number of sub-expressions (see \plinfo for an example of such expression). Hence a bracket containing $>2$ other brackets gets expanded as follows:
+\begin{lstlisting}[language=psll,aboveskip=3pt,belowskip=-2pt]
+( (out 1) (out 2) (out 3) (out 4) (out 5) )
+\end{lstlisting}
+is interpreted as:
+\begin{lstlisting}[language=psll,aboveskip=3pt,belowskip=-2pt]
+( (((out 1) (out 2))  ((out 3) (out 4)))  (out 5) )
+\end{lstlisting}
+Each neighbouring pair or elements of the parent gets put together into a bracket, until the length of the parent is less than 2. This results in a (literal) balanced binary tree in the final PS code, and so for a parent bracket of $N$ sub-expressions will result in a tree of height $\bigO\left(\log_2\left(N\right)\right)$.
+
+\textbf{String literals} Single characters can be created in RDM with the \tt{chr} keyword (Ruby \tt{.to\textunderscore{}i.chr}). It is also possible to construct longer strings in RDM since Ruby's \enquote{\tt{+}} sign overloads string concatenation. The string \textit{\enquote{hello}} is therefore:
+\begin{lstlisting}[language=psll,aboveskip=3pt,belowskip=-2pt]
+(+ (+ (+ (+ (chr 72) (chr 101)) (chr 108))
+	(chr 108)) (chr 111))
+\end{lstlisting}
+\psll introduces string literals, such that \ilpsll{(set s "hello")} expands into the above code. Note that this is a very left-child heavy tree. To balance it, the above string could also be made by recursively concatenating its binary split:
+\begin{lstlisting}[language=psll,aboveskip=3pt,belowskip=-2pt]
+(+ (+ (chr 72) (chr 101))
+	(+ (chr 108) (+ (chr 108)) (chr 111)))
+\end{lstlisting}
+such that $\textit{\enquote{hello}} = \textit{\enquote{he}} + \textit{\enquote{llo}} = \left(\textit{\enquote{h}} + \textit{\enquote{e}}\,\right) + \left(\textit{\enquote{l}} + \textit{\enquote{lo}}\,\right) = \dots$.
+
+\textbf{Array literals}
+
+\textbf{Rolling sum and product}
+
+\textbf{\tt{def} keyword}
+
+Semi-local
+
+\subsection{Sharp edges}\label{sec:sharp_edges}
+As mentioned at the beginning of Section~\ref{sec:sugar}, the introduction of syntactic sugar into \psll introduces some edge cases which one ought to watch out for.
+
+\textbf{Underscore keyword}
+\_
+
+\textbf{Escape characters}
+Because " is used for strings, and [ ] for arrays...
 
 \section{Compiler}
 \subsection{Abstract syntax tree}
-\subsection{Local macro expansion}
+\subsection{Local macro expansion}\label{sec:macros}
 \subsection{Optimisation}
 
 \section{Example programs}
+\subsection{Pseudorandom number generation}
 \subsection{Bubble sort}
 \subsection{Chess engine}
 
-\section{Conclusions}
+\begin{lstlisting}[language=psll,frame=tb,numbers=left,aboveskip=3mm,belowskip=3mm]
+(set a 0) // Flip-flop
+(set N 10) (set j 0) // N of iteration and loop counter
+(loop (! (= j N)) (
+    // Do some work...
+    (out j (chr 32)) // Print j and space
+    (out a (chr 10)) // Print a and newline
+    (set a (! a)) // Flip a
+(set j (+ j 1))
+)) (set test "hi")
+\end{lstlisting}
+
+\section{Conclusions and outlook}
 Program in Pyramid Scheme! Teach your friends! Have them teach \emph{their} friends! Then have those friends teach \emph{their} friends!
+
+- Joined pyramids
 
 
 \lipsum[11-15]
+\ilpsll{(chr 10)}
 
 \section*{Links}
 \begin{itemize}
@@ -90,9 +201,10 @@ Program in Pyramid Scheme! Teach your friends! Have them teach \emph{their} frie
 \end{itemize}
 
 \section*{Acknowledgements}
-
-%\nocite{*}
+%I would like to thank Blain Rodgers and Samuel Hutton for proofreading and their helpful comments on the manuscript.
+ 
+\nocite{*}
 \bibliographystyle{unsrt}
-%\bibliography{psll} %< bib file name
+\bibliography{sigbovik-psll.bib} %< bib file name
 
 \end{document}
