@@ -1,0 +1,98 @@
+\documentclass[aip,jcp,reprint]{revtex4-1}
+
+\usepackage[utopia]{mathdesign}
+\usepackage[utf8]{inputenc} % Unicode input encoding
+\usepackage[T1]{fontenc} % Font encoding
+\usepackage[english]{babel} % English linebrakes, hyphenation etc.
+\usepackage[%
+	tracking=true,kerning=true,spacing=true,%
+	stretch=10,shrink=10,%
+	factor=1100,%
+	]{microtype}
+	
+\usepackage{graphicx}% Include figure files
+\graphicspath{ {./figures/} }
+
+\usepackage{multirow}
+
+\usepackage{csquotes}
+\usepackage{parskip} % Change paragraph formatting parindent = 0, parskip > 0
+\usepackage{bm}% bold math
+\usepackage{mathtools}
+\usepackage{xspace}
+\usepackage{xcolor}
+
+\DeclareMathAlphabet{\mathoms}{OMS}{cmsy}{m}{n}
+\DeclareMathOperator{\bigO}{\ensuremath{\mathoms{O}}}
+
+\usepackage{lipsum}
+\usepackage{nopageno}
+
+\raggedbottom
+%\flushbottom
+
+% Placeholders
+\newcommand{\plcite}{{\color{red}\textbf{[???]}}\xspace}
+\newcommand{\plinfo}{{\color[rgb]{0.929,0.694,0.125}\textbf{[info]}}\xspace}
+
+\begin{document}
+\preprint{AIP/123-QED}
+
+\title[Design of a Pyramid Scheme Lisp-like programming language]{Design of a Pyramid Scheme Lisp-like programming language}
+
+\def\icl{Department of Chemistry, University of Oxford, Inorganic Chemistry Laboratory, Oxford OX1 3QR, U.K.}
+\author{Marcin~Konowalczyk}\email{marcin.konow@lczyk.xyz}\affiliation{\icl}
+
+\date{\today}
+
+\begin{abstract}
+
+\lipsum[1]
+\end{abstract}
+
+\keywords{a; b; c}
+
+\maketitle
+
+\section{Introduction}
+
+Pyramid Scheme is a variant of the Scheme dialect of Lisp, designed by Conor O'Brien \plinfo \plcite.
+
+\lipsum[1-5]
+
+\section{Language description}
+\subsection{Bracket structure}
+\subsection{Additional functions}
+\subsection{Sharp edges}
+
+\section{Compiler}
+\subsection{Abstract syntax tree}
+\subsection{Local macro expansion}
+\subsection{Optimisation}
+
+\section{Example programs}
+\subsection{Bubble sort}
+\subsection{Chess engine}
+
+\section{Conclusions}
+Program in Pyramid Scheme! Teach your friends! Have them teach \emph{their} friends! Then have those friends teach \emph{their} friends!
+
+
+\lipsum[11-15]
+
+\section*{Links}
+\begin{itemize}
+\item psll git
+\item pyramid scheme
+\item TiO hello world in ps
+\item Esolang page?
+\item Code Golf page
+\end{itemize}
+
+\section*{Acknowledgements}
+
+%\nocite{*}
+\bibliographystyle{unsrt}
+%\bibliography{psll} %< bib file name
+
+\end{document}

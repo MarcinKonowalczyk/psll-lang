@@ -1,0 +1,9 @@
+*.log
+*.fls
+*.aux
+*.fdb_latexmk
+*.synctex.gz
+.DS_Store
+*.bbl
+*.blg
+*Notes.bib
