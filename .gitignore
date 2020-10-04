@@ -8,3 +8,4 @@ htmlcov
 __pycache__
 .pytest_cache
 python_tests
+psll-venv
