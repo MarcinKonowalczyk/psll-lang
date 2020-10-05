@@ -18,7 +18,7 @@ before_script:
   - python -m pip install 'more_itertools>=8.5.0'
 
 script:
-  - bash run_coverage # <- This runs tests for the main files too
+  - bash run_coverage.sh # <- This runs tests for the main files too
   - python -m unittest discover -p "test_examples.py" tests -v
 
 after_success:
