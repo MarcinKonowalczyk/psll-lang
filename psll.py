@@ -20,19 +20,6 @@ def in_pairs(iterable):
 SPACE = ' '
 PS_KEYWORDS = {'+','*','-','/','^','=','<=>','out','chr','arg','#','"','!','[',']','set','do','loop','?'}
 
-# TODO Test depth
-def depth(tree):
-    ''' Calculate the depth of a tree '''
-    if isinstance(tree,str):
-        return 0
-    elif isinstance(tree,tuple):
-        if len(tree)==0:
-            return 0
-        else:
-            return max(depth(node) for node in tree) + 1
-    else:
-        raise TypeError(f'The abstract syntax tree can contain only strings or other, smaller, trees, not {type(tree).__name__}')
-
 class PsllSyntaxError(SyntaxError):
     pass
 
@@ -73,10 +60,9 @@ def readfile(filename):
 #                                                             
 #=============================================================
 
-def context_split(string, delimiter=',', contexts=None, escape_char='\\'):
+def context_split(string, delimiter=',', contexts=(), escape_char='\\', remove_empty=False):
     ''' Split string at delimiter, except for in the middle of the specified contexts '''
 
-    contexts = tuple(map(lambda x: x if len(x)==2 else x+x,contexts)) if contexts else ()
     state = [0 for _ in contexts] # States of each context
     last_break, escape, parts = 0, False, [] # Keep track of 
 
@@ -98,10 +84,11 @@ def context_split(string, delimiter=',', contexts=None, escape_char='\\'):
 
         escape = char is escape_char # Escape the next char
 
-        if char is delimiter and not any(state):
+        if not any(state) and (char is delimiter or not delimiter):
             parts.append(string[last_break:si])
-            last_break = si + 1
-        
+            if delimiter: si += 1 # Skip delimiter
+            last_break = si
+
         if any(s<0 for s in state):
             raise PsllSyntaxError('Invalid context structure. Ketbra context match.')
 
@@ -109,15 +96,18 @@ def context_split(string, delimiter=',', contexts=None, escape_char='\\'):
 
     if any(state):
         raise PsllSyntaxError('Invalid context structure. Incomplete context.')
+    
+    if remove_empty:
+        parts = [p for p in parts if p]
 
     return tuple(parts)
 
-lexer_split = partial(context_split,delimiter=' ',contexts=('()','"','[]'))
-isbracketed = lambda text: len(text)>=2 and text[0]=='(' and text[-1]==')'
+lexer_split = partial(context_split,delimiter=' ',contexts=('()','""','[]'))
+incontext = lambda text,context: len(text)>=2 and text[0]==context[0] and text[-1]==context[1]
 
 def lex(text):
     ''' Compose a basic abstract syntax tree from the reduced source '''
-    return tuple((lex(s[1:-1]) if isbracketed(s) else s) for s in lexer_split(text))
+    return tuple((lex(s[1:-1]) if incontext(s,'()') else s) for s in lexer_split(text))
 
 #==================================================================================================================================================
 #                                                                                                                                                  
@@ -159,7 +149,7 @@ def tree_traversal(ast, str_fun=None, post_fun=None, pre_fun=None, final_fun=Non
 #                                                                                                     
 #=====================================================================================================
 
-__processing_stack__ = []
+__processing_stack__ = [] # Pre processign functions in order they ought to be applied
 def in_processing_stack(fun):
     ''' Append function to the processing stack '''
     __processing_stack__.append(fun)
@@ -266,28 +256,26 @@ def expand_array_literals(ast):
         return ('-',(element,'0'),('0','0')) if element is not '0' else ('-',(element,'1'),('1','1'))
 
     def array_to_tree(string):
-        string = string[1:-1].strip()
-        if not string:
-            return ('-',('0','0'),('0','0')) # Make an empty array
+        ''' Parse (inner) array string to its ast tree representation '''
+        elements = lexer_split(string,remove_empty=True) # Reuse lexer split
+        if not elements:
+            return ('-',('0','0'),('0','0')) # Return empty array
 
-        elements = context_split(string,delimiter=' ',contexts=('[]','"','()'))
-        elements = [e for e in elements if e] # Remove empty elements (from multiple spaces)
-        if len(elements)==1:
-            return one_element_array(elements[0])
-        if len(elements) % 2: # Build the tree
+        # Build the tree
+        if len(elements) % 2:
             tree = one_element_array(elements[-1])
             elements = elements[:-1]
         else:
             tree = ()
-        
-        for e2,e1 in windowed(reversed(elements),2,step=2):
-            tree = ('+', (e1,e2), tree) if tree else (e1,e2)
+        if elements:
+            for e2,e1 in windowed(reversed(elements),2,step=2):
+                tree = ('+', (e1,e2), tree) if tree else (e1,e2)
 
         return tree
 
     def array_expander(string):
-        if string and string[0]=='[' and string[-1]==']':
-            return array_to_tree(string)
+        if incontext(string,'[]'):
+            return array_to_tree(string[1:-1])
         return string
 
     return tree_traversal(ast,str_fun=array_expander)
@@ -296,18 +284,24 @@ def expand_array_literals(ast):
 @in_processing_stack
 def expand_string_literals(ast):
     
+    string_split = partial(context_split,delimiter='',contexts=('()','""','[]'),remove_empty=True)
+
+    def special(char):
+        ''' Convert char to its special character representation '''
+        cases = {'n':'\n', 't':'\t', 'r':'\r'}
+        return cases[char] if char in cases else char
+
     def expand(string):
-        if re.match('(\'.+\'|".+")',string):
+        if incontext(string,'""'):
             tree = ()
-            for character in string[1:-1]:
-                subtree = ('chr', '_', str(ord(character)))
+            for char in string_split(string[1:-1]):
+                if len(char)>1 and char[0]=='\\': char = special(char[1])
+                subtree = ('chr', '_', str(ord(char)))
                 tree = subtree if not tree else ('+', tree, subtree)
-            return tree
-        elif re.match('(\'\'|"")',string):
             # TODO Is there a more robust way of making an empty string in pyramid scheme??
-            return ('eps',) # 'eps' is an empty string
-        else:
-            return string
+            if not tree: tree = ('eps',)
+            return tree
+        return string
 
     return tree_traversal(ast,str_fun=expand)
 
@@ -364,26 +358,12 @@ def fill_in_underscores(ast):
         return node
     return tree_traversal(ast,post_fun=filler)
 
+
 @in_processing_stack
 def underscore_keyword(ast):
     def replacer(node):
         return None if node is '_' else node
     return tree_traversal(ast,str_fun=replacer)
-
-
-# processing_stack = ( # Pre-processing function stack
-#     shorten_variable_names,
-#     def_keyword,
-#     expand_array_literals,
-#     expand_string_literals,
-#     expand_overfull_brackets,
-#     fill_in_empty_trees,
-#     fill_in_underscores,
-#     underscore_keyword)
-
-# for f1,f2 in zip(__processing_stack__,processing_stack):
-#     print(f1.__name__)
-#     print(f2.__name__,end='\n\n')
 
 #=======================================================================
 #                                                                       

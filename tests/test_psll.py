@@ -4,15 +4,25 @@ from functools import partial
 from string import ascii_letters
 import random
 from itertools import product, permutations
+from contextlib import contextmanager
 
 # Add '.' to path so running this file by itself also works
 import os, sys
 sys.path.append(os.path.realpath('.'))
 
 import psll
-from psll import depth
 
-from contextlib import contextmanager
+def depth(tree):
+    ''' Calculate the depth of a tree '''
+    if isinstance(tree,str):
+        return 0
+    elif isinstance(tree,tuple):
+        if len(tree)==0:
+            return 0
+        else:
+            return max(depth(node) for node in tree) + 1
+    else:
+        raise TypeError(f'The abstract syntax tree can contain only strings or other, smaller, trees, not {type(tree).__name__}')
 
 random_string = lambda N: ''.join(random.choice(ascii_letters) for _ in range(N)) 
 
@@ -139,8 +149,8 @@ class Split(unittest.TestCase,MetaTests):
         targets = [('(())',),('(())','()'),('(((hi)))',),('(() () hi)',),('(() ())','(())','()')]
         self.paired_test(texts,targets,psll.split_into_lines)
 
-    def test_string(self):
-        ''' > Bracket parity error '''
+    def test_error(self):
+        ''' > Bracket parity and ketbra errors '''
         texts = ['(',')',')(','(hi))','((hi)','((','))','((()())','(()()))']
         self.error_test(texts,psll.split_into_lines,psll.PsllSyntaxError)
 
@@ -164,8 +174,8 @@ class Split(unittest.TestCase,MetaTests):
 
     def test_quotes(self):
         ''' > Don't split quotes '''
-        texts = ['("hi")','(\'hello\')','(set a \'one\')','(set b "two")','("string with spaces")']
-        targets = [('"hi"',),('\'hello\'',),('set','a','\'one\''),('set','b','"two"'),('"string with spaces"',)]
+        texts = ['("hi")','(set a "one")','("string with spaces")']
+        targets = [('"hi"',),('set','a','"one"'),('"string with spaces"',)]
         self.paired_test(texts,targets,psll.split_into_subtrees)
     
     @unittest.skip('Currently broken')
@@ -341,44 +351,35 @@ class StingExpansion(unittest.TestCase,MetaTests):
 
     def test_empty(self):
         ''' > Empty string expands to 'eps' '''
+        ast = ('""',)
         target = (('eps',),)
-        for quote in '\'"':
-            ast = (f'{quote*2}',)
-            with self.subTest(ast=ast):
-                self.assertEqual(psll.expand_string_literals(ast),target)
+        self.assertEqual(psll.expand_string_literals(ast),target)
 
     def test_single_char(self):
-        ''' > Expand single character strings '''
+        ''' > Expand single character string '''
         trees = [(f'"{c}"',) for c in ascii_letters]
         targets = [(('chr','_',f'{str(ord(c))}'),) for c in ascii_letters]
         self.paired_test(trees,targets,psll.expand_string_literals)
 
     def test_double_quote(self):
-        ''' > Make sure the " sign is *not* is expanded '''
-        ast = ('"',)
+        ''' > Make sure the " sign is *not* is expanded when escaped '''
+        ast = ('\\"',)
         est = psll.expand_string_literals(ast)
         self.assertEqual(ast,est)
 
     def test_quote_combinations(self):
         ''' > Expand some more strings as subtrees '''
-        trees = [('.hi.',),('out','.hi.'),('.one.','.two.'),
-            ('set','a','.hello.'),('set','.a.','hello'),
-            ('.set.','a','hello')]
-        for quote,ast in product('"\'',trees):
-            ast = tuple(t.replace('.',quote) for t in ast)
+        trees = [('"hi"',),('out','"hi"'),('"one"','"two"'),
+            ('set','a','"hello"'),('set','"a"','hello'),
+            ('"set"','a','hello')]
+        for ast in trees:
             with self.subTest(ast=ast):
                 est = psll.expand_string_literals(ast)
                 self.assertGreater(depth(est),depth(ast))
     
-    def test_mixed_quotes(self):
-        ''' > Mix correct quote pairs in one tree '''
-        ast = ('"one"','\'two\'')
-        est = psll.expand_string_literals(ast)
-        self.assertGreater(depth(est),depth(ast))
-    
     def test_nested(self):
         ''' > Expand strings in nested trees '''
-        trees = [(('\'hi\'',),),(('"hi"',),),('set','a',('+','a','\'hi\'')),('set','a',('+','a','"hi"'))]
+        trees = [(('"hi"',),),(('"hi"',),),('set','a',('+','a','"hi"')),('set','a',('+','a','"hi"'))]
         for ast in trees:
             with self.subTest(ast=ast):
                 est = psll.expand_string_literals(ast)

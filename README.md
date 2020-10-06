@@ -11,7 +11,7 @@ Make  `psll.py` executable:
 ```
 chmod u+x psll.py
 ```
-or use the `psll` bash script (which you might want to edit to make it point to the correct files) which compiles and runs a program.
+or use the `psll.sh` bash script (which you might want to edit to make it point to the correct files) which compiles and runs a program.
 
 ## Use
 
@@ -53,10 +53,10 @@ It can be compiled and run as follows:
 ruby ./Pyramid-Scheme/pyra.rb ./exmaples/nargin_counter.pyra 4 3 5 2 4
 ```
 
-or with the `psll` bash script:
+or with the `psll.sh` bash script:
 
 ```
-./psll ./examples/nargin_counter.psll 4 3 5 2 4
+./psll.sh ./examples/nargin_counter.psll 4 3 5 2 4
 ```
 
 The output is `nargin: 5`
@@ -119,6 +119,8 @@ Psll expands a string literal into such construct, so its enough to write:
 ```cs
 (set a "Hello")
 ```
+
+Only `"` can be used to create strings.
 
 ### Def keyword
 
@@ -209,7 +211,7 @@ This is not a real-purpose language. In this section the 'optimisation' refers t
   - [ ] Expansion of `+` and `*` commands too
   - [ ] ?? `*( ... )` construct
 - [ ] ?? Arrays / Linked lists
-  - [ ] Improve array implementation
+  - [x] Improve array implementation
   - [ ] `range` keyword
 - [ ] ?? Easier to use installation. Maybe a make-script which makes a symlink in the correct place...
 - [ ] Improve test coverage
@@ -224,9 +226,9 @@ This is not a real-purpose language. In this section the 'optimisation' refers t
   - [ ] ?? Backtrace
   - [ ] ?? Or, I guess, rip it out and make it a normal `SyntaxError`
 - [x] Add testing psll bash script to tests
-  - [ ] ?? And somehow coverage
-- [ ] Redo tree / string parsing with paired delimiter matching
-  - [ ] ?? Have a look at `pyparsing` (`QuotedString`, `nestedExpr`)
+  - [ ] <s>?? And somehow coverage</s> [`bashcov`](https://github.com/infertux/bashcov)
+- [ ] Use `hypothesis` in testing ?
+- [ ] ?? Move the command line code from psll.py to a bash script
 
 ## Done's
 
@@ -250,6 +252,8 @@ Bullet points get moved here from the above section when they get finished. (It'
   - [x] ?? Interpret `_` as not-a-tree
   - [x] Therefore optimise `chr` in string expansion
   - [x] <s>Also add this to the snake optimiser</s>
+- [x] Redo tree / string parsing with paired delimiter matching
+  - [x] <s>?? Have a look at `pyparsing` (`QuotedString`, `nestedExpr`)</s> <- No, because I want to keep this as vanilla python as possible.
 
 ## Bugs
 

@@ -1,4 +1,4 @@
-(set newline (chr 10))
+(set newline "\n")
 (set nil (arg 999))
 
 // Allocate an array

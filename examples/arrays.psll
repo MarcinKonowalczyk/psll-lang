@@ -1,4 +1,4 @@
-(set newline (chr 10))
+(set newline "\n")
 (def print ( // Helper to print 'a'
     (out "a: " a) (out newline)
 ))
@@ -24,11 +24,8 @@
 ////// array literal //////
 (out newline)
 
-// Both of these work
-(set a [1,2,3,4,5,6,7]) (print)
+// Arrays are declared in square braces, delimited with spaces
 (set a [1 2 3 4 5 6 7]) (print)
-// But not mix of commas and spaces
-// (set a [1,2 3 4 5 6 7]) (print)
 
 (set a []) (print)
 (set a [1]) (print)
@@ -57,7 +54,7 @@
 ////// star (*) operator //////
 (out newline)
 
-(set a [1,2,3,4])
+(set a [1 2 3 4])
 
 // * overloads concatenation
 (out (* a 3)) (out newline)
@@ -77,7 +74,7 @@
 ////// Add to array //////
 (out newline)
 
-(set a [1,2,3,4])
+(set a [1 2 3 4])
 (set a (+ a [5])) (print) // Append
 (set a (+ [0] a)) (print) // Prepend
 
@@ -85,15 +82,15 @@
 (out newline)
 
 // Arrays are zero-indexed
-(set a [1,2,3,4]) (print)
-(out "a[0]: " (arg a 0)) (out newline)
-(out "a[1]: " (arg a 1)) (out newline)
+(set a [1 2 3 4]) (print)
+(out "a\[0\]: " (arg a 0)) (out newline)
+(out "a\[1\]: " (arg a 1)) (out newline)
 
 // Negative indices go from the end
-(out "a[-1]: " (arg a -1)) (out newline)
-(out "a[-2]: " (arg a -2)) (out newline)
+(out "a\[-1\]: " (arg a -1)) (out newline)
+(out "a\[-2\]: " (arg a -2)) (out newline)
 
 // Too large indices give 'nil'
-(out "a[4]: " (arg a 4)) (out newline)
-(out "a[-5]: " (arg a -5)) (out newline)
+(out "a\[4\]: " (arg a 4)) (out newline)
+(out "a\[-5\]: " (arg a -5)) (out newline)
 
