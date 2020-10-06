@@ -47,10 +47,7 @@ class PsllSyntaxError(SyntaxError):
 #==========================================================================================================
 
 def readfile(filename):
-    '''
-    Read the file, remove comments and make sure all the lines are
-    in correct brackets
-    '''
+    ''' Read the file, remove comments and make sure all the lines are in correct brackets '''
 
     with open(filename,'r') as f:
         text = f.read()
@@ -76,66 +73,44 @@ def readfile(filename):
 #                                                             
 #=============================================================
 
-@cached(maxsize=1000)
-def split_into_lines(text):
-    ''' Split the reduced source into 1st-level brackets (aka major trees) '''
-    # Split into lines at first level brackets
-    count, last_count, last_break = (0,0,0)
-    lines = []
-    for j,char in enumerate(text):
-        count += 1 if char=='(' else 0
-        count -= 1 if char==')' else 0
-        if count == 0: # End of a bracket
-            if last_count != 0:
-                line = text[last_break:(j+1)]
-                lines.append(line)
-            else: # Start of a new bracket
-                last_break = j+1
-        elif count < 0:
-            raise PsllSyntaxError('Invalid bracket alignment (ketbra)')
-        last_count = count
+def context_split(string, delimiter=',', contexts=None, escape_char='\\'):
+    ''' Split string at delimiter, except for in the middle of the specified contexts '''
 
-    if count != 0: # Check the final count is 0
-        raise PsllSyntaxError('Invalid bracket parity.')
+    contexts = tuple(map(lambda x: x if len(x)==2 else x+x,contexts)) if contexts else ()
+    state = [0 for _ in contexts] # States of each context
+    last_break, escape, parts = 0, False, [] # Keep track of 
 
-    return tuple(lines)
+    for si,char in enumerate(string):
+        if escape:
+            escape = False
+            continue
 
-def split_into_subtrees(line):
-    ''' Split each tree into subtrees '''
-    if re.match('\(.*\)',line): # Remove outermost bracket
-        line = line[1:-1];
-    line += SPACE
+        for ci,c in enumerate(contexts):
+            other_state = [s for i,s in enumerate(state) if i is not ci]
+            if state[ci]:
+                # First try to match the closing context if state is already high
+                # This make matching the same delimiter for opening and closing work
+                if char is c[1]: state[ci] -= 1
+                elif char is c[0]: state[ci] += 1
+            else:
+                if char is c[0]: state[ci] += 1
+                elif char is c[1]: state[ci] -= 1
 
-    bracket_count, last_break = (0,0) # Kepping track of bracket parity
-    last_quote = '' # Keeping track of quotation marks
-    in_array = False # Keep track of whether you're in a psll array
+        escape = char is escape_char # Escape the next char
 
-    tree = []
-    for j,char in enumerate(line):
-        bracket_count += 1 if char=='(' else 0
-        bracket_count -= 1 if char==')' else 0
-        for quote in ['"','\'']:
-            if char==quote:
-                if not last_quote: last_quote = quote # Start a quote
-                elif last_quote==quote: last_quote = '' # End a quote
-        
-        if not last_quote: # Not currently inside of a string
-            if char==SPACE: # Break at spaces
-                if bracket_count == 0 and not in_array:
-                    tree.append(line[last_break:j])
-                    last_break = j+1
-            elif char=='[':
-                in_array = True
-            elif char == ']':
-                in_array = False
-    
-    # Recursively split parts of self 
-    return tuple(split_into_subtrees(subtree) if re.match('\(.*\)',subtree) else subtree for subtree in tree)
+        if char is delimiter and not any(state):
+            parts.append(string[last_break:si])
+            last_break = si + 1
+
+    parts.append(string[last_break:])
+    return tuple(parts)
+
+lexer_split = partial(context_split,delimiter=' ',contexts=('()','"','[]'))
+isbracketed = lambda text: len(text)>=2 and text[0]=='(' and text[-1]==')'
 
 def lex(text):
     ''' Compose a basic abstract syntax tree from the reduced source '''
-    ast = tuple(split_into_subtrees(line) for line in split_into_lines(text))
-    return ast
+    return tuple((lex(s[1:-1]) if isbracketed(s) else s) for s in lexer_split(text))
 
 #==================================================================================================================================================
 #                                                                                                                                                  
@@ -177,6 +152,12 @@ def tree_traversal(ast, str_fun=None, post_fun=None, pre_fun=None, final_fun=Non
 #                                                                                                     
 #=====================================================================================================
 
+__processing_stack__ = []
+def in_processing_stack(fun):
+    ''' Append function to the processing stack '''
+    __processing_stack__.append(fun)
+    return fun
+
 def find_variable_names(ast):
     ''' Find all the variable names used in the code '''
     names = set()
@@ -187,6 +168,8 @@ def find_variable_names(ast):
     tree_traversal(ast,post_fun=variable_finder)
     return names
 
+
+@in_processing_stack
 def shorten_variable_names(ast):
     ''' Shorten variable names to single letter, is possible '''
     names = find_variable_names(ast)
@@ -218,6 +201,20 @@ def shorten_variable_names(ast):
 
     return tree_traversal(ast,str_fun=string_replacer)
 
+
+def apply_replacement_rules(ast,rules):
+    ''' Apply replacement rules to the abstract syntax tree '''
+    def singleton_tuple_replacer(node): #  Replace (f) by def of f
+        return rules[node[0]] if len(node)==1 and node[0] in rules.keys() else node
+    def string_replacer(node): #  Replace f by def of f
+        return rules[node] if node in rules.keys() else node
+
+    return tree_traversal(ast,
+        pre_fun=singleton_tuple_replacer,
+        str_fun=string_replacer)
+
+
+@in_processing_stack
 def def_keyword(ast):
     ''' Search for ('def','something',(...)) keywords '''
 
@@ -252,18 +249,8 @@ def def_keyword(ast):
         pre_fun=find_defs,
         final_fun=pop_def_stack)
 
-def apply_replacement_rules(ast,rules):
-    ''' Apply replacement rules to the abstract syntax tree '''
-    def singleton_tuple_replacer(node): #  Replace (f) by def of f
-        return rules[node[0]] if len(node)==1 and node[0] in rules.keys() else node
-    def string_replacer(node): #  Replace f by def of f
-        return rules[node] if node in rules.keys() else node
-
-    return tree_traversal(ast,
-        pre_fun=singleton_tuple_replacer,
-        str_fun=string_replacer)
-
 ## TESTED
+@in_processing_stack
 def expand_array_literals(ast):
 
     def one_element_array(element):
@@ -320,6 +307,7 @@ def expand_array_literals(ast):
     return tree_traversal(ast,str_fun=array_expander)
 
 ## TESTED
+@in_processing_stack
 def expand_string_literals(ast):
     
     def expand(string):
@@ -338,6 +326,7 @@ def expand_string_literals(ast):
     return tree_traversal(ast,str_fun=expand)
 
 ## TESTED
+@in_processing_stack
 def expand_overfull_brackets(ast):
     ''' Expand lists of many lists into lists of length 2 '''
 
@@ -351,6 +340,8 @@ def expand_overfull_brackets(ast):
         
     return tree_traversal(ast,post_fun=expander)
 
+
+@in_processing_stack
 def fill_in_empty_trees(ast):
     ''' Fill in the implicit empty strings in brackets with only lists '''
     def filler(node):
@@ -367,6 +358,8 @@ def fill_in_empty_trees(ast):
 
     return tree_traversal(ast,post_fun=filler)
 
+
+@in_processing_stack
 def fill_in_underscores(ast):
     def filler(node):
         if len(node)==3:
@@ -385,10 +378,26 @@ def fill_in_underscores(ast):
         return node
     return tree_traversal(ast,post_fun=filler)
 
+@in_processing_stack
 def underscore_keyword(ast):
     def replacer(node):
         return None if node is '_' else node
     return tree_traversal(ast,str_fun=replacer)
+
+
+# processing_stack = ( # Pre-processing function stack
+#     shorten_variable_names,
+#     def_keyword,
+#     expand_array_literals,
+#     expand_string_literals,
+#     expand_overfull_brackets,
+#     fill_in_empty_trees,
+#     fill_in_underscores,
+#     underscore_keyword)
+
+# for f1,f2 in zip(__processing_stack__,processing_stack):
+#     print(f1.__name__)
+#     print(f2.__name__,end='\n\n')
 
 #=======================================================================
 #                                                                       
@@ -529,22 +538,12 @@ def main(args):
     if args.verbose: print('Reduced source:',text)
     
     ast = lex(text)
-
+    # print(ast,end='\n\n')
     # names = find_variable_names(ast)
     # print('variables:',variables)
 
-    stack = [ # Pre-processing function stack
-        shorten_variable_names,
-        def_keyword,
-        expand_array_literals,
-        expand_string_literals,
-        expand_overfull_brackets,
-        fill_in_empty_trees,
-        fill_in_underscores,
-        underscore_keyword]
-    if args.full_names:
-        stack = stack[1:]
-    ast = reduce(lambda x,y: y(x), [ast] + stack)
+    stack = __processing_stack__[1:] if args.full_names else __processing_stack__
+    ast = reduce(lambda x,y: y(x), [ast] + list(stack))
     
     # TODO  Make optimisation options mutually exclusive
     if args.considerate_optimisation:

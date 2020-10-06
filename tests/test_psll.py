@@ -124,6 +124,7 @@ class Readfile(unittest.TestCase,MetaTests):
 #                                                             
 #=============================================================
 
+@unittest.skip('Needs rewriting into tests of `lex`')
 class Split(unittest.TestCase,MetaTests):
 
     def test_simple(self):
