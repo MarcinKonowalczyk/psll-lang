@@ -297,7 +297,7 @@ class ArrayExpansion(unittest.TestCase,MetaTests):
     
     def test_more_elements(self):
         ''' > Actually useful arrays '''
-        strings = [('set','a',x) for x in ["[1,2]","[1,2,3]","[1,2,3,4]","[1,2,3,4,5]"]]
+        strings = [('set','a',x) for x in ["[1 2]","[1 2 3]","[1 2 3 4]","[1 2 3 4 5]"]]
         targets = [
             ('set','a',('1','2')),
             ('set','a',('+',('1','2'),('-',('3','0'),('0','0')))),
@@ -307,29 +307,21 @@ class ArrayExpansion(unittest.TestCase,MetaTests):
 
     def test_last_zero(self):
         ''' > Make sure last zero in odd-length arrays also works '''
-        strings = [('set','a',x) for x in ["[1,2,0]","[1,2,3,4,0]"]]
+        strings = [('set','a',x) for x in ["[1 2 0]","[1 2 3 4 0]"]]
         targets = [
             ('set','a',('+',('1','2'),('-',('0','1'),('1','1')))),
             ('set','a',('+',('1','2'),('+',('3','4'),('-',('0','1'),('1','1')))))]
         self.paired_test(strings,targets,psll.expand_array_literals)
 
     def test_delimiters(self):
-        ''' > Different delimiter patterns '''
-        strings = [('set','a',x) for x in ["[1]","[1 ]","[ 1]","[ 1 ]"]]
-        targets = [('set','a',('-',('1','0'),('0','0')))]*len(strings)
-        self.paired_test(strings,targets,psll.expand_array_literals)
-        
-        strings = [('set','a',x) for x in ["[1,2]","[1, 2]","[1 ,2]","[ 1,2 ]","[    1   ,  2  ]"]]
-        targets = [('set','a',('1','2'))]*len(strings)
-        self.paired_test(strings,targets,psll.expand_array_literals)
-
-        strings = [('set','a',x) for x in ["[1 2]","[1  2]","[ 1 2 ]","[    1     2  ]"]]
+        ''' > Different delimiter patterns '''        
+        strings = [('set','a',x) for x in ["[1 2]","[1  2]","[ 1 2 ]","[    1      2  ]"]]
         targets = [('set','a',('1','2'))]*len(strings)
         self.paired_test(strings,targets,psll.expand_array_literals)
 
     def test_strings(self):
         ''' > Make sure psll strings are not expanded '''
-        strings = [('set','a',x) for x in ['["hellos"]','["hi","sup"]','["13", angry, men]']]
+        strings = [('set','a',x) for x in ['["hellos"]','["hi" "sup"]','["13" angry men]']]
         targets = [
             ('set','a',('-',('"hellos"','0'),('0','0'))),
             ('set','a',('"hi"','"sup"')),

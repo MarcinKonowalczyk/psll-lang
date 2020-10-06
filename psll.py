@@ -101,8 +101,15 @@ def context_split(string, delimiter=',', contexts=None, escape_char='\\'):
         if char is delimiter and not any(state):
             parts.append(string[last_break:si])
             last_break = si + 1
+        
+        if any(s<0 for s in state):
+            raise PsllSyntaxError('Invalid context structure. Ketbra context match.')
 
     parts.append(string[last_break:])
+
+    if any(state):
+        raise PsllSyntaxError('Invalid context structure. Incomplete context.')
+
     return tuple(parts)
 
 lexer_split = partial(context_split,delimiter=' ',contexts=('()','"','[]'))
@@ -124,7 +131,7 @@ def lex(text):
 
 def tree_traversal(ast, str_fun=None, post_fun=None, pre_fun=None, final_fun=None):
     ''' (Depth-first) walk through the abstract syntax tree and application of appropriate functions '''
-    ast2 = [] # Build a new ast
+    ast2 = [] # Since, ast is immutable, build a new ast
     for node in ast:
         if node is None:
             ast2.append(node)
@@ -157,6 +164,7 @@ def in_processing_stack(fun):
     ''' Append function to the processing stack '''
     __processing_stack__.append(fun)
     return fun
+
 
 def find_variable_names(ast):
     ''' Find all the variable names used in the code '''
@@ -254,6 +262,7 @@ def def_keyword(ast):
 def expand_array_literals(ast):
 
     def one_element_array(element):
+        ''' Put `element` into a one-element array with the subtraction trick '''
         return ('-',(element,'0'),('0','0')) if element is not '0' else ('-',(element,'1'),('1','1'))
 
     def array_to_tree(string):
@@ -261,34 +270,11 @@ def expand_array_literals(ast):
         if not string:
             return ('-',('0','0'),('0','0')) # Make an empty array
 
-        last_quote = '' # Keep track of quotation marks
-        delimiter = '' # Don't know the delimiter yet
-        found_space = False
-
-        # Figure out the delimiter
-        for j,char in enumerate(string):
-
-            # Enter and exit psll strings
-            for quote in ['"','\'']:
-                if char==quote:
-                    if not last_quote: last_quote = quote # Start a quote
-                    elif last_quote==quote: last_quote = '' # End a quote
-            
-            if not last_quote: # If not in the middle of a psll string
-                if char == ',':
-                    delimiter = ','
-                    break
-                elif char == SPACE: # Keep going to see if there is a comma there
-                    found_space = True
-                elif found_space:
-                    delimiter = SPACE
-                    break
-        else: # No delimiters found, aka, 1-element array
-            return one_element_array(string)
-
-        # Build the tree
-        elements = [e.strip() for e in string.split(delimiter) if e]
-        if len(elements) % 2:
+        elements = context_split(string,delimiter=' ',contexts=('[]','"','()'))
+        elements = [e for e in elements if e] # Remove empty elements (from multiple spaces)
+        if len(elements)==1:
+            return one_element_array(elements[0])
+        if len(elements) % 2: # Build the tree
             tree = one_element_array(elements[-1])
             elements = elements[:-1]
         else:
