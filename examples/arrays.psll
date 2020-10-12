@@ -1,6 +1,6 @@
 (set newline "\n")
 (def print ( // Helper to print 'a'
-    (out "a: " a) (out newline)
+    (out "a: " a newline)
 ))
 
 ////// simple array declaration //////
@@ -57,19 +57,19 @@
 (set a [1 2 3 4])
 
 // * overloads concatenation
-(out (* a 3)) (out newline)
+(out (* a 3) newline)
 
 // as well as .join with string
-(out (* a ",")) (out newline)
-(out (* a " -> ")) (out newline)
+(out (* a ",") newline)
+(out (* a " -> ") newline)
 
 (set a ("one" "two"))
-(out (* a " -> ")) (out newline)
+(out (* a " -> ") newline)
 
 // String concatenation
 (set a 'Quick') (set b 'ly')
-(out (* (a b) '')) (out newline)
-(out (+ a b)) (out newline) // But this is simpler
+(out (* (a b) '') newline)
+(out (+ a b) newline) // But this is simpler
 
 ////// Add to array //////
 (out newline)
@@ -83,14 +83,14 @@
 
 // Arrays are zero-indexed
 (set a [1 2 3 4]) (print)
-(out "a\[0\]: " (arg a 0)) (out newline)
-(out "a\[1\]: " (arg a 1)) (out newline)
+(out "a\[0\]: " (arg a 0) newline)
+(out "a\[1\]: " (arg a 1) newline)
 
 // Negative indices go from the end
-(out "a\[-1\]: " (arg a -1)) (out newline)
-(out "a\[-2\]: " (arg a -2)) (out newline)
+(out "a\[-1\]: " (arg a -1) newline)
+(out "a\[-2\]: " (arg a -2) newline)
 
 // Too large indices give 'nil'
-(out "a\[4\]: " (arg a 4)) (out newline)
-(out "a\[-5\]: " (arg a -5)) (out newline)
+(out "a\[4\]: " (arg a 4) newline)
+(out "a\[-5\]: " (arg a -5) newline)
 

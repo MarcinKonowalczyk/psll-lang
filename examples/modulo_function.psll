@@ -1,18 +1,18 @@
 ////// Implementation of mod(a,b) with repeated subtraction //////
 (set a 33) (set b 16)
 (loop (<=> (<=> a b) -1) (set a (- a b)))
-(out "33 mod 16 = " a) (out "\n")
+(out "33 mod 16 = " a "\n")
 
 ////// Same thing using 'def' keyword //////
 (def mod (loop (<=> (<=> a b) -1) (set a (- a b)))) // Set a to mod(a,b)
 (set a 11) (set b 7)
-(out a " mod ") (out b " = ")
+(out a " mod " b " = ")
 (mod)
 (out a "\n")
 
 ////// Same thing with print //////
 (def mod (
-    (out a " mod ") (out b " = ")
+    (out a " mod " b " = ")
     (mod)
     (out a "\n")
 ))

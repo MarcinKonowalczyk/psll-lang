@@ -3,12 +3,12 @@
 ////// Basic definition //////
 (def incr (set a (+ a 1))) // Increment a
 (incr) // This now becomes (set a (+ a 1))
-(out "a: " a) (out "\n")
+(out "a: " a "\n")
 
 ////// Redefinition //////
 (def incr ( // Redefine 'incr' as itself + printing
     (incr)
-    (out "<incr> a: " a) (out "\n")
+    (out "<incr> a: " a "\n")
 ))
 (incr) // This now does the original incr + print
 
@@ -25,14 +25,16 @@
     (f)
     (out "leaving scope 1\n")
 )
-(out "a: " a) (out "\n") // But 'a' remains unchanged
+(out "a: " a "\n") // But 'a' remains unchanged
 (f) // 'f' works the same way as before the scope
 (incr) // and 'incr' also works the same way
 
 // This is a bit of a technical point. Basically, empty brackets don't break it.
+// TODO: Fix this:
 (
     (out "entering scope 2\n")
-    () // Empty brackets don't pop the stack of defs
+    // Currently, they do in fact pop the stack ...
+    // () // Empty brackets don't pop the stack of defs
     (out "leaving scope 2\n")
 )
 

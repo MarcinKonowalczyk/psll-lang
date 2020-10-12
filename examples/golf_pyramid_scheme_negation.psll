@@ -1,35 +1,17 @@
 (set n (# line)) // Set n to line input
 
-(set space (chr 32))
-(set newline (chr 10))
-(set caret (chr 94))
-(set fslash (chr 47))
-(set bang (chr 33))
-(set bslash (chr 92))
-(set dash (chr 45))
-
-// Left triangle
-(set lt fslash)
-(set lt (+ lt bang)) (set lt (+ lt bslash)) (set lt (+ lt newline))
-(set lt (+ lt dash)) (set lt (+ lt dash)) (set lt (+ lt dash))
-
-// Right triangle
-(set rt caret) (set rt (+ rt newline))
-(set rt (+ rt space)) (set rt (+ rt space))
-(set rt (+ rt fslash)) (set rt (+ rt bang)) (set rt (+ rt bslash))
-(set rt (+ rt newline))
-(set rt (+ rt space)) (set rt (+ rt caret))
-(set rt (+ rt dash)) (set rt (+ rt dash)) (set rt (+ rt dash))
-(set rt (+ rt newline))
+// Left and right triangle
+(set lt "/!\\\n---")
+(set rt "^\n  /!\\\n ^---\n")
 
 // n = mod(m,2)
 ((set m n) (loop (<=> (<=> m 2) -1) (set m (- m 2))))
 
 // Print the top and the first triangle
 (? (! (? m ( // If m
-    (out space space) (out space)
+    (out "   ")
 ))) ( // Else
-    (out space caret) (out newline)
+    (out " ^\n")
 ))
 
 (set l 0)
@@ -42,4 +24,4 @@
     ))
 (set l (+ l 1))
 ))
-(out space dash) // Final triangle
+(out " -") // Bottom of the final triangle

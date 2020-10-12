@@ -174,6 +174,26 @@ The following is, for example, a *postfix* implementation of the modulo function
 (set a 11) (set b 7) (mod)
 ```
 
+### Command expansion
+
+The `out` command of Pyramid Scheme allows for output of, at most, 2 variables. To output more, one needs to chain mutiple such `out` statements. In psll an out command with more than two inputs gets automatically expanded into such chain, such that:
+
+```cs
+(out a b)
+(out c d)
+(out e)
+```
+
+can be written simply as:
+
+```cs
+(out a b c d e)
+```
+
+The former might, however be preferable in certain contexts since it allows for comments on each part of the `out`.
+
+A _similar_ expansion will be implemented for `+`, `-`, `*`, and `\` (but **is not** implemented yet!)
+
 ### Underscore keyword
 
 The underscore `_` can be used to explicitly specify an empty slot where a pyramid could be. It is not particularly useful from the user point of view (maybe except for fine-tuning the position of the pyramids for code golf), but it is very helpful for the compiler. All the leaves are eventually terminated with `_`, and string expansion used the `_` keyword to help pack the code a bit better.
@@ -204,7 +224,7 @@ This is not a real-purpose language. In this section the 'optimisation' refers t
   - [x] Simpler writing of nested nil pyramids
   - [x] `def` keyword
   - [x] ?? `_` keyword
-  - [ ] Implicit expansion of `out` command, such that one can write `(out "j: " j " | k: " k newline)` and it gets expanded into a pile of `out` commands
+  - [x] Implicit expansion of `out` command, such that one can write `(out "j: " j " | k: " k newline)` and it gets expanded into a pile of `out` commands
   - [ ] `nil` keyword
     - Make it more robustly than `(arg 999)`
     - ?? Allow compiler to insert `def`s into preamble
@@ -214,6 +234,7 @@ This is not a real-purpose language. In this section the 'optimisation' refers t
   - [x] Improve array implementation
   - [ ] `range` keyword
 - [ ] ?? Easier to use installation. Maybe a make-script which makes a symlink in the correct place...
+  - [ ] ?? `pip install psll` ...
 - [ ] Improve test coverage
   - [x] Make the coverage count only the tests for that file
   - [x] tree_repr coverage
@@ -229,6 +250,7 @@ This is not a real-purpose language. In this section the 'optimisation' refers t
   - [ ] <s>?? And somehow coverage</s> [`bashcov`](https://github.com/infertux/bashcov)
 - [ ] Use `hypothesis` in testing ?
 - [ ] ?? Move the command line code from psll.py to a bash script
+- [ ] Prettify the intermediate representation
 
 ## Done's
 
@@ -257,10 +279,15 @@ Bullet points get moved here from the above section when they get finished. (It'
 
 ## Bugs
 
+- [ ] `(_)` breaks the compiler (Why would someone decide to write this though...?)
+- [ ] Bug in greedy optimisation for source code with one major tree
+- [ ] Intermediate representation is ugly since the multiple spaces are gone. This is not really a bug, but would be nice to change.
+
+## Bugs no more
+
+- [x] Strings do not support escape characters <s>(And maybe they never will! Ha! They're just sugar anyway...)</s> (Fine...)
 - [x] <s>`compact` option breaks when `N`th triangle is wider than all the `1..N-1`s.</s>
 - [x] `compact` option does nothing
-- [ ] Strings do not support escape characters (And maybe they never will! Ha! They're just sugar anyway...)
-- [ ] `(_)` breaks the compiler (Why would someone decide to write this though...?)
 - [x] Asymmetric children cause issues in `tree_repr` in `add_one_child`
-- [ ] Bug in greedy optimisation for source code with one major tree
-- [ ] `"` command doesn't work (it gets recognised as a psll string)
+- [x] `"` command doesn't work (it gets recognized as a psll string)
+- [x] Multiple spaces in strings get squashed to one because the intermediate representation is oblivious of context and just `re`'s the entire source.

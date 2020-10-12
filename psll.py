@@ -10,12 +10,16 @@ from functools import lru_cache as cached
 import operator
 from string import ascii_letters
 
+import sys
+if sys.version_info<(3,6):
+    raise RuntimeError('Upgrade to python 3.6, or newer.')
+
 from ascii_trees import Pyramid
 
-def in_pairs(iterable):
+def in_pairs(iterable,in_tuple=False):
     ''' Pair up elements in the array. (s1,s2,s3,s4,s5) -> ((s1,s2),(s3,s4),s5) '''
     for p in windowed(iterable,2,step=2):
-        yield p if p[1] else p[0]
+        yield p if p[1] else ((p[0],) if in_tuple else p[0])
 
 SPACE = ' '
 PS_KEYWORDS = {'+','*','-','/','^','=','<=>','out','chr','arg','#','"','!','[',']','set','do','loop','?'}
@@ -40,25 +44,26 @@ def readfile(filename):
         text = f.read()
 
     subs = ((r'//.*',''), # Remove comments
-        (r'\s{1,}',' '), # Only single spaces
+        (r'\n+',''), # Remove newlines
         (r'((?<=^)\s+|\s+(?=$))',''), # No trailing or leading whitespace
         (r'((?<=\()\s+|\s+(?=\)))',''), # Spaces inside brackets
         (r'(?<=\))(?=\()',' ')) # Put single spaces between crammed brackets
+
     # Apply substitutions
     for a,b in subs:
         text = re.sub(a,b,text)
 
     return text
 
-#=============================================================
-#                                                             
-#  ##      #####  ##    ##                                    
-#  ##      ##      ##  ##                                     
-#  ##      #####    ####                                      
-#  ##      ##      ##  ##                                     
-#  ######  #####  ##    ##                                    
-#                                                             
-#=============================================================
+#=======================================================================================================================================
+#                                                                                                                                       
+#   ####   #####   ##     ##  ######  #####  ##    ##  ######         ####  #####   ##      ##  ######                                
+#  ##     ##   ##  ####   ##    ##    ##      ##  ##     ##          ##     ##  ##  ##      ##    ##                                  
+#  ##     ##   ##  ##  ## ##    ##    #####    ####      ##           ###   #####   ##      ##    ##                                  
+#  ##     ##   ##  ##    ###    ##    ##      ##  ##     ##             ##  ##      ##      ##    ##                                  
+#   ####   #####   ##     ##    ##    #####  ##    ##    ##          ####   ##      ######  ##    ##                                  
+#                                                                                                                                       
+#=======================================================================================================================================
 
 def context_split(string, delimiter=',', contexts=(), escape_char='\\', remove_empty=False):
     ''' Split string at delimiter, except for in the middle of the specified contexts '''
@@ -72,15 +77,15 @@ def context_split(string, delimiter=',', contexts=(), escape_char='\\', remove_e
             continue
 
         for ci,c in enumerate(contexts):
-            other_state = [s for i,s in enumerate(state) if i is not ci]
-            if state[ci]:
-                # First try to match the closing context if state is already high
-                # This make matching the same delimiter for opening and closing work
-                if char is c[1]: state[ci] -= 1
-                elif char is c[0]: state[ci] += 1
-            else:
-                if char is c[0]: state[ci] += 1
-                elif char is c[1]: state[ci] -= 1
+            if not any(state[ci+1:]):
+                if state[ci]:
+                    # First try to match the closing context if state is already high
+                    # This make matching the same delimiter for opening and closing work
+                    if char is c[1]: state[ci] -= 1
+                    elif char is c[0]: state[ci] += 1
+                else:
+                    if char is c[0]: state[ci] += 1
+                    elif char is c[1]: state[ci] -= 1
 
         escape = char is escape_char # Escape the next char
 
@@ -102,7 +107,17 @@ def context_split(string, delimiter=',', contexts=(), escape_char='\\', remove_e
 
     return tuple(parts)
 
-lexer_split = partial(context_split,delimiter=' ',contexts=('()','""','[]'))
+#=============================================================
+#                                                             
+#  ##      #####  ##    ##                                    
+#  ##      ##      ##  ##                                     
+#  ##      #####    ####                                      
+#  ##      ##      ##  ##                                     
+#  ######  #####  ##    ##                                    
+#                                                             
+#=============================================================
+
+lexer_split = partial(context_split,delimiter=' ',contexts=('()','[]','""'),remove_empty=True)
 incontext = lambda text,context: len(text)>=2 and text[0]==context[0] and text[-1]==context[1]
 
 def lex(text):
@@ -139,22 +154,21 @@ def tree_traversal(ast, str_fun=None, post_fun=None, pre_fun=None, final_fun=Non
         final_fun(ast2)
     return ast2 # Return ast back as a tuple
 
-#=====================================================================================================
-#                                                                                                     
-#  #####   #####    #####            #####   #####     #####    ####                                
-#  ##  ##  ##  ##   ##               ##  ##  ##  ##   ##   ##  ##                                   
-#  #####   #####    #####  ########  #####   #####    ##   ##  ##                                   
-#  ##      ##  ##   ##               ##      ##  ##   ##   ##  ##                                   
-#  ##      ##   ##  #####            ##      ##   ##   #####    ####                                
-#                                                                                                     
-#=====================================================================================================
-
 __processing_stack__ = [] # Pre processign functions in order they ought to be applied
 def in_processing_stack(fun):
     ''' Append function to the processing stack '''
     __processing_stack__.append(fun)
     return fun
 
+#==================================================================================================================================================
+#                                                                                                                                                  
+#   ####  ##   ##   #####   #####    ######  #####  ##     ##        ##     ##    ###    ###    ###  #####   ####                                
+#  ##     ##   ##  ##   ##  ##  ##     ##    ##     ####   ##        ####   ##   ## ##   ## #  # ##  ##     ##                                   
+#   ###   #######  ##   ##  #####      ##    #####  ##  ## ##        ##  ## ##  ##   ##  ##  ##  ##  #####   ###                                 
+#     ##  ##   ##  ##   ##  ##  ##     ##    ##     ##    ###        ##    ###  #######  ##      ##  ##        ##                                
+#  ####   ##   ##   #####   ##   ##    ##    #####  ##     ##        ##     ##  ##   ##  ##      ##  #####  ####                                 
+#                                                                                                                                                  
+#==================================================================================================================================================
 
 def find_variable_names(ast):
     ''' Find all the variable names used in the code '''
@@ -199,6 +213,15 @@ def shorten_variable_names(ast):
 
     return tree_traversal(ast,str_fun=string_replacer)
 
+#=============================================================================================================================
+#                                                                                                                             
+#  ####    #####  #####        ##  ##  #####  ##    ##  ##      ##   #####   #####    ####                                  
+#  ##  ##  ##     ##           ## ##   ##      ##  ##   ##      ##  ##   ##  ##  ##   ##  ##                                
+#  ##  ##  #####  #####        ####    #####    ####    ##  ##  ##  ##   ##  #####    ##  ##                                
+#  ##  ##  ##     ##           ## ##   ##        ##     ##  ##  ##  ##   ##  ##  ##   ##  ##                                
+#  ####    #####  ##           ##  ##  #####     ##      ###  ###    #####   ##   ##  ####                                  
+#                                                                                                                             
+#=============================================================================================================================
 
 def apply_replacement_rules(ast,rules):
     ''' Apply replacement rules to the abstract syntax tree '''
@@ -233,11 +256,13 @@ def def_keyword(ast):
                 raise PsllSyntaxError(f"'def' statement can only assign brackets to values, not {type(node[2])} to {type(node[1])}")
             if node[1]=='def':
                 raise PsllSyntaxError(f"('def' 'def' (...)) structure is not allowed")
-            defs.append([node[1],apply_replacement_rules(node[2],dict(defs))])
+            defs.append((node[1],apply_replacement_rules(node[2],dict(defs))))
             return () # Return empty tuple
         return node
     
     def pop_def_stack(ast):
+        print('ast:', ast, end='\n')
+        print('defs:', defs, end='\n\n')
         for node in ast:
             if node == ():
                 defs.pop()
@@ -246,6 +271,16 @@ def def_keyword(ast):
         str_fun=replacer,
         pre_fun=find_defs,
         final_fun=pop_def_stack)
+
+#=======================================================================================
+#                                                                                       
+#    ###    #####    #####      ###    ##    ##   ####                                
+#   ## ##   ##  ##   ##  ##    ## ##    ##  ##   ##                                   
+#  ##   ##  #####    #####    ##   ##    ####     ###                                 
+#  #######  ##  ##   ##  ##   #######     ##        ##                                
+#  ##   ##  ##   ##  ##   ##  ##   ##     ##     ####                                 
+#                                                                                       
+#=======================================================================================
 
 ## TESTED
 @in_processing_stack
@@ -257,7 +292,7 @@ def expand_array_literals(ast):
 
     def array_to_tree(string):
         ''' Parse (inner) array string to its ast tree representation '''
-        elements = lexer_split(string,remove_empty=True) # Reuse lexer split
+        elements = lexer_split(string) # Reuse lexer split
         if not elements:
             return ('-',('0','0'),('0','0')) # Return empty array
 
@@ -280,11 +315,21 @@ def expand_array_literals(ast):
 
     return tree_traversal(ast,str_fun=array_expander)
 
+#=========================================================================================
+#                                                                                         
+#   ####  ######  #####    ##  ##     ##   ####     ####                                
+#  ##       ##    ##  ##   ##  ####   ##  ##       ##                                   
+#   ###     ##    #####    ##  ##  ## ##  ##  ###   ###                                 
+#     ##    ##    ##  ##   ##  ##    ###  ##   ##     ##                                
+#  ####     ##    ##   ##  ##  ##     ##   ####    ####                                 
+#                                                                                         
+#=========================================================================================
+
 ## TESTED
 @in_processing_stack
 def expand_string_literals(ast):
     
-    string_split = partial(context_split,delimiter='',contexts=('()','""','[]'),remove_empty=True)
+    string_split = partial(context_split,delimiter='',contexts=('""',),remove_empty=True)
 
     def special(char):
         ''' Convert char to its special character representation '''
@@ -305,6 +350,36 @@ def expand_string_literals(ast):
 
     return tree_traversal(ast,str_fun=expand)
 
+#=============================================================================================================================================
+#                                                                                                                                             
+#   #####   ##   ##  #####  #####  ##   ##  ##      ##             ####   #####   ###    ###  ###    ###                                    
+#  ##   ##  ##   ##  ##     ##     ##   ##  ##      ##            ##     ##   ##  ## #  # ##  ## #  # ##                                    
+#  ##   ##  ##   ##  #####  #####  ##   ##  ##      ##            ##     ##   ##  ##  ##  ##  ##  ##  ##                                    
+#  ##   ##   ## ##   ##     ##     ##   ##  ##      ##            ##     ##   ##  ##      ##  ##      ##                                    
+#   #####     ###    #####  ##      #####   ######  ######         ####   #####   ##      ##  ##      ##  ##                                
+#                                                                                                                                             
+#=============================================================================================================================================
+
+@in_processing_stack
+def expand_overfull_outs(ast):
+
+    def expander(node):
+        if len(node) > 3 and node[0] == 'out':
+            node = (('out',*p) for p in in_pairs(node[1:],in_tuple=True))
+        return node
+    
+    return tree_traversal(ast,pre_fun=expander)
+
+#=============================================================================================================
+#                                                                                                             
+#  #####    #####    ####  ######            #####   #####     #####    ####                                
+#  ##  ##  ##   ##  ##       ##              ##  ##  ##  ##   ##   ##  ##                                   
+#  #####   ##   ##   ###     ##    ########  #####   #####    ##   ##  ##                                   
+#  ##      ##   ##     ##    ##              ##      ##  ##   ##   ##  ##                                   
+#  ##       #####   ####     ##              ##      ##   ##   #####    ####                                
+#                                                                                                             
+#=============================================================================================================
+
 ## TESTED
 @in_processing_stack
 def expand_overfull_brackets(ast):
@@ -319,7 +394,6 @@ def expand_overfull_brackets(ast):
         return node
         
     return tree_traversal(ast,post_fun=expander)
-
 
 @in_processing_stack
 def fill_in_empty_trees(ast):
@@ -337,7 +411,6 @@ def fill_in_empty_trees(ast):
             return ('',*node) # Add pad before non-keywords (this allows one to make arrays)
 
     return tree_traversal(ast,post_fun=filler)
-
 
 @in_processing_stack
 def fill_in_underscores(ast):
@@ -358,22 +431,21 @@ def fill_in_underscores(ast):
         return node
     return tree_traversal(ast,post_fun=filler)
 
-
 @in_processing_stack
 def underscore_keyword(ast):
     def replacer(node):
         return None if node is '_' else node
     return tree_traversal(ast,str_fun=replacer)
 
-#=======================================================================
-#                                                                       
-#  #####   ##   ##  ##  ##      ####                                  
-#  ##  ##  ##   ##  ##  ##      ##  ##                                
-#  #####   ##   ##  ##  ##      ##  ##                                
-#  ##  ##  ##   ##  ##  ##      ##  ##                                
-#  #####    #####   ##  ######  ####                                  
-#                                                                       
-#=======================================================================
+#=========================================================================================
+#                                                                                         
+#   ####   #####   ###    ###  #####   ##  ##      #####                                
+#  ##     ##   ##  ## #  # ##  ##  ##  ##  ##      ##                                   
+#  ##     ##   ##  ##  ##  ##  #####   ##  ##      #####                                
+#  ##     ##   ##  ##      ##  ##      ##  ##      ##                                   
+#   ####   #####   ##      ##  ##      ##  ######  #####                                
+#                                                                                         
+#=========================================================================================
 
 @cached(maxsize=10000)
 def build_tree(ast):
@@ -391,16 +463,6 @@ def build_tree(ast):
         return build_tree(ast[0]) + (build_tree(ast[1]),build_tree(ast[2]))
     else:
         raise TypeError(f'Abstract syntax tree must be represented by a list (or just a string) not a {type(ast)}')
-
-#=========================================================================================
-#                                                                                         
-#   ####   #####   ###    ###  #####   ##  ##      #####                                
-#  ##     ##   ##  ## #  # ##  ##  ##  ##  ##      ##                                   
-#  ##     ##   ##  ##  ##  ##  #####   ##  ##      #####                                
-#  ##     ##   ##  ##      ##  ##      ##  ##      ##                                   
-#   ####   #####   ##      ##  ##      ##  ######  #####                                
-#                                                                                         
-#=========================================================================================
 
 # TODO Refactor
 def compile(ast):
@@ -504,7 +566,7 @@ def main(args):
     if args.verbose: print('Reduced source:',text)
     
     ast = lex(text)
-    # print(ast,end='\n\n')
+    print(ast,end='\n\n')
     # names = find_variable_names(ast)
     # print('variables:',variables)
 

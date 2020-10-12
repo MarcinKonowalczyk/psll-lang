@@ -86,20 +86,12 @@ class TestNarginCounter(unittest.TestCase,MetaTests):
 class TestXOR(unittest.TestCase,MetaTests):
     pass
 
-@skipUnlessExampleExists(examples + 'is_in_array.psll')
-class TestIsInArray(unittest.TestCase,MetaTests):
-    pass
-
 @skipUnlessExampleExists(examples + 'bubble_sort.psll')
 class TestBubbleSort(unittest.TestCase,MetaTests):
     pass
 
 @skipUnlessExampleExists(examples + 'def_keyword.psll')
 class TestDefKeyword(unittest.TestCase,MetaTests):
-    pass
-
-@skipUnlessExampleExists(examples + 'own_source_length.psll')
-class TestSourceLength(unittest.TestCase,MetaTests):
     pass
 
 @skipUnlessExampleExists(examples + 'arrays.psll')
