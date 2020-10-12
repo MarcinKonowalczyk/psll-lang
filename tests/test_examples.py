@@ -98,5 +98,9 @@ class TestDefKeyword(unittest.TestCase,MetaTests):
 class TestArray(unittest.TestCase,MetaTests):
     pass
 
+@skipUnlessExampleExists(examples + 'binary_operator_chains.psll')
+class TestOperatorChains(unittest.TestCase,MetaTests):
+    pass
+
 if __name__=="__main__":
     unittest.main()

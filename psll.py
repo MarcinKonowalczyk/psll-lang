@@ -367,7 +367,36 @@ def expand_overfull_outs(ast):
         if len(node) > 3 and node[0] == 'out':
             node = (('out',*p) for p in in_pairs(node[1:],in_tuple=True))
         return node
-    
+
+    return tree_traversal(ast,pre_fun=expander)
+
+binary_operators = set(('+','-','*','/','^','=','<=>'))
+
+@in_processing_stack
+def expand_left_associative(ast):
+
+    def expander(node):
+        if len(node) > 3 and node[0] in binary_operators:
+            tree = node[:3]
+            for element in node[3:]:
+                tree = (node[0], tree, element)
+            return tree
+        return node
+
+    return tree_traversal(ast,pre_fun=expander)
+
+@in_processing_stack
+def expand_right_associative(ast):
+
+    def expander(node):
+        if len(node) > 2 and node[-1] in binary_operators:
+            tree = (node[-1], *node[-3:-1])
+            print(tree)
+            for element in reversed(node[:-3]):
+                tree = (node[-1], element, tree)
+            return tree
+        return node
+
     return tree_traversal(ast,pre_fun=expander)
 
 #=============================================================================================================
@@ -414,6 +443,7 @@ def fill_in_empty_trees(ast):
 
 @in_processing_stack
 def fill_in_underscores(ast):
+
     def filler(node):
         if len(node)==3:
             if isinstance(node[1],str) and node[1] is not '_':
@@ -429,10 +459,12 @@ def fill_in_underscores(ast):
         elif len(node)==1 and node[0] is not '_':
             node = (*node,'_','_')
         return node
+
     return tree_traversal(ast,post_fun=filler)
 
 @in_processing_stack
 def underscore_keyword(ast):
+
     def replacer(node):
         return None if node is '_' else node
     return tree_traversal(ast,str_fun=replacer)

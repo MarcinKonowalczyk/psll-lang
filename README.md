@@ -192,7 +192,36 @@ can be written simply as:
 
 The former might, however be preferable in certain contexts since it allows for comments on each part of the `out`.
 
-A _similar_ expansion will be implemented for `+`, `-`, `*`, and `\` (but **is not** implemented yet!)
+A _similar_ expansion will is also implemented for binary operators `+`, `*` as well as `-`, `/`, `^`, `=` and `<=>`, such that:
+
+```cs
+(+ 1 2 3 4) // This
+(out (+ (+ (+ 1 2) 3) 4) newline) // Becomes this
+```
+
+Addition and subtraction are commutative over the set of all possible inputs, and hence the exact order of operations does not matter. (This is not quite true. String multiplication overloads concatenation and that's not commutative). For a non-commutative operation, e.g. subtraction, the expansion order does matter. Hence:
+
+```cs
+(- 1 2 3 4) // This
+(- (- (- 1 2) 3) 4) // Does indeed expand into this
+```
+
+but,
+
+```cs
+(1 2 3 4 -) // This
+(- 1 (- 2 (- 3 4))) // Expands to this instead
+```
+
+For the binary operations listed above, they can be specified at the end of the bracket to perform a right-associative expansion.
+
+For the sake of compatibility with non-expanded brackets, the following two are also allowed, and identical:
+
+```cs
+(- 1 2)
+(1 2 -)
+```
+(and, of course, the same for other binary operations, even the commutative ones)
 
 ### Underscore keyword
 
@@ -218,39 +247,34 @@ This optimisation technique tends to result in wide pyramid scheme. It is slower
 
 This is not a real-purpose language. In this section the 'optimisation' refers to obtaining nicer-looking and more compact pyramids, *not* not efficient code.
 
-- [x] ?? Syntactic sugar
-  - [x] Simpler writing of strings
-    - [ ] Add support for escape characters
-  - [x] Simpler writing of nested nil pyramids
-  - [x] `def` keyword
-  - [x] ?? `_` keyword
-  - [x] Implicit expansion of `out` command, such that one can write `(out "j: " j " | k: " k newline)` and it gets expanded into a pile of `out` commands
-  - [ ] `nil` keyword
-    - Make it more robustly than `(arg 999)`
-    - ?? Allow compiler to insert `def`s into preamble
-  - [ ] Expansion of `+` and `*` commands too
-  - [ ] ?? `*( ... )` construct
 - [ ] ?? Arrays / Linked lists
   - [x] Improve array implementation
   - [ ] `range` keyword
+- [ ] `nil` keyword
+  - Make it more robustly than `(arg 999)`
+  - ?? Allow compiler to insert `def`s into preamble
+- [ ] Prettify the intermediate representation
+- [ ] ?? `*( ... )` construct
 - [ ] ?? Easier to use installation. Maybe a make-script which makes a symlink in the correct place...
   - [ ] ?? `pip install psll` ...
-- [ ] Improve test coverage
-  - [x] Make the coverage count only the tests for that file
-  - [x] tree_repr coverage
-  - [ ] psll coverage
-  - [x] Test *asymmetric* children in `tree_repr`
+- [ ] Better testing
+  - [ ] Improve test coverage
+    - [x] Make the coverage count only the tests for that file
+    - [x] tree_repr coverage
+    - [ ] psll coverage
+    - [x] Test *asymmetric* children in `tree_repr`
+  - [x] Add testing psll bash script to tests
+    - [ ] <s>?? And somehow coverage</s> [`bashcov`](https://github.com/infertux/bashcov)
+  - [ ] Use `hypothesis` in testing ?
+  - [ ] Test for correct example output
+  - [ ] ?? Test code optimisation
 - [ ] ?? Tree rendering
   - [ ] ?? Have a look at (optionally!) using `anytree` package for visualisation
   - [ ] ?? Ascii art to LaTeX
 - [ ] ?? Make `PsllSyntaxError` class do more
   - [ ] ?? Backtrace
   - [ ] ?? Or, I guess, rip it out and make it a normal `SyntaxError`
-- [x] Add testing psll bash script to tests
-  - [ ] <s>?? And somehow coverage</s> [`bashcov`](https://github.com/infertux/bashcov)
-- [ ] Use `hypothesis` in testing ?
 - [ ] ?? Move the command line code from psll.py to a bash script
-- [ ] Prettify the intermediate representation
 
 ## Done's
 
@@ -276,6 +300,15 @@ Bullet points get moved here from the above section when they get finished. (It'
   - [x] <s>Also add this to the snake optimiser</s>
 - [x] Redo tree / string parsing with paired delimiter matching
   - [x] <s>?? Have a look at `pyparsing` (`QuotedString`, `nestedExpr`)</s> <- No, because I want to keep this as vanilla python as possible.
+- [x] ?? Syntactic sugar
+  - [x] Simpler writing of strings
+    - [x] Add support for escape characters
+  - [x] Simpler writing of nested nil pyramids
+  - [x] `def` keyword
+  - [x] ?? `_` keyword
+  - [x] Implicit expansion of `out` command, such that one can write `(out "j: " j " | k: " k newline)` and it gets expanded into a pile of `out` commands
+  - [x] Expansion of `+` and `*` commands too
+    - [x] Right and left-associative expansion
 
 ## Bugs
 

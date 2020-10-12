@@ -1,0 +1,50 @@
+(set newline "\n")
+
+(out (+ (+ (+ 1 2) 3) 4) newline) // <- This
+(out (+ 1 2 3 4) newline) // Can be simplified as this
+
+// The same holds for multiplication:
+
+(out (* (* (* 1 2) 3) 4) newline)
+(out (* 1 2 3 4) newline)
+
+// And, somewhat less intuitively, for subtraction, division and exponentiation
+
+(out (- (- (- 1 2) 3) 4) newline)
+(out (- 1 2 3 4) newline)
+
+(out (/ (/ (/ 1 2) 3) 4) newline)
+(out (/ 1 2 3 4) newline)
+
+(out (^ (^ (^ 1 2) 3) 4) newline)
+(out (^ 1 2 3 4) newline)
+
+// In this case the expansion is left-associative - the operation is repeatedly applied
+// to the first element of the chain. This did not matter for addition, but does for subtraction,
+// division and exponentiation (since they are not commutative over the set of inputs).
+// Hence, the right-associative expansion can be specified as:
+
+(out (- 1 (- 2 (- 3 4))) newline)
+(out (1 2 3 4 -) newline)
+
+(out (/ 1 (/ 2 (/ 3 4))) newline)
+(out (1 2 3 4 /) newline)
+
+(out (^ 1 (^ 2 (^ 3 4))) newline)
+(out (1 2 3 4 ^) newline)
+
+// For compatibility with non-chaining operations, the following are identical
+(out (- 1 2) newline)
+(out (1 2 -) newline)
+
+// Binary operator chaining (both left-, and right associative) also works for comparison operators
+
+(set a 1) (set b 1) (set c 1)
+
+(out (= a (= b (= c 1))) newline)
+(out (a b c 1 =) newline)
+(out (a b c 2 =) newline)
+
+(out (<=> -1 (<=> 8 10)) newline)
+(out (-1 8 10 <=>) newline)
+
