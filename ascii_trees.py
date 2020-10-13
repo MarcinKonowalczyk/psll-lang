@@ -248,7 +248,6 @@ class Tree(AbstractTree):
     def add_one_child(self,child,left=True):
         ''' Add a left or right child to the tree '''
         assert isinstance(child,AbstractTree), 'The child must be a Tree or a Pyramid'
-        # child = child.toTree() # The child doesn't actually need to be a tree
 
         # Figure out the padding and overhang spacing
         p, c = self[-1], child[0] # Last row of parent and first of the child
@@ -326,14 +325,11 @@ class Tree(AbstractTree):
             l,r = other
             if l and r:
                 return self.add_two_children(l,r)
-                # raise NotImplementedError('"Tree.add_children()" not yet implemented')
             elif l:
                 return self.add_one_child(l,left=True)
-                # raise NotImplementedError('"Tree.add_left_child()" not yet implemented')
             elif r:
                 return self.add_one_child(r,left=False)
-                # raise NotImplementedError('"Tree.add_right_child()" not yet implemented')
-            else: # self + (None,None)
+            else:
                 return self
         else:
             raise TypeError(f"unsupported operand type for +: '{type(self).__name__}' and '{type(other).__name__}'")

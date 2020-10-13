@@ -40,7 +40,8 @@
 (out newline)
 
 // This: ...
-// (set a (range 1 5))
+(set a (range 1 5))
+(print)
 // Expands into this:
 (set a
     (+ (1 2) // Array [1,2]
@@ -50,6 +51,11 @@
     )
 )
 (print)
+
+// Ranges with variable step are also supported
+(set a (range 0 10 1)) (print)
+(set a (range 0 10 2)) (print)
+(set a (range 0 10 3)) (print)
 
 ////// star (*) operator //////
 (out newline)
@@ -83,14 +89,13 @@
 
 // Arrays are zero-indexed
 (set a [1 2 3 4]) (print)
-(out "a\[0\]: " (arg a 0) newline)
-(out "a\[1\]: " (arg a 1) newline)
+(out "a[0]: " (arg a 0) newline)
+(out "a[1]: " (arg a 1) newline)
 
 // Negative indices go from the end
-(out "a\[-1\]: " (arg a -1) newline)
-(out "a\[-2\]: " (arg a -2) newline)
+(out "a[-1]: " (arg a -1) newline)
+(out "a[-2]: " (arg a -2) newline)
 
 // Too large indices give 'nil'
-(out "a\[4\]: " (arg a 4) newline)
-(out "a\[-5\]: " (arg a -5) newline)
-
+(out "a[4]: " (arg a 4) newline)
+(out "a[-5]: " (arg a -5) newline)

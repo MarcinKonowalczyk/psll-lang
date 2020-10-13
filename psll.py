@@ -21,6 +21,10 @@ def in_pairs(iterable,in_tuple=False):
     for p in windowed(iterable,2,step=2):
         yield p if p[1] else ((p[0],) if in_tuple else p[0])
 
+is_string = lambda x: isinstance(x, str)
+is_tuple = lambda x: isinstance(x, tuple)
+# ^ Alas this cannot be done with partial
+
 SPACE = ' '
 PS_KEYWORDS = {'+','*','-','/','^','=','<=>','out','chr','arg','#','"','!','[',']','set','do','loop','?'}
 
@@ -140,9 +144,9 @@ def tree_traversal(ast, str_fun=None, post_fun=None, pre_fun=None, final_fun=Non
     for node in ast:
         if node is None:
             ast2.append(node)
-        elif isinstance(node,str):
+        elif is_string(node):
             ast2.append(str_fun(node) if str_fun else node)
-        elif isinstance(node,tuple):
+        elif is_tuple(node):
             node = pre_fun(node) if pre_fun else node
             node = tree_traversal(node, pre_fun=pre_fun, str_fun=str_fun, post_fun=post_fun, final_fun=final_fun)
             node = post_fun(node) if post_fun else node
@@ -175,7 +179,7 @@ def find_variable_names(ast):
     names = set()
     def variable_finder(node):
         if len(node)==3:
-            if node[0] == 'set' and isinstance(node[1],str):
+            if node[0] == 'set' and is_string(node[1]):
                 names.add(node[1])
     tree_traversal(ast,post_fun=variable_finder)
     return names
@@ -252,7 +256,7 @@ def def_keyword(ast):
         if len(node)>0 and node[0]=='def':
             if not len(node)==3:
                 raise PsllSyntaxError(f"'def' statement must have 3 members, not {len(node)} (node = {node})")
-            if not isinstance(node[1],str) or not isinstance(node[2],tuple):
+            if not is_string(node[1]) or not is_tuple(node[2]):
                 raise PsllSyntaxError(f"'def' statement can only assign brackets to values, not {type(node[2])} to {type(node[1])}")
             if node[1]=='def':
                 raise PsllSyntaxError(f"('def' 'def' (...)) structure is not allowed")
@@ -281,6 +285,20 @@ def def_keyword(ast):
 #  ##   ##  ##   ##  ##   ##  ##   ##     ##     ####                                 
 #                                                                                       
 #=======================================================================================
+
+@in_processing_stack
+def range_keyword(ast):
+
+    def ranger(node):
+        if len(node)>0 and node[0]=='range' and all(map(is_string,node[1:])):
+            if len(node)>4:
+                raise PsllSyntaxError(f"'range' must be of the form (range begin end) or (range begin end step)")
+            start, stop = int(node[1]), int(node[2])+1
+            step = int(node[3]) if len(node)==4 else 1
+            return ("[" + ', '.join(map(str,range(start,stop,step))) + "]",)
+        return node
+
+    return tree_traversal(ast,pre_fun=ranger)
 
 ## TESTED
 @in_processing_stack
@@ -415,7 +433,7 @@ def expand_overfull_brackets(ast):
     ''' Expand lists of many lists into lists of length 2 '''
 
     def expander(node):
-        if all(map(lambda x: isinstance(x,tuple),node)): # All lists
+        if all(map(is_tuple,node)):
             while len(node)>2:
                 node = tuple(p for p in in_pairs(node))
         elif len(node)>3:
@@ -430,7 +448,7 @@ def fill_in_empty_trees(ast):
     def filler(node):
         if node is (): # Empty node
             return ('')
-        elif all(map(lambda x: isinstance(x,tuple),node)): # All tuples
+        elif all(map(is_tuple,node)): # All tuples
             return ('',*node)
         elif node[0] == '_':
             return ('',*node)
@@ -446,13 +464,13 @@ def fill_in_underscores(ast):
 
     def filler(node):
         if len(node)==3:
-            if isinstance(node[1],str) and node[1] is not '_':
+            if is_string(node[1]) and node[1] is not '_':
                 node = (node[0], (node[1], '_', '_'), node[2])
-            if isinstance(node[2],str) and node[2] is not '_':
+            if is_string(node[2]) and node[2] is not '_':
                 node = (node[0], node[1], (node[2], '_', '_'))
             pass
         elif len(node)==2:
-            if isinstance(node[1],str) and node[1] is not '_':
+            if is_string(node[1]) and node[1] is not '_':
                 node = (node[0], (node[1], '_', '_'), '_')
             else:
                 node = (*node,'_')
@@ -483,14 +501,14 @@ def underscore_keyword(ast):
 def build_tree(ast):
     ''' Build the call tree from the leaves to the root '''
 
-    if isinstance(ast,str):
+    if is_string(ast):
         return Pyramid.from_text(ast)
     elif ast is None:
         return None
-    elif isinstance(ast,tuple):
+    elif is_tuple(ast):
         if len(ast) != 3:
             raise RuntimeError(f'Invalid structure of the abstract syntax tree. ({ast})')
-        if not isinstance(ast[0],str):
+        if not is_string(ast[0]):
             raise RuntimeError(f'Invalid abstract syntax tree. The first element of each node must be a string, not a {type(ast[0])}')
         return build_tree(ast[0]) + (build_tree(ast[1]),build_tree(ast[2]))
     else:
