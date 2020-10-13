@@ -315,6 +315,7 @@ Bullet points get moved here from the above section when they get finished. (It'
 - [ ] `(_)` breaks the compiler (Why would someone decide to write this though...?)
 - [ ] Bug in greedy optimisation for source code with one major tree
 - [ ] Intermediate representation is ugly since the multiple spaces are gone. This is not really a bug, but would be nice to change.
+- [ ] `def` replacer sometimes adds an extra pyramid
 
 ## Bugs no more
 

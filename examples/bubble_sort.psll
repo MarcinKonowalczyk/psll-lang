@@ -1,12 +1,17 @@
 (set newline "\n")
 (set nil (arg 999))
 
-// Allocate an array
+// Array to be sorted
 (set a [3 1 4 1 5 9 2 6 5 3 5])
 
 // Get array length
+// (len a N)
+
+( (set N 0) (loop (! (= (arg a N) nil)) (set N (+ N 1))) )
+
 (set N 0) // Pointer into the array
 (loop (! (= (arg a N) nil)) (set N (+ N 1))) // Increment pointer until goes off the end
+
 
 // Bubble sort the array
 (do again (

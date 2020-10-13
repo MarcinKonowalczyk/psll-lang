@@ -1,7 +1,9 @@
 (set newline "\n")
-(def print ( // Helper to print 'a'
+(def print  // Helper to print 'a'
     (out "a: " a newline)
-))
+)
+
+(out "b: " "1" "\n")
 
 ////// simple array declaration //////
 (out newline)

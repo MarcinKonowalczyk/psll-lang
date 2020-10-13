@@ -238,7 +238,6 @@ def apply_replacement_rules(ast,rules):
         pre_fun=singleton_tuple_replacer,
         str_fun=string_replacer)
 
-
 @in_processing_stack
 def def_keyword(ast):
     ''' Search for ('def','something',(...)) keywords '''
@@ -246,9 +245,8 @@ def def_keyword(ast):
     defs = []
     def replacer(node):
         if len(defs)>0:
-            for b,m,e in windowed_complete(reversed(defs),1):
-                value,definition = m[0]
-                if node==value: # Node needs to be replaced
+            for value,definition in reversed(defs):
+                if node == value:
                     return definition
         return node
 
@@ -260,13 +258,11 @@ def def_keyword(ast):
                 raise PsllSyntaxError(f"'def' statement can only assign brackets to values, not {type(node[2])} to {type(node[1])}")
             if node[1]=='def':
                 raise PsllSyntaxError(f"('def' 'def' (...)) structure is not allowed")
-            defs.append((node[1],apply_replacement_rules(node[2],dict(defs))))
+            defs.append( (node[1], apply_replacement_rules(node[2],dict(defs))) )
             return () # Return empty tuple
         return node
     
     def pop_def_stack(ast):
-        print('ast:', ast, end='\n')
-        print('defs:', defs, end='\n\n')
         for node in ast:
             if node == ():
                 defs.pop()
@@ -290,7 +286,9 @@ def def_keyword(ast):
 def range_keyword(ast):
 
     def ranger(node):
-        if len(node)>0 and node[0]=='range' and all(map(is_string,node[1:])):
+        if len(node)>0 and node[0]=='range':
+            if not all(map(is_string,node[1:])):
+                raise PsllSyntaxError(f"'range' arguments must be integer literals")
             if len(node)>4:
                 raise PsllSyntaxError(f"'range' must be of the form (range begin end) or (range begin end step)")
             start, stop = int(node[1]), int(node[2])+1
@@ -299,6 +297,21 @@ def range_keyword(ast):
         return node
 
     return tree_traversal(ast,pre_fun=ranger)
+
+# @in_processing_stack
+# def len_keyword(ast):
+
+#     def lengther(node):
+#         if len(node)==3 and node[0]=='len':
+#             if not all(map(is_string,node[1:])):
+#                 raise PsllSyntaxError(f"'range' arguments must be variable names")
+#             # return 
+#             a, N = node[1], node[2]
+#             ('set',N,0) ('loop', (), ())
+#             # ( (set N 0) (loop (! (= (arg a N) nil)) (set N (+ N 1))) )
+
+#     return tree_traversal(ast,pre_fun=lengther)
+
 
 ## TESTED
 @in_processing_stack
