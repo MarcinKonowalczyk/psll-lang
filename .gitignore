@@ -1,9 +1,10 @@
-*.log
-*.fls
-*.aux
-*.fdb_latexmk
 *.synctex.gz
-.DS_Store
+*.aux
 *.bbl
 *.blg
 *Notes.bib
+*.log
+.DS_Store
+*.fdb_latexmk
+*.fls
+*.synctex(busy)
