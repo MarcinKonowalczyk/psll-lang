@@ -12,7 +12,7 @@ from string import ascii_letters
 
 import sys
 if sys.version_info<(3,6):
-    raise RuntimeError('Upgrade to python 3.6, or newer.')
+    raise RuntimeError('Upgrade to python 3.6, or newer.') # pragma: no cover
 
 from ascii_trees import Pyramid
 
@@ -620,7 +620,7 @@ def considerate_optimisation(ast,verbose=True,max_iter=None,max_depth=10):
 #                                                                      
 #======================================================================
 
-def main(args):
+def main(args): # pragma: no cover
     ''' Main function for the command-line operation '''
     if args.verbose: print('Input filename:',args.input)
     if args.output and args.verbose: print('Output filename:',args.output)

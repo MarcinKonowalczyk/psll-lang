@@ -3,7 +3,7 @@ import unittest
 from string import ascii_letters
 from random import choice
 
-from itertools import product, permutations
+from itertools import product
 
 # Add '.' to path so running this file by itself also works
 import os, sys
