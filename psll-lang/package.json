@@ -1,0 +1,30 @@
+{
+    "name": "psll",
+    "version": "0.0.1",
+    "engines": {
+        "vscode": ">=0.9.0-pre.1"
+    },
+    "publisher": "Marcin Konowalczyk",
+    "contributes": {
+        "languages": [{
+            "id": "psll",
+            "aliases": ["PSLL", "psll"],
+            "extensions": [".psll"]
+        },
+        {
+            "id": "pyra",
+            "aliases": ["Pyramid Scheme", "pyramid-scheme"],
+            "extensions": [".pyra",".pyr"]
+        }],
+        "grammars": [{
+            "language": "psll",
+            "scopeName": "source.psll",
+            "path": "./syntaxes/psll.tmlanguage"
+        },
+        {
+            "language": "pyra",
+            "scopeName": "source.pyra",
+            "path": "./syntaxes/pyra.tmlanguage"
+        }]
+    }
+}

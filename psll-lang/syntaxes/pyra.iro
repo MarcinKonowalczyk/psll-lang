@@ -1,0 +1,146 @@
+name = pyra
+file_extensions [] = pyra, pyr;
+
+styles [] {
+
+.triangle_tip : style {
+   color = #C5C8C6
+   // bold = true
+   textmate_scope = punctuation.tip
+}
+
+.triangle_base : style {
+   color = #676867
+   textmate_scope = keyword.base
+}
+
+.punctuation_triangle : style {
+   color = #C5C8C6
+   textmate_scope = punctuation.edges
+}
+
+.keyword : style {
+   color = #9872A2
+   textmate_scope = keyword.control
+}
+.other : style {
+   color = white
+   textmate_scope = other
+}
+
+.numeric : style {
+   color = #6089B4
+   textmate_scope = constant.numeric
+}
+
+.space_inside : style {
+   color = #C5C8C6
+   background_color = #111111
+   textmate_scope = space.inside
+}
+
+.space_outside : style {
+   color = #E5E8E6
+   background_color = #111111
+   textmate_scope = space.outside
+}
+
+// .illegal : style {
+//    color = white
+//    background_color = red
+//    textmate_scope = invalid
+// }
+
+}
+
+contexts [] {
+   main : context {
+      
+      : pattern {
+         regex \= (\^)
+         styles [] = .triangle_tip;
+      }
+      
+      // Triangle inside
+      : inline_push {
+         regex \= (\/)
+         styles [] = .punctuation_triangle;
+         : pop {
+            regex \= (\\)
+            styles [] = .punctuation_triangle;
+         }
+         // : include "string" ;
+         : include "keyword" ;
+         : include "numeric" ;
+         : include "other" ;  
+         : include "space_inside" ;
+      }
+      
+      : pattern {
+         regex \= (-+)
+         styles [] = .triangle_base;
+      }
+      
+      // Space outside of the triangle
+      : pattern {
+         regex \= (\s)
+         styles [] = .space_outside ;
+      }
+      
+      // : include "illegal" ; // This should be matched last
+   }
+   
+   // Space inside of the triangle
+   space_inside : context {
+      : pattern {
+         regex \= (\s)
+         styles [] = .space_inside ;
+      }
+   }
+   
+   // Keywords
+   // (\s?) - some spaces maybe
+   // (...) - all Pyramid Scheme keyword, appropriatelly escaped
+   // (\s?) - some spaces maybe
+   // https://github.com/ConorOBrien-Foxx/Pyramid-Scheme
+   keyword : context {
+      : pattern {
+         regex \=(\s?)(\+|\*|-|/|^|=|<=>|out|chr|arg|#|"|!|\[|\]|set|do|loop|\?)(\s?)
+         styles [] = .space_inside, .keyword, .space_inside;
+      }
+   }
+   
+   // Other variables
+   // (\s?) - some spaces maybe
+   // [a-zA-Z] - lowercase or uppercase letter
+   // [a-zA-Z0-9]* - lowercase or uppercase letters, or a numbers, maybe
+   // (\s?) - some spaces maybe
+   other : context {
+      : pattern {
+         regex \=(\s?)([a-zA-Z][a-zA-Z0-9]*)(\s?)
+         styles [] = .space_inside, .other, .space_inside;
+      }
+   }
+   
+   // Number
+   // (\s?) - some spaces maybe
+   // (?:\+|-)? - non-capturing + or minus sign, maybe
+   // \d+ - at least one digit
+   // (?:\.\d+)? - non-capturing full stop and at least one digit, maybe
+   // (\s?) - some spaces maybe
+   numeric : context {
+      : pattern {
+         regex \= (\s?)((?:\+|-)?\d+(?:\.\d+)?)(\s?)
+         styles [] = .space_inside, .numeric, .space_inside;
+      }
+   }
+   
+   // For debug, not actually used
+   // Matches anything which is not a space, and hasn't been matched yet
+   // illegal : context {
+   //    : pattern {
+   //       regex \= (.*)
+   //       styles [] = .illegal;
+   //    }
+   // }
+}

@@ -50,7 +50,7 @@
             <key>1</key>
             <dict>
               <key>name</key>
-              <string>punctuation.psll</string>
+              <string>punctuation.brackets.psll</string>
             </dict>
           </dict>
           <key>patterns</key>
@@ -67,7 +67,7 @@
             <key>1</key>
             <dict>
               <key>name</key>
-              <string>punctuation.psll</string>
+              <string>punctuation.brackets.psll</string>
             </dict>
           </dict>
         </dict>
@@ -99,7 +99,7 @@
             <key>1</key>
             <dict>
               <key>name</key>
-              <string>punctuation.psll</string>
+              <string>punctuation.brackets.psll</string>
             </dict>
           </dict>
           <key>patterns</key>
@@ -116,13 +116,9 @@
             <key>1</key>
             <dict>
               <key>name</key>
-              <string>punctuation.psll</string>
+              <string>punctuation.brackets.psll</string>
             </dict>
           </dict>
-        </dict>
-        <dict>
-          <key>include</key>
-          <string>#illegal</string>
         </dict>
        </array>
     </dict>
@@ -160,7 +156,7 @@
             <key>3</key>
             <dict>
               <key>name</key>
-              <string>function.psll</string>
+              <string>entity.name.function.psll</string>
             </dict>
           </dict>
         </dict>
@@ -172,31 +168,19 @@
             <key>1</key>
             <dict>
               <key>name</key>
-              <string>punctuation.psll</string>
+              <string>punctuation.brackets.psll</string>
             </dict>
             <key>2</key>
             <dict>
               <key>name</key>
-              <string>function.psll</string>
+              <string>entity.name.function.psll</string>
             </dict>
             <key>3</key>
             <dict>
               <key>name</key>
-              <string>punctuation.psll</string>
+              <string>punctuation.brackets.psll</string>
             </dict>
           </dict>
-        </dict>
-       </array>
-    </dict>
-    <key>illegal</key>
-    <dict>
-      <key>patterns</key>
-      <array> 
-        <dict>
-          <key>match</key>
-          <string>(.*)</string>
-          <key>name</key>
-          <string>invalid.psll</string>
         </dict>
        </array>
     </dict>
@@ -233,10 +217,6 @@
         <dict>
           <key>include</key>
           <string>#other</string>
-        </dict>
-        <dict>
-          <key>include</key>
-          <string>#illegal</string>
         </dict>
        </array>
     </dict>
@@ -288,7 +268,7 @@
             <key>1</key>
             <dict>
               <key>name</key>
-              <string>punctuation.psll</string>
+              <string>string.punctuation.psll</string>
             </dict>
           </dict>
           <key>patterns</key>
@@ -305,7 +285,7 @@
             <key>1</key>
             <dict>
               <key>name</key>
-              <string>punctuation.psll</string>
+              <string>string.punctuation.psll</string>
             </dict>
           </dict>
         </dict>
@@ -331,7 +311,7 @@
           <key>match</key>
           <string>([^\&quot;\x{005c}]+)</string>
           <key>name</key>
-          <string>string.psll</string>
+          <string>string.text.psll</string>
         </dict>
        </array>
     </dict>

@@ -15,18 +15,23 @@ styles [] {
 }
 
 .function : style {
-   color = #C7444A
-   textmate_scope = function
+   color = #CE6700
+   textmate_scope = entity.name.function
 }
 
-.punctuation : style {
+.punctuation_brackets : style {
    color = #C5C8C6
-   textmate_scope = punctuation
+   textmate_scope = punctuation.brackets
+}
+
+.punctuation_quotes : style {
+   color = #9AA83A
+   textmate_scope = string.punctuation
 }
 
 .string : style {
    color = #9AA83A
-   textmate_scope = string
+   textmate_scope = string.text
 }
 
 .escape_character : style {
@@ -56,11 +61,11 @@ styles [] {
 }
 
 
-.illegal : style {
-   color = white
-   background_color = red
-   textmate_scope = invalid
-}
+// .illegal : style {
+//    color = white
+//    background_color = red
+//    textmate_scope = invalid
+// }
 
 }
 
@@ -83,10 +88,10 @@ contexts [] {
       // Brackets (recursively including main)
       : inline_push {
          regex \= (\()
-         styles [] = .punctuation;
+         styles [] = .punctuation_brackets;
          : pop {
             regex \= (\))
-            styles [] = .punctuation;
+            styles [] = .punctuation_brackets;
          }
          : include "main" ;
       }
@@ -101,10 +106,10 @@ contexts [] {
       // Arrays
       : inline_push {
          regex \= (\[)
-         styles [] = .punctuation;
+         styles [] = .punctuation_brackets;
          : pop {
             regex \= (\])
-            styles [] = .punctuation;
+            styles [] = .punctuation_brackets;
          }
          : include "string" ;
          : include "numeric" ;
@@ -112,10 +117,10 @@ contexts [] {
          : include "space" ;
          : include "other" ;
          
-         : include "illegal" ;
+         // : include "illegal" ; // This should be matched last
       }
       
-      : include "illegal" ; // This should be matched last
+      // : include "illegal" ; // This should be matched last
    }
    
    // String
@@ -125,10 +130,10 @@ contexts [] {
    string : context {
       : inline_push {
             regex \= (\")
-            styles [] = .punctuation;
+            styles [] = .punctuation_quotes;
             : pop {
                regex \= (\")
-               styles [] = .punctuation;
+               styles [] = .punctuation_quotes;
             }
             // Backslash, quote, and newline, tab and return characters have to be escaped
             : pattern {
@@ -194,7 +199,7 @@ contexts [] {
    
    // Def call
    // Three capturing groups, two for the braces and one for the word in the middle
-   //Pattern just like in 'other' above
+   // Pattern just like in 'other' above
    definition : context {
       : pattern {
          regex \= (def)(\s+)([a-zA-Z][a-zA-Z0-9]*)
@@ -203,16 +208,16 @@ contexts [] {
       
       : pattern {
          regex \= (\()([a-zA-Z][a-zA-Z0-9]*)(\))
-         styles [] = .punctuation, .function, .punctuation;
+         styles [] = .punctuation_brackets, .function, .punctuation_brackets;
       }
    }
    
    // For debug, not actually used
    // Matches anything which is not a space, and hasn't been matched yet
-   illegal : context {
-      : pattern {
-         regex \= (.*)
-         styles [] = .illegal;
-      }
-   }
+   // illegal : context {
+   //    : pattern {
+   //       regex \= (.*)
+   //       styles [] = .illegal;
+   //    }
+   // }
 }
