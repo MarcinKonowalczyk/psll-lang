@@ -1,0 +1,218 @@
+name = psll
+file_extensions [] = psll;
+
+styles [] {
+
+.keyword_control : style {
+   color = #9872A2
+   ace_scope = keyword.control
+   textmate_scope = keyword.control
+   pygments_scope = Keyword
+}
+
+.keyword_operator : style {
+   color = #676867
+   ace_scope = keyword.operator
+   textmate_scope = keyword.operator
+   pygments_scope = Keyword
+}
+
+.support : style {
+   color = #C7444A
+   ace_scope = support
+   textmate_scope = support
+   pygments_scope = Keyword
+}
+
+.punctuation : style {
+   color = #C5C8C6
+   ace_scope = punctuation
+   textmate_scope = punctuation
+   pygments_scope = Punctuation
+}
+
+.string : style {
+   color = #9AA83A
+   ace_scope = string
+   textmate_scope = string
+   pygments_scope = String
+}
+
+.escape_character : style {
+   color = #8080FF
+   ace_scope = constant.character.escape
+   textmate_scope = constant.character.escape
+   pygments_scope = String
+}
+
+.comment : style {
+   color = #9A9B99
+   italic = true
+   ace_scope = comment
+   textmate_scope = comment
+   pygments_scope = Comment
+}
+
+.numeric : style {
+   color = #6089B4
+   ace_scope = constant.numeric
+   textmate_scope = constant.numeric
+   pygments_scope = Number
+}
+
+.other : style {
+   color = white
+   ace_scope = other
+   textmate_scope = other
+   pygments_scope = Generic
+}
+
+.illegal : style {
+   color = white
+   background_color = red
+   ace_scope = invalid
+   textmate_scope = invalid
+   pygments_scope = Generic.Error
+}
+
+}
+
+contexts [] {
+   main : context {
+      
+      : include "definition";
+      
+      // Keywords
+      : pattern {
+         regex \= ((?!\s)(?:set|loop|do|out|nil|chr|arg|range)(?=\s|\)))
+         styles [] = .keyword_control;
+      }
+      
+      : pattern {
+         regex \= ((?!\s)(?:\+|\*|-|\/|\^|=|<=>|#|\!|\?|_)(?=\s|\)))
+         styles [] = .keyword_operator;
+      }
+      
+      : pattern {
+         regex \= ((?!\s)def(?=\s|\)))
+         styles [] = .support;
+      }
+      
+      // Brackets (recursively including main)
+      : inline_push {
+         regex \= (\()
+         styles [] = .punctuation;
+         : pop {
+            regex \= (\))
+            styles [] = .punctuation;
+         }
+         : include "main" ;
+      }
+      
+      // Strings and numbers
+      : include "string" ;
+      : include "numeric" ;
+      : include "comment" ;
+      : include "other" ;
+      
+      // Arrays
+      : inline_push {
+         regex \= (\[)
+         styles [] = .punctuation;
+         : pop {
+            regex \= (\])
+            styles [] = .punctuation;
+         }
+         : include "numeric" ;
+         : include "string" ;
+         : include "comment" ;
+         : include "other" ;
+         : include "illegal" ;
+      }
+      
+      : include "illegal" ;
+   }
+   
+   // String
+   //
+   // Pushes and pops with "
+   // Escape cha
+   string : context {
+      : inline_push {
+            regex \= (\")
+            styles [] = .punctuation;
+            : pop {
+               regex \= (\")
+               styles [] = .punctuation;
+            }
+            // Backslash, quote, and newline, tab and return characters have to be escaped
+            : pattern {
+               regex \= (?:\\["\\nrt])
+               styles [] = .escape_character;
+            }
+            // Backslash anything is escaped, just unnecessary
+            : pattern {
+               regex \= (?:\\.)
+               styles [] = .escape_character;
+            }
+            // Any number of non-backslash and non-qote charactes are just a string
+            : pattern {
+               regex \= (?:[^\"\\]+)
+               styles [] = .string;
+            }
+         }
+   }
+   
+   // Number
+   // (?!\s) - not a space lookahead
+   // (?:\+|-)? - non-capturing + or minus sign, maybe
+   // \d+ - at least one digit
+   // (?:\.\d+)? - non-capturing full stop and at least one digit, maybe
+   // (?=\s|\)|\]) - space, closing square or normal brace lookahead
+   
+   numeric : context {
+      : pattern {
+         regex \= (?:(?!\s)(?:\+|-)?\d+(?:\.\d+)?(?=\s|\)|\]))
+         styles [] = .numeric;
+      }
+   }
+   
+   // Other variables
+   // (?!\s) - not a space lookahead
+   // [a-zA-Z] - lowercase or uppercase letter
+   // [a-zA-Z0-9]* - a pile of lowercase or uppercase letters, or a numbers, maybe
+   other : context {
+      : pattern {
+         regex \= (?:(?!\s)[a-zA-Z][a-zA-Z0-9]*)
+         styles [] = .other;
+      }
+   }
+   
+   // Def call
+   // Three cpaturing groups, two for the braces and one for the word in the middle
+   //Pattern just like in 'other' above
+   definition : context {
+      : pattern {
+         regex \= (\()([a-zA-Z][a-zA-Z0-9]*)(\))
+         styles [] = .punctuation, .support, .punctuation;
+      }
+   }
+   
+   // Comment
+   // Everything after the // is ignored until the end of the line
+   comment : context {
+      : pattern {
+         regex \= (//.*)
+         styles [] = .comment;
+      }
+   }
+   
+   // For debug, not actually used
+   // Matches anything which is not a space, and hasn't been matched yet
+   illegal : context {
+      : pattern {
+         regex \= ([^\s])
+         styles [] = .illegal;
+      }
+   }
+}
