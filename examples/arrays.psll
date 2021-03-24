@@ -75,8 +75,8 @@
 (out (* a " -> ") newline)
 
 // String concatenation
-(set a 'Quick') (set b 'ly')
-(out (* (a b) '') newline)
+(set a "Quick") (set b "ly")
+(out (* (a b) "") newline)
 (out (+ a b) newline) // But this is simpler
 
 ////// Add to array //////

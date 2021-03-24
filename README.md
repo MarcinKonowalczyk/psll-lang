@@ -314,6 +314,9 @@ Bullet points get moved here from the above section when they get finished. (It'
 
 ## Bugs
 
+- [ ] `[`, `]` and `"` Pyramid-Scheme keywords are not working at all at the moment (they ought to be typed as `\[`, `\]` and `\"`) (It's ok. They're really nto that useful, but it would be nice if they did actually work too.)
+- [ ] `arrays` example is putting in rouge commas into int literals
+- [ ] `()` pop the scope stack
 - [ ] `(_)` breaks the compiler (Why would someone decide to write this though...?)
 - [ ] Bug in greedy optimisation for source code with one major tree
 - [ ] Intermediate representation is ugly since the multiple spaces are gone. This is not really a bug, but would be nice to change.

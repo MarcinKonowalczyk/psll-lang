@@ -638,15 +638,15 @@ def main(args): # pragma: no cover
     
     # TODO  Make optimisation options mutually exclusive
     if args.considerate_optimisation:
-        ast = considerate_optimisation(ast,max_iter=None)
+        ast = considerate_optimisation(ast, max_iter=None)
     if args.greedy_optimisation:
-        ast = greedy_optimisation(ast,max_iter=None)
+        ast = greedy_optimisation(ast, max_iter=None)
 
     program = compile(ast)
-    if args.verbose: print('Pyramid scheme:',program,sep='\n')
+    if args.verbose: print('Pyramid scheme:', program,sep='\n')
     
     if args.output:
-        with open(args.output,'w') as f:
+        with open(args.output, 'w') as f:
             f.write(program)
 
 if __name__ == "__main__":
