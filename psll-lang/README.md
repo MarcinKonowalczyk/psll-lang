@@ -14,3 +14,6 @@ rm -rf ~/.vscode/extensions/psll-lang && cp -r psll-lang ~/.vscode/extensions/
 
  - https://eeyo.io/iro/
  - https://stackoverflow.com/a/66666460/2531987
+ - https://regex101.com
+ - https://code.visualstudio.com/api/language-extensions/syntax-highlight-guide
+ - https://macromates.com/manual/en/language_grammars
