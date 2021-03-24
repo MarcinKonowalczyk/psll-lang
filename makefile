@@ -1,127 +1,70 @@
-#++++++++++++++++++++++++++++++++++++++++++++++++
-#
-# Set up this Makefile:
-#   Place all image files in a subdirectory.
-#   Update all variables in the first section below.
-#
-# Use this Makefile:
-#   Run "make help", or see end of file.
-#
-# Description of file:
-#  Keep the images in lists, one list per format.
-#  When compiling into for instance a .dvi file, the target.dvi rule is used.
-#    Bibtex and convertion between .eps and .pdf images are handled within this rule.
-#    (I found no way to generate multiple rules from a list)
-#  Converting from .svg files into .eps or .pdf files are done in their own rules.
-#  Some make/shell help is written in the end of this file.
-# 
-#################################################
+# Sigbovik PSLL paper makefile
+# Written by Marcin Konowalczyk
 
-# Image sources: Only include the original files (not files created by this script).
-IMAGES = logo logo2 # pdfs or svgs
-OTHERS = cat.jpg # files without conversion support
-NAME = sigbovik-psll # Latex top file (excl .tex)
+IMAGES = logo2.pdf cat.jpg
+NAME = sigbovik-psll # tex file name (without extension)
+IMAGES_DIR = img
 
-#################################################
-VPATH = img lib
-ALL_IMAGES = $(patsubst %,%.pdf,$(IMAGES)) $(OTHERS)
-BIB_NAME = $(NAME).bib # including .bib
+##################################################
 
-# When to run bibtex. 0=never, 1=if .bib was changed, 2=always. see help
-RUNBIB=0
+VPATH = $(IMAGES_DIR) # Make searches for files in VPATH
 
 # Spam filter for latex outputs
-# egrep filter was ok, but it was a pain to remove the Fotn shape declaration warnings
-# FilterLatex = egrep "Class|Warning|entering|LaTeX2e|Output|Transcript|Document Class|For additional" | egrep -v "Font shape declaration"
-FilterLatex = awk '
-FilterLatex += /Class/ || (/Warning/ && !/Font shape declaration/) ||
-FilterLatex += /Failed/ ||
-FilterLatex += /entering/ || /LaTeX2e/ || /Output/ || /Transcript/ ||
-FilterLatex += /Document Class/ || /For additional/
-FilterLatex += ' # Closing quote of the awk command
+# Filter out only selected lines, and add a space before the print for more readable output
+TEX_FILTER = | awk '{if (
+TEX_FILTER += /Class/ || (/Warning/ && !/Font shape declaration/) ||
+TEX_FILTER += /Failed/ || /Rerun/ ||
+TEX_FILTER += /entering/ || /LaTeX2e/ || /Output/ || /Transcript/ ||
+TEX_FILTER += /Document Class/ || /For additional/
+TEX_FILTER += ) { print " " $$0 } }' # Closing of the awk command
+
+BIB_FILTER = | awk '{if (/BibTeX/ || /Database/) { print " " $$0 } }'
+DEV_NULL = > /dev/null
 
 NAME := $(strip $(NAME))
 
-LATEX_FLAGS = -halt-on-error
+TEX_FLAGS = -halt-on-error # -interaction=nonstopmode
 
-#============== PHONY COMMANDS (except help) ================
+.PHONY: pdf bib clean open
+
 default: pdf
 
 pdf: $(NAME).pdf
-bib: $(NAME).bbl $(NAME).aux
+bib: $(NAME).bbl
 
 ## Recipies
 
-# Pake pdfs from svgs
 %.pdf: %.svg
-	@echo "PDF <- SVG $@"
-	@inkscape --export-text-to-path --export-type=pdf --export-filename=$@ $<
+	@ echo "PDF <- SVG $@"
+	@ inkscape --export-text-to-path --export-type=pdf --export-filename=$(IMAGES_DIR)/$@ $<
 
 clean:
-	@ rm -vf $(NAME).aux $(NAME).log $(NAME)Notes.bib $(NAME).synctex.gz $(NAME).pdf $(NAME).blg $(NAME).bbl
+	@ rm -vf $(NAME).aux $(NAME).log $(NAME)Notes.bib $(NAME).pdf $(NAME).blg $(NAME).bbl
 
-$(NAME).pdf $(NAME).aux: $(NAME).tex $(BIB_NAME) $(ALL_IMAGES)
-	@ if [ $(NAME).tex -nt $(NAME).log ]; then \
-	    echo "======= Running pdfLaTeX (for bibtex purpose) ======="; \
-	    pdflatex $(NAME).tex | $(FilterLatex); \
-	fi;
-	@ echo "======= Running BibTeX =======" ;
-	@ bibtex $(NAME) ;
-	@ echo "======= Running PDFLaTeX ======="
+open: $(NAME).pdf
+	open $(NAME).pdf
+
+$(NAME).pdf: $(NAME).tex $(NAME).bbl $(IMAGES)
+	@ echo "$@ <- $<"
 	@ while : ; do\
-	    pdflatex $(NAME).tex | $(FilterLatex);\
-	    if grep -q "Rerun to get" $(NAME).log; then\
-	    echo "======= Rerunning PDFLaTeX =======";\
-	    else break; fi;\
+	    echo "======= PDFLaTeX =======";\
+	    pdflatex $(TEX_FLAGS) $< $(TEX_FILTER);\
+	    grep --quiet "Rerun to get" $(NAME).log || break;\
 	done;
 
-# ===== The bibliography, as a stand-alone command (this is not called normally) =====
-$(NAME).bbl: $(NAME).tex $(BIB_NAME)
-	@echo "======= Running BibTeX ======="
-	@bibtex $(NAME)
+# Compiled bibliography file
+# Run pdflatex if .tex is newer (-nt flag) that the log file
+$(NAME).bbl: $(NAME).aux $(NAME).bib
+	@ echo "$@ <- $?"
+	@ bibtex $(NAME) $(BIB_FILTER);
 
-#============== PHONY HELP ================
-help:
-	@echo ""
-	@echo "make <cmd> [NAME=<main name>] [RUNBIB=0/1/2]"
-	@echo ""
-	@echo " <cmd>:"
-	@echo "    dvi     - latex: .tex -> .dvi."
-	@echo "    dvipdf  - latex + dvipdf: .tex -> .dvi -> .dvi.pdf."
-	@echo "    kdvi    - latex + kdvi: .tex -> .dvi, view in KDVI."
-	@echo "    dviacro - latex + dvipdf + acroread: .tex -> .dvi -> .dvi.pdf, view in acroread."
-	@echo "    pdf     - pdflatex: .tex -> pdf."
-	@echo "    acro    - pdflatex + acroread: .tex -> .pdf, view in acroread."
-	@echo "    bib     - bibtex: .aux,.bib -> .bbl (independent of RUNBIB)."
-	@echo "    clean   - rm *~ *aux *backup *log *toc *bbl *blg *lot *lof."
-	@echo "    superclean - clean + rm generated images and dvi/pdf files"
-	@echo "    help    - show this message. This is default, if no <cmd> are given."
-	@echo ""
-	@echo " NAME: optional name of main latex file (excl. \".tex\"). Actual=$(NAME)."
-	@echo ""
-	@echo " RUNBIB: Decide whether to update the bibliography file or not. Actual=$(RUNBIB)."
-	@echo "       =0: Never run bibtex (more then by the bib command)."
-	@echo "       =1: Run bibtex if .bib was changed, or .bbl is missing."
-	@echo "       =2: Run bibtex every time."
-	@echo ""
-	@echo " Example (without bibtex): make dviacro NAME=report"
-	@echo "  -> latex report.tex; dvipdf report.dvi report.dvi.pdf; acroread report.dvi.pdf"
-	@echo " Example (with bibtex): make dviacro NAME=report"
-	@echo "  -> latex report.tex; bibtex report; latex report.tex; latex report.tex; dvipdf report.dvi report.dvi.pdf; acroread report.dvi.pdf"
-	@echo ""
-	@echo " PS. .tex->.dvi can only handle .eps files."
-	@echo "     .tex->.pdf can NOT handle .eps files, but e.g. PDF/PNG files."
-	@echo "     This makefile will automatically convert from svg images to eps or pdf formats."
-	@echo "     This makefile will automatically convert from pdf images to eps formats."
-	@echo "     This makefile will automatically convert from eps images to pdf formats."
-	@echo "     This makefile has no support for other image formats (which does not mean they cannot be used)."
-	@echo ""
-
-# Some shell command syntax (see "man sh", "man test"):
-# > for VAR in LIST ; do COMMANDS; done
-# > if [ ... ]; then COMMANDS; fi
-# > ...: -o = logical OR, -eq = numerical equal, -e = exist, ! = not, -nt = newer than.
-#        "A -nt B" = true if file A is newer than file B, or if (only) file B is missing.
-#        "A -nt B" = false if file B is not older than file A, or if file A is missing.
-#
-# The complete make manual: http://www.gnu.org/software/make/manual/
+# (Re)Compile aux, log and Notes.bib
+$(NAME).aux $(NAME).log $(NAME)Notes.bib: $(NAME).tex $(IMAGES)
+	@ echo "$@ <- $<"
+	@ if [ $< -nt $(NAME).aux -o $< -nt $(NAME).log ]; then \
+	    pdflatex $(TEX_FLAGS) $< $(DEV_NULL); \
+	    [[ $$? -eq 0 ]] || ( egrep "^!" sigbovik-psll.log && exit 1 ); \
+	fi;
+    # We dont want the pdf file from this compilation. Try to delete it even when
+    # pdflatex above doesn't run, becasue we don't expect it to exist at this point
+	@ rm -f $(NAME).pdf;
