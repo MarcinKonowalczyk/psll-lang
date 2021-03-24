@@ -40,6 +40,12 @@ bib: $(NAME).bbl
 
 clean:
 	@ rm -vf $(NAME).aux $(NAME).log $(NAME)Notes.bib $(NAME).pdf $(NAME).blg $(NAME).bbl
+    # Also remove files in the image directory which have a corresponding .svg counterpart
+	@ for file in $(IMAGES_DIR)/*; do\
+	    if [ "$${file##*.}" == "pdf" ]; then\
+	        [[ -f $${file%.*}.svg ]] && rm -f $$file;\
+	    fi;\
+	done
 
 open: $(NAME).pdf
 	open $(NAME).pdf
