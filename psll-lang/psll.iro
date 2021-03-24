@@ -5,6 +5,7 @@ styles [] {
 
 .keyword_control : style {
    color = #9872A2
+   // bold = true
    textmate_scope = keyword.control
 }
 
