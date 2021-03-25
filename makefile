@@ -13,7 +13,7 @@ VPATH = $(IMAGES_DIR) # Make searches for files in VPATH
 # Filter out only selected lines, and add a space before the print for more readable output
 TEX_FILTER = | awk '{if (
 TEX_FILTER += /Class/ || (/Warning/ && !/Font shape declaration/) ||
-TEX_FILTER += /Failed/ || /Rerun/ ||
+TEX_FILTER += /Failed/ || /Rerun to get/ ||
 TEX_FILTER += /entering/ || /LaTeX2e/ || /Output/ || /Transcript/ ||
 TEX_FILTER += /Document Class/ || /For additional/
 TEX_FILTER += ) { print " " $$0 } }' # Closing of the awk command
@@ -24,6 +24,7 @@ DEV_NULL = > /dev/null
 NAME := $(strip $(NAME))
 
 TEX_FLAGS = -halt-on-error # -interaction=nonstopmode
+INKSCAPE_FLAGS = --export-text-to-path --export-type=pdf
 
 .PHONY: pdf bib clean open
 
@@ -32,14 +33,8 @@ default: pdf
 pdf: $(NAME).pdf
 bib: $(NAME).bbl
 
-## Recipies
-
-%.pdf: %.svg
-	@ echo "PDF <- SVG $@"
-	@ inkscape --export-text-to-path --export-type=pdf --export-filename=$(IMAGES_DIR)/$@ $<
-
 clean:
-	@ rm -vf $(NAME).aux $(NAME).log $(NAME)Notes.bib $(NAME).pdf $(NAME).blg $(NAME).bbl
+	@ rm -f $(NAME).aux $(NAME).log $(NAME)Notes.bib $(NAME).pdf $(NAME).blg $(NAME).bbl
     # Also remove files in the image directory which have a corresponding .svg counterpart
 	@ for file in $(IMAGES_DIR)/*; do\
 	    if [ "$${file##*.}" == "pdf" ]; then\
@@ -50,8 +45,14 @@ clean:
 open: $(NAME).pdf
 	open $(NAME).pdf
 
-$(NAME).pdf: $(NAME).tex $(NAME).bbl $(IMAGES)
-	@ echo "$@ <- $<"
+## Recipies
+
+%.pdf: %.svg
+	@ echo "$(notdir $@) <- $(notdir $<)"
+	@ inkscape $(INKSCAPE_FLAGS) --export-filename=$(IMAGES_DIR)/$@ $<
+
+$(NAME).pdf: $(NAME).tex bib $(IMAGES)
+	@ echo "$(notdir $@) <- $(notdir $<)"
 	@ while : ; do\
 	    echo "======= PDFLaTeX =======";\
 	    pdflatex $(TEX_FLAGS) $< $(TEX_FILTER);\
@@ -59,14 +60,14 @@ $(NAME).pdf: $(NAME).tex $(NAME).bbl $(IMAGES)
 	done;
 
 # Compiled bibliography file
-# Run pdflatex if .tex is newer (-nt flag) that the log file
 $(NAME).bbl: $(NAME).aux $(NAME).bib
-	@ echo "$@ <- $?"
+	@ echo "$(notdir $@) <- $(notdir $<)"
 	@ bibtex $(NAME) $(BIB_FILTER);
 
 # (Re)Compile aux, log and Notes.bib
+# Run pdflatex if .tex is newer (-nt flag) that the log file or the aux file
 $(NAME).aux $(NAME).log $(NAME)Notes.bib: $(NAME).tex $(IMAGES)
-	@ echo "$@ <- $<"
+	@ echo "$(notdir $@) <- $(notdir $<)"
 	@ if [ $< -nt $(NAME).aux -o $< -nt $(NAME).log ]; then \
 	    pdflatex $(TEX_FLAGS) $< $(DEV_NULL); \
 	    [[ $$? -eq 0 ]] || ( egrep "^!" sigbovik-psll.log && exit 1 ); \

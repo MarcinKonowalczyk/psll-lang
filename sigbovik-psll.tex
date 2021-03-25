@@ -16,7 +16,7 @@
 \microtypecontext{spacing=nonfrench}
 	
 \usepackage{graphicx}% Include figure files
-\graphicspath{ {./figures/} }
+\graphicspath{ {./img/} }
 
 \usepackage{multirow}
 
@@ -44,10 +44,6 @@
 \let\tt\texttt
 \newcommand\psll{\texttt{psll}\xspace}
 
-
-
-
-\usepackage{listings}
 \usepackage{color}
 
 \definecolor{lines_blue}{rgb}{0, 0.4470, 0.7410}
@@ -58,9 +54,25 @@
 \definecolor{lines_cyan}{rgb}{0.3010, 0.7450, 0.9330}
 \definecolor{lines_burgundy}{rgb}{0.6350, 0.0780, 0.1840}
 
+% Hyperref
+\PassOptionsToPackage{hyphens}{url}
+% Hyper reference setup
+\usepackage[%
+bookmarks=false, hypertexnames=false,%
+colorlinks, allcolors={green}, citecolor={blue}, urlcolor={red}, %
+unicode, % Encode pdf as unicode
+breaklinks=true, % Allow links to break lines
+hyperfootnotes=false % Dont link footnotes (This does not work very well)
+]{hyperref}%
+
+
+\usepackage{listings}
+% " , / , [ and ] keywords don't play nicely with other syntax
 \lstdefinelanguage{psll} {%
-otherkeywords={+,!,=,<=>},
-morekeywords={set,loop,out,chr}, sensitive=false,
+otherkeywords={+,!,=,<=>,*,-,^,\#,?,_},
+morekeywords={out,chr,arg,set,do,loop},
+morekeywords={[2]def,range,len},
+sensitive=false,
 morecomment=[l]{//},%
 morestring=[b]",%
 }
@@ -71,6 +83,7 @@ morestring=[b]",%
   basicstyle={\small\ttfamily},%
   numberstyle=\small\normalfont\ttfamily\color{black!25!white},%
   keywordstyle=\color{lines_blue},%
+  keywordstyle={[2]\color{orange}},%
   commentstyle=\color{lines_green},%
   stringstyle=\color{lines_purple},%
   breaklines=false,
@@ -81,17 +94,14 @@ morestring=[b]",%
 \newcommand{\ilpsll}[1]{\lstinline[language=psll,columns=flexible]{#1}}
 \newcommand{\ilruby}[1]{\lstinline[language=ruby,columns=flexible]{#1}}
 
-
-
-
 \begin{document}
 \preprint{AIP/123-QED}
 
 \title{Design and implementation of \psll\ -- Lisp-like programming language which compiles to Pyramid Scheme}
 
-\def\icl{Department of Chemistry, University of Oxford, Inorganic Chemistry Laboratory, Oxford OX1 3QR, U.K.}
+\def\crl{Department of Chemistry, University of Oxford, Chemistry Research Laboratory, Oxford OX1 3TA, U.K.}
 \def\samueli{UCLA Samueli School of Engineering, University of California, Los Angeles, 7400 Boelter Hall, Los Angeles, CA 90095, United States}
-\author{Marcin~Konowalczyk}\email{marcin.konow@lczyk.xyz}\affiliation{\icl}
+\author{Marcin~Konowalczyk}\email{marcin.konow@lczyk.xyz}\affiliation{\crl}\affiliation{\samueli}
 
 \date{\today}
 
@@ -100,16 +110,15 @@ morestring=[b]",%
 \lipsum[1]
 \end{abstract}
 
-\keywords{a; b; c}
+\keywords{syntax tree; pyramid scheme; lisp; compilation}
 
 \maketitle
 
 \section{Introduction}
 
-Pyramid Scheme (PS) is a variant of the Scheme dialect of Lisp, designed by Conor O'Brien \plinfo \plcite.
+Pyramid Scheme is a variant of the Scheme dialect of Lisp, designed by Conor O'Brien, in the early 2017 (date of the earliest commit to the GitHub repository).\cite{pyra_git} It is a turing-complete esoteric programming language (esolang)\cite{pyra_esolang} which uses tree-like, as opposed to a linear code structure. Pyramid scheme is a true outlier in the contemporary computing scene. Whereas most languages / frameworks build on top of the existing infrastructure to create \enquote{the stack} of software,\cite{cantrill2017} pyramid scheme aims to remove unnecessary abstractions. Compilers make use of an intermediate representation of the language in the form of an abstract syntax tree (AST).\cite{cooper2011} Pyramid scheme removes this, clearly unnecessary, abstraction and represents the computation in the form of a literal syntax tree (LST) of ascii-art pyramidal constructs.
 
-Golf
-TiO
+Pyramid scheme is supported by the \enquote{Try It Online!} repository of inline interpreters,\cite{tio} and, like many other esolangs, has been featured in many Code Golfing challenges.\cite{golf_se} In ancient Egypt, pyramids were constructed as the resting places of deceased pharaos, containing not only their mummified remains but also an assortment of keywords and/or type literals the pharaoh need in the afterlife. The authors don't suppose the association accidental.
 
 \subsection{Implementation of Pyramid Scheme}
 
@@ -186,16 +195,70 @@ Because " is used for strings, and [ ] for arrays...
 )) (set test "hi")
 \end{lstlisting}
 
+\begin{lstlisting}[language=psll,frame=tb,numbers=left,aboveskip=3mm,belowskip=3mm]
+  (set newline "\n")
+  (set nil (arg 999))
+  
+  // Array to be sorted
+  (set a [3 1 4 1 5 9 2 6 5 3 5])
+  
+  // Get array length
+  // (len a N)
+  
+  ( (set N 0) (loop (! (= (arg a N) nil)) (set N (+ N 1))) )
+  
+  (set N 0) // Pointer into the array
+  (loop (! (= (arg a N) nil)) (set N (+ N 1))) // Increment pointer until goes off the end
+  
+  (def sup "hello")
+  // Bubble sort the array
+  (do again (
+      (set again 0)
+      (set n 0) // Position pointer
+      (loop (! (! (<=> n (- N 1)))) ( // Go through all the pairs
+          (set this (arg a n))
+          (set next (arg a (+ n 1)))
+  
+          // This and next need swapping
+          (set swap (! (<=> (<=> this next) -1)))
+          (? swap (
+              (set again 1) // Will need to go through the list again
+              (set b []) // Start b as an empty array
+              
+              // Add prefix of a
+              (set l 0)
+              (loop (= (<=> l n) -1) (
+                  (set b (+ b (- ((arg a l) nil) (nil nil))))
+              (set l (+ l 1))
+              ))
+  
+              // Add two elements, swapped
+              (set b (+ b (- ((arg a (+ n 1)) nil) (nil nil))))
+              (set b (+ b (- ((arg a (+ n 0)) nil) (nil nil))))
+  
+              // Add suffix of a
+              (set l (+ n 2))
+              (loop (= (<=> l N) -1) (
+                  (set b (+ b (- ((arg a l) nil) (nil nil))))
+              (set l (+ l 1))
+              ))
+              (set a b)
+          ))
+      (set n (+ n 1)) // Increment position pointer
+      ))
+      (out (* a ",") newline) // Print b + newline
+  ))
+\end{lstlisting}
+
 \section{Conclusions and outlook}
 Program in Pyramid Scheme! Teach your friends! Have them teach \emph{their} friends! Then have those friends teach \emph{their} friends!
 
 - Joined pyramids
 
-
 \lipsum[11-15]
 \ilpsll{(chr 10)}
-
 \section*{Links}
+
 \begin{itemize}
 \item psll git
 \item pyramid scheme

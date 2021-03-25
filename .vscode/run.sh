@@ -1,4 +1,4 @@
 echo "hi! ^_^"
 
-make clean;
-make pdf;
+make;
+# make clean && make pdf;
