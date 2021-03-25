@@ -65,35 +65,59 @@ breaklinks=true, % Allow links to break lines
 hyperfootnotes=false % Dont link footnotes (This does not work very well)
 ]{hyperref}%
 
-
 \usepackage{listings}
+
+% Bold "Listing"
+\renewcommand{\lstlistingname}{\bfseries Listing}
+\makeatletter
+\def\fnum@lstlisting{%
+  \lstlistingname
+  \ifx\lst@@caption\@empty\else~\thelstlisting\normalfont\fi}%
+\makeatother
+
 % " , / , [ and ] keywords don't play nicely with other syntax
 \lstdefinelanguage{psll} {%
 otherkeywords={+,!,=,<=>,*,-,^,\#,?,_},
 morekeywords={out,chr,arg,set,do,loop},
-morekeywords={[2]def,range,len},
+morekeywords={[2]def,range,len,nil},
 sensitive=false,
 morecomment=[l]{//},%
 morestring=[b]",%
+showspaces=true
 }
+
+\lstdefinelanguage{pyra} {%
+otherkeywords={+,!,=,<=>,*,\#,?},
+morekeywords={out,chr,arg,set,do,loop},
+sensitive=false,
+showspaces=true
+}
+
+\makeatletter
+\def\lst@visiblespace{{\color{black!10!white}.}}
+\makeatother
 
 \lstset{
   aboveskip=3mm,belowskip=3mm,%
   columns=flexible,%
   basicstyle={\small\ttfamily},%
-  numberstyle=\small\normalfont\ttfamily\color{black!25!white},%
+  numberstyle=\scriptsize\ttfamily\color{black!25!white},%
   keywordstyle=\color{lines_blue},%
   keywordstyle={[2]\color{orange}},%
+  keywordstyle={[3]\color{red}},%
   commentstyle=\color{lines_green},%
   stringstyle=\color{lines_purple},%
   breaklines=false,
-  numbersep=5pt,
+  numbersep=3pt,
   tabsize=4,
+  captionpos=b,
 }
 
 \newcommand{\ilpsll}[1]{\lstinline[language=psll,columns=flexible]{#1}}
 \newcommand{\ilruby}[1]{\lstinline[language=ruby,columns=flexible]{#1}}
 
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \begin{document}
 \preprint{AIP/123-QED}
 
@@ -110,19 +134,54 @@ morestring=[b]",%
 \lipsum[1]
 \end{abstract}
 
-\keywords{syntax tree; pyramid scheme; lisp; compilation}
+\keywords{syntax tree; Pyramid Scheme; lisp; compilation}
 
 \maketitle
 
 \section{Introduction}
 
-Pyramid Scheme is a variant of the Scheme dialect of Lisp, designed by Conor O'Brien, in the early 2017 (date of the earliest commit to the GitHub repository).\cite{pyra_git} It is a turing-complete esoteric programming language (esolang)\cite{pyra_esolang} which uses tree-like, as opposed to a linear code structure. Pyramid scheme is a true outlier in the contemporary computing scene. Whereas most languages / frameworks build on top of the existing infrastructure to create \enquote{the stack} of software,\cite{cantrill2017} pyramid scheme aims to remove unnecessary abstractions. Compilers make use of an intermediate representation of the language in the form of an abstract syntax tree (AST).\cite{cooper2011} Pyramid scheme removes this, clearly unnecessary, abstraction and represents the computation in the form of a literal syntax tree (LST) of ascii-art pyramidal constructs.
+In ancient Egypt, pyramids were constructed as the resting places of deceased pharaos, containing not only their mummified remains but also an assortment of keywords and type literals the pharaoh will need in their journey though afterlife. Pyramid Scheme (PS) is a variant of the Scheme dialect of Lisp, which honours these ancient traditions and accompanies \emph{us} thorough our journey of computation.
 
-Pyramid scheme is supported by the \enquote{Try It Online!} repository of inline interpreters,\cite{tio} and, like many other esolangs, has been featured in many Code Golfing challenges.\cite{golf_se} In ancient Egypt, pyramids were constructed as the resting places of deceased pharaos, containing not only their mummified remains but also an assortment of keywords and/or type literals the pharaoh need in the afterlife. The authors don't suppose the association accidental.
+PS was designed by Conor O'Brien, in the early 2017 (date of the earliest commit to the GitHub repository).\cite{pyra_git} It is a turing-complete esoteric programming language (esolang)\cite{pyra_esolang} which uses tree-like, as opposed to a serial code structure. Compilers make use of an intermediate representation of the language in the form of an abstract syntax tree (AST).\cite{cooper2011} In contrast to most contemporary languages / frameworks, which build on top of the existing infrastructure to create \enquote{the stack} of software,\cite{cantrill2017,muratori2018} Pyramid Scheme aims to shed any unnecessary abstractions, including that of the AST. The computation in pPramid scheme is therefore represented as a literal syntax tree (LST) of ascii-art pyramidal constructs.
 
-\subsection{Implementation of Pyramid Scheme}
+Pyramid Scheme is supported by the \enquote{Try It Online!} repository of online interpreters,\cite{tio} and, like many other esolangs, has been featured in many Code Golfing challenges.\cite{golf_se}
 
-Ruby Dictionary Memory (RDM)
+\subsection{Pyramid Scheme}
+
+% aboveskip=0pt,belowskip=0pt
+\begin{lstlisting}[float,language=pyra,frame=tb,numbers=left,caption={\label{lst:pyra_simple}
+A simple Pyramid Scheme program. It takes one input from \tt{stdin} -- \ilpsll{(set x (\# stdin))}, increments it by one -- \ilpsll{(set x (+ x 1))} and prints the result computation to the command line.
+}]
+      ^ ^     ^           ^      ^      ^    ^
+     ^-/ \   / \         / \    / \    / \   -^
+    ^-/out\ /set\       /out\  /out\  /out\  / \
+   / \-----^-----^     ^----- ^----- ^----- /out\
+  /set\   /x\   /+\   / \    / \    / \    ^-----
+ ^-----^  ---  ^---^ /chr\  /chr\  /chr\  /x\
+/x\   /#\     /x\ /1\-----^ -----^ -----^ ---
+---  ^---     --- ---    / \    / \    / \
+    /l\                 /43 \  /49 \  /61 \
+   /ine\                -----  -----  -----
+   -----
+\end{lstlisting}
+
+The original and, so far, the only implementation of PS is written in Ruby.\cite{pyra_git} The LST of the program is first parsed and then mapped to a recursive evaluation chain. An example of one such program can be seen in Listing~\ref{lst:pyra_simple}.
+
+PS parser reads the body of each pyramid verbatim, concatenated line by line.\footnote{Hence, for example, the bottom pyramid in the first stack in Listing~\ref{lst:pyra_simple} contains the (semi)keyword \tt{line}, as opposed to two words: \tt{l} and \tt{ine}.} The parser begins at the tip (\tt{\^}), and walks down the left (\tt{/}) and the right (\tt{\textbackslash}) side, collecting the characters in-between. When the two sides run out, it first checks for the presence of the pyramid base (\tt{-}),\footnote{Note that the base of the pyramid is a dash (\tt{0x2d}), not an underscore.} and then for the tips of the child pyramids, if present. The pyramids may connect \emph{only} on these corners, such that, for example, the first pyramid with \tt{chr} (which constructs a character \tt{+} to be printed) in Listing~\ref{lst:pyra_simple} rightfully does not consider the pyramid \tt{1} of the \tt{set} branch as its child.
+
+Note, however, that this allows for an existence of direct connection between neighbouring branches of the LST -- in Listing~\ref{lst:pyra_simple}, for example, the first print statement (\tt{out} keyword), shares the node \tt{x} with its neighbouring branch. This is an interesting parallel to the phenomenon of the lateral gene transfer observed in genetics, and suggests a more-proper description of the PS to be that of a Ewok village syntax tree (EWST).\cite{keeling2008,smbc} Although this is undoubtedly one of the more interesting and powerful features of PS, it has not yet been implemented in the project described herein shortly, and therefore will not be considered further, but left for future work.
+
+The specification of the pyramid structure does not preclude the existence of a pyramid with no content. Such a height-0 pyramid is falsey and evaluates to 0.~\footnote{The term \enquote{height-0} can be ambiguous since the pyramid itself has height of 2 characters. In this work the pyramid's height, however, is the number of lines of the text in its body.}~\cite{psnegation} A pyramid with no content \emph{does} however both evaluate its children, and pass them as an its output. This make the height-0 pyramid an important construct for code packing, as can be seen in the first branch in Listing~\ref{lst:pyra_simple}
+
+There are two types operators in PS: ones which implicitly evaluate both of their children, as well as those which do this only under certain circumstances. The first group maps very closely to its underlying Ruby implementation. There are basic binary arithmetic and comparison operators: \tt{+}, \tt{*}, \tt{-}, \tt{/}, \tt{\^}, \tt{=}, \tt{!} and \tt{<=>}. Keyword \tt{out} prints all of its inputs and \tt{chr} converts number to a character. The keyword \tt{arg} indexes arrays (or input arguments), and keywords \tt{\#} and \tt{"} convert back and forth from and to a string. \tt{\#} character also allows one prompt user for input if given a (semi)keyword \tt{line}.~\footnote{\tt{line}, (as well as \tt{stdin}, \tt{readline}) are referenced to as \emph{semi}keywords since they have a keyword meaning only when they're an input of the \# command.}~\cite{pyra_git}
+
+
+
+In that, the 
+The memory makes us of a Ruby dictionary for storing variable
+Ruby Dictionary Memory
+
+\subsection{Motivation behind \psll}
 
 \cite{dbeaz2018}
 
@@ -251,27 +310,22 @@ Because " is used for strings, and [ ] for arrays...
 \end{lstlisting}
 
 \section{Conclusions and outlook}
-Program in Pyramid Scheme! Teach your friends! Have them teach \emph{their} friends! Then have those friends teach \emph{their} friends!
+\textit{\enquote{Program in Pyramid Scheme! Teach your friends! Have them teach \emph{their} friends! Then have those friends teach \emph{their} friends!}}
 
 - Joined pyramids
 
 \lipsum[11-15]
 \ilpsll{(chr 10)}
-\section*{Links}
+\section*{Reproducibility}
 
-\begin{itemize}
-\item psll git
-\item pyramid scheme
-\item TiO hello world in ps
-\item Esolang page?
-\item Code Golf page
-\end{itemize}
+% At the time of writing, the commit SHA of the main Pyramid Scheme GitHub repo\cite{pyra_git} is: \tt{fd183d296f08e0cba8bf55da907697eaf412f6a7}, and the \psll repo is: \tt{ea6c6d2e9c8278cc752894a9aff43f7d44bd93a9}
 
 \section*{Acknowledgements}
-%I would like to thank Blain Rodgers and Samuel Hutton for proofreading and their helpful comments on the manuscript.
+
+I would like to thank Blaine Rodgers and Samuel Hutton for discussions and helpful comments on the manuscript, as well as Jonathan Blow and David Beazley, for sparking a long-lasting interest in programming languages.
  
 \nocite{*}
 \bibliographystyle{unsrt}
-\bibliography{sigbovik-psll.bib} %< bib file name
+\bibliography{sigbovik-psll.bib}
 
 \end{document}
