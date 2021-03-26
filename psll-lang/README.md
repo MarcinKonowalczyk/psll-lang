@@ -17,3 +17,4 @@ rm -rf ~/.vscode/extensions/psll-lang && cp -r psll-lang ~/.vscode/extensions/
  - https://regex101.com
  - https://code.visualstudio.com/api/language-extensions/syntax-highlight-guide
  - https://macromates.com/manual/en/language_grammars
+ - https://aleksander-mendoza.github.io/aleksander-mendoza.github.io/syntax_highlighter.html

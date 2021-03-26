@@ -9,7 +9,8 @@
         "languages": [{
             "id": "psll",
             "aliases": ["PSLL", "psll"],
-            "extensions": [".psll"]
+            "extensions": [".psll"],
+            "configuration": "./psll-config.json"
         },
         {
             "id": "pyra",
