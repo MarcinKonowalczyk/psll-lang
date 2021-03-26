@@ -4,6 +4,7 @@
 
 A lisp-like language which compiles to [pyramid scheme](https://github.com/ConorOBrien-Foxx/Pyramid-Scheme) (**p**yramid **s**cheme **l**isp-**l**ike syntax, aka `psll`).
 
+
 ## Installation
 
 Make  `psll.py` executable:
@@ -12,6 +13,7 @@ Make  `psll.py` executable:
 chmod u+x psll.py
 ```
 or use the `psll.sh` bash script which you might want to edit to make it point to the correct files. It compiles and runs a program.
+
 
 ## Use
 
@@ -24,6 +26,7 @@ Verbose output and save to the file:
 ```
 ./psll.py ./examples/bubble_sort.psll -o -v
 ```
+
 
 ## Examples
 
@@ -61,11 +64,14 @@ or with the `psll.sh` bash script:
 
 The output is `nargin: 5`
 
+
 ## Additional features
 
 Psll implements a few bits of syntactic sugar, to make writing complicated pyramid schemes easier.
 
+
 ### Bracket expansion
+
 A bracket with multiple subtrees will get automatically split into multiple size-2 subtrees which will, in turn, get prepended with the empty string, as described above. Hence, the following psll code:
 
 ```cs
@@ -174,6 +180,7 @@ The following is, for example, a *postfix* implementation of the modulo function
 (set a 11) (set b 7) (mod)
 ```
 
+
 ### Command expansion
 
 The `out` command of Pyramid Scheme allows for output of, at most, 2 variables. To output more, one needs to chain mutiple such `out` statements. In psll an out command with more than two inputs gets automatically expanded into such chain, such that:
@@ -223,13 +230,16 @@ For the sake of compatibility with non-expanded brackets, the following two are 
 ```
 (and, of course, the same for other binary operations, even the commutative ones)
 
+
 ### Underscore keyword
 
 The underscore `_` can be used to explicitly specify an empty slot where a pyramid could be. It is not particularly useful from the user point of view (maybe except for fine-tuning the position of the pyramids for code golf), but it is very helpful for the compiler. All the leaves are eventually terminated with `_`, and string expansion used the `_` keyword to help pack the code a bit better.
 
+
 ## Code optimisation
 
 Psll compiler allows for some code optimisation. Optimising the code for speed would be, let's be honest with ourselves, a bit silly at this point. Psll optimisation attempts, therefore, to minimise number of bytes in the source code, such that the result can be used in [code golf challenges](https://codegolf.stackexchange.com/a/208938/68200).
+
 
 ### Greedy optimisation
 
@@ -237,11 +247,13 @@ Attempt to package each pair of root nodes in the abstract syntax tree. Insert a
 
 This optimisation technique tends to result in tall pyramid scheme. It is very fast, and produces intermediate-quality results.
 
+
 ### Considerate optimisation
 
 Consider all the possible places to either insert a single pyramid, or package two adjacent pyramids up to certain depth (10). Choose the most beneficial.
 
 This optimisation technique tends to result in wide pyramid scheme. It is slower than the greedy optimisation, but very often results in a smaller pyramid scheme.
+
 
 ## ToDo's
 
@@ -276,6 +288,10 @@ This is not a real-purpose language. In this section the 'optimisation' refers t
   - [ ] @functional decorator? Is that a thing?
 - [ ] Make string expansion balanced binary
   - [ ] ? should this be a compiler option...
+- [ ] ? allow only letters and numbers in variable names
+- [ ] ? Actually throw an error if bracket is found in an array, or is this somehow, sometimes desired? After all, braces are not allowed in variable names.
+- [ ] Add more sorting algorithms to examples (because they're fun to code.) Pancake sort?
+  - [ ] ? Add something to help with prefix and suffix?
 
 More on the 'project management' front:
 
@@ -295,6 +311,8 @@ More on the 'project management' front:
     - [x] Test *asymmetric* children in `tree_repr`
 - [ ] `psll.sh` is a mess, therefore (amongst others) `run.sh` is a mess
 - [ ] Allow one to write the empty pyramid keyword explicitly as the underscore, such that `( (a) (b) )` can also be written as `(_ (a) (b) )`, just for completeness.
+- [ ] Add section about array expansions to this README
+- [ ] Add mention of the Sigbovik paper to README
 
 ## Done's
 
