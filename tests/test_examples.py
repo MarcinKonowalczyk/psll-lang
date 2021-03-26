@@ -78,6 +78,7 @@ class MetaTests:
                     # print('\nPyramid Scheme output:')
                     # print('\n'.join(out))
                     pass
+
 @skipUnlessExampleExists(examples + 'nargin_counter.psll')
 class TestNarginCounter(unittest.TestCase,MetaTests):
     pass
@@ -100,6 +101,10 @@ class TestArray(unittest.TestCase,MetaTests):
 
 @skipUnlessExampleExists(examples + 'binary_operator_chains.psll')
 class TestOperatorChains(unittest.TestCase,MetaTests):
+    pass
+
+@skipUnlessExampleExists(examples + 'pseudorandom_number_generation.psll')
+class TestPRNG(unittest.TestCase,MetaTests):
     pass
 
 if __name__=="__main__":
