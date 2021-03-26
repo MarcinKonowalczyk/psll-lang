@@ -357,8 +357,7 @@ where $V_n$ is the value of the LCG at iteration $n$, $p$ is the prime and $d$ i
 Since PS does not implement the modulo function, we have to write it ourselves. In this case we use a very simple implementation which repeatedly subtracts $d$ from $pV_n$ until the result is smaller than $d$. A small prime factor has been chosen to minimise the runtime.
 
 \begin{lstlisting}[language=psll,aboveskip=3mm,belowskip=3mm,
-    label=lst:lcg,caption={
-        \href{https://tio.run/\%23\%23jVbbbsIwDH3PV/h5qDJl0vay7UuiSIhWAgkGgoG0r@@aOBc7l7JI0Do9SU5Pjp1efq/b02Hobrv9eBqnCagZ@hkWxmYUXRE0QGegY2Foc6D8DXgYhbfxRycQeBjC3J9wprPNJJTHUb97Yn94sFPhWicYAQOVyLCzHOkfI8cZ6dkBvvYbxjKtO5w9FB/b433Uc@8MBS3eNtDy5JS/AX8NixQiJZXkooH9x@eXhlKsDExwIRnXrEBbvFcuygQlHtm9dtJhv17rXMGWCECC23FGiMNfXkrRuo9DhHlEJCS2/UqwMpWIK20EN1oejebRu84E9xKugs@Hw0O7iQxzvXx9w3r8YmSQDfkJL9fDaQyUcjXsgthzye3Q/s3tDinNpcPzneTxTpTWiQNy/Uy@TWVLyuFVV11cNyluv4f5f7e/LuBRmC4kUZuPsOlCYi35FJy3m0MaRnXjVZPUYuZWsj0WQbUoIn@Fmioo1KANaughpaPdsb01MIpIi8wuaGAWi0RqlLwcTxK6rFJP4A5I5bncE6xuUEgZ9RS5VOS6/xQ2aNR76ZHCPUqaom0eJZmZtneULCcr3baO4gxNMa19cjyfLxGbTkdXo9rppkLi@GMxq0LNw3EGv0D2uJ1jpRgI82HayjTxuVCZIM83FB4tZ2CR1zzIEwt8ONux693HRJiwC0Oybwh2dpF4fsbFci3ZJN2XijbLu3pvtTyx7Kv31kaxY6vsnabpDw}{Try it online!}
+    label=lst:lcg,caption={Simple linear congruential pseudo-random number generator. \href{https://tio.run/\%23\%23jVbbbsIwDH3PV/h5qDJl0vay7UuiSIhWAgkGgoG0r@@aOBc7l7JI0Do9SU5Pjp1efq/b02Hobrv9eBqnCagZ@hkWxmYUXRE0QGegY2Foc6D8DXgYhbfxRycQeBjC3J9wprPNJJTHUb97Yn94sFPhWicYAQOVyLCzHOkfI8cZ6dkBvvYbxjKtO5w9FB/b433Uc@8MBS3eNtDy5JS/AX8NixQiJZXkooH9x@eXhlKsDExwIRnXrEBbvFcuygQlHtm9dtJhv17rXMGWCECC23FGiMNfXkrRuo9DhHlEJCS2/UqwMpWIK20EN1oejebRu84E9xKugs@Hw0O7iQxzvXx9w3r8YmSQDfkJL9fDaQyUcjXsgthzye3Q/s3tDinNpcPzneTxTpTWiQNy/Uy@TWVLyuFVV11cNyluv4f5f7e/LuBRmC4kUZuPsOlCYi35FJy3m0MaRnXjVZPUYuZWsj0WQbUoIn@Fmioo1KANaughpaPdsb01MIpIi8wuaGAWi0RqlLwcTxK6rFJP4A5I5bncE6xuUEgZ9RS5VOS6/xQ2aNR76ZHCPUqaom0eJZmZtneULCcr3baO4gxNMa19cjyfLxGbTkdXo9rppkLi@GMxq0LNw3EGv0D2uJ1jpRgI82HayjTxuVCZIM83FB4tZ2CR1zzIEwt8ONux693HRJiwC0Oybwh2dpF4fsbFci3ZJN2XijbLu3pvtTyx7Kv31kaxY6vsnabpDw}{Try it online!}
     }]
 (set value 312312) // seed the lcg value
 (set div (^ 2 16)) // 16-bit divisor / modulo base
@@ -490,7 +489,7 @@ At the time of writing, the commit SHA of the main Pyramid Scheme GitHub repo is
 and the \psll repo:~\cite{psll_git}
 \[
     \href{https://github.com/MarcinKonowalczyk/psll-lang}{\tt{SHA of this commit goes here}}
-    % \href{https://github.com/MarcinKonowalczyk/psll-lang/commit/...}{\tt{...}}
+    % \href{https://github.com/MarcinKonowalczyk/psll-lang/commit/8ede28d029f9378499a0a94520e53d23701722a4}{\tt{8ede28d029f9378499a0a94520e53d23701722a4}}
 \]
 
 The \psll repository also has all the latex and make files for this very paper. Short of fixing typos, the text will not be modified after the submission.
