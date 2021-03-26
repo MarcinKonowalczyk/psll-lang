@@ -23,7 +23,11 @@ PARENT_FOLDER=${PARENT_FOLDER##*/}
 # Run make from the sigbovik-paper directory
 if [ "$PARENT_FOLDER" = "sigbovik-paper" ]; then
     make --directory "${DIR}";
+elif [[ "$PARENT_FOLDER" = "examples" ]] && [[ "$EXTENSION" == "psll" ]]; then
+# elif [ "$PARENT_FOLDER" = "examples" && "$EXTENSION" == "psll" ]; then
+    ${ROOT}psll.sh examples/$FILENAME
+else
+    :
 fi
-
 # make;
 # make clean && make pdf;
