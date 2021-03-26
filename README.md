@@ -11,7 +11,7 @@ Make  `psll.py` executable:
 ```
 chmod u+x psll.py
 ```
-or use the `psll.sh` bash script (which you might want to edit to make it point to the correct files) which compiles and runs a program.
+or use the `psll.sh` bash script which you might want to edit to make it point to the correct files. It compiles and runs a program.
 
 ## Use
 
@@ -29,9 +29,9 @@ Verbose output and save to the file:
 
 The following is an example lisp-like pyramid scheme which counts the number of input arguments it gets, and then prints it out to the command line. The syntax supports `//` comments and newlines, as well as (almost) random additions of whitespace.
 
-N.b. C# highlighting seems to look fine for most intensions and purposes (at lest in vscode). Lisp-highlighting somehow looks worse in my opinion.
+For the purposed of the markdown README, C# highlighting seems to look fine. There is a vscode extension in the `psll-lang` folder which provides syntax highlighting for both psll and Pyramid Scheme.
 
-```cs
+```c#
 // Make nil by asking for the 999'th input argument
 (set nil (arg 999))
 
@@ -250,21 +250,12 @@ This is not a real-purpose language. In this section the 'optimisation' refers t
 - [ ] ?? Arrays / Linked lists
   - [x] Improve array implementation
   - [ ] `range` keyword
+  - [ ] `len` keyword
 - [ ] `nil` keyword
-  - Make it more robustly than `(arg 999)`
-  - ?? Allow compiler to insert `def`s into preamble
+  - [ ] Make it more robustly than `(arg 999)`
+  - [ ] ?? Allow compiler to insert `def`s into preamble
 - [ ] Prettify the intermediate representation
 - [ ] ?? `*( ... )` construct
-- [ ] ?? Easier to use installation. Maybe a makefile which makes a symlink in the correct place...
-  - [ ] ?? `pip install psll` ...
-  - [ ] ? Move testing to makefile
-  - [ ] ??? brew tap. I mean, why not. Its not polluting the core with needless software if its just a tap...
-- [ ] Better testing
-  - [ ] Improve test coverage
-    - [x] Make the coverage count only the tests for that file
-    - [x] tree_repr coverage
-    - [ ] psll coverage
-    - [x] Test *asymmetric* children in `tree_repr`
   - [x] Add testing psll bash script to tests
     - [ ] <s>?? And somehow coverage</s> [`bashcov`](https://github.com/infertux/bashcov)
   - [ ] Use `hypothesis` in testing ?
@@ -277,6 +268,25 @@ This is not a real-purpose language. In this section the 'optimisation' refers t
   - [ ] ?? Backtrace
   - [ ] ?? Or, I guess, rip it out and make it a normal `SyntaxError`
 - [ ] ?? Move the command line code from psll.py to a bash script
+- [ ] Protect `set` and maybe some other keywords from accidentally writing something like `(set (x (set y 1)) (# line))`. `def` is already protected like that, so why not `set`.
+
+More on the 'project management' front:
+
+- [ ] ?? Easier to use installation. Maybe a makefile which makes a symlink in the correct place...
+  - [ ] ?? `pip install psll` ...
+  - [ ] ? Move testing to makefile
+    - [ ] Make sure it works with travis
+  - [ ] ??? brew tap. I mean, why not. Its not polluting the core with needless software if its just a tap...
+- [ ] Configure flake8 and fight with it for a while
+- [ ] ?? Same for mypy
+- [ ] Make sure migration to travis.com (from travis.org) went fine (whenever that happens)
+- [ ] Better testing
+  - [ ] Improve test coverage
+    - [x] Make the coverage count only the tests for that file
+    - [x] tree_repr coverage
+    - [ ] psll coverage
+    - [x] Test *asymmetric* children in `tree_repr`
+
 
 ## Done's
 
@@ -312,6 +322,7 @@ Bullet points get moved here from the above section when they get finished. (It'
   - [x] Expansion of `+` and `*` commands too
     - [x] Right and left-associative expansion
 
+
 ## Bugs
 
 - [ ] `[`, `]` and `"` Pyramid-Scheme keywords are not working at all at the moment (they ought to be typed as `\[`, `\]` and `\"`) (It's ok. They're really nto that useful, but it would be nice if they did actually work too.)
@@ -321,6 +332,7 @@ Bullet points get moved here from the above section when they get finished. (It'
 - [ ] Bug in greedy optimisation for source code with one major tree
 - [ ] Intermediate representation is ugly since the multiple spaces are gone. This is not really a bug, but would be nice to change.
 - [ ] `def` replacer sometimes adds an extra pyramid
+
 
 ## Bugs no more
 
