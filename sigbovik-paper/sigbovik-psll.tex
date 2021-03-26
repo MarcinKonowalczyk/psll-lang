@@ -238,42 +238,36 @@ Each neighbouring pair or elements of the parent gets put together into a bracke
 
 \textbf{Expansion of binary operators} A similar type of expansion can be applied to a bracket where the first member is not a child bracket but a keyword. This is done only for all binary operator keywords (\tt{+}, \tt{*} as well as \tt{-}, \tt{/}, \tt{\^}, \tt{=} and \tt{<=>}) in a left-associative (LA) fashion, such that:
 \begin{lstlisting}[language=psll,aboveskip=3pt,belowskip=-2pt,frame=none,numbers=none]
-    (+ 1 2 3 4) // This
-    (out (+ (+ (+ 1 2) 3) 4) newline) // Becomes this
+(+ 1 2 3 4) // This
+(out (+ (+ (+ 1 2) 3) 4) newline) // Becomes this
 \end{lstlisting}
 Addition and subtraction are commutative over the set of most possible inputs, and hence the exact order of operations does not usually matter (string multiplication overloads concatenation and that's not commutative). For a non-commutative operation, e.g. subtraction, the expansion order does matter. Hence, if the keyword is placed at the end of the bracket, a right-associative (RA) expansion is performed:
 \begin{lstlisting}[language=psll,aboveskip=3pt,belowskip=-2pt,frame=none,numbers=none]
-    (- 1 2 3 4) // This
-    (- (- (- 1 2) 3) 4) // Does indeed expand into this
-    (1 2 3 4 -) // But this
-    (- 1 (- 2 (- 4 3))) // Expands to this instead
+  (- 1 2 3 4) // This
+  (- (- (- 1 2) 3) 4) // Does indeed expand into this
+  (1 2 3 4 -) // But this
+  (- 1 (- 2 (- 4 3))) // Expands to this instead
 \end{lstlisting}
 Note that the order of the last two elements is purposefully reversed, such that the RA expansion is symmetrical with respect to the LA one. For the sake of compatibility with non-expanded brackets, the following two are also allowed for all binary operators.
 \begin{lstlisting}[language=psll,aboveskip=3pt,belowskip=-2pt,frame=none,numbers=none]
-(- 1 2) // 1 - 2 = -1
-(1 2 -) // 2 - 1 = +1
+  (- 1 2) // 1 - 2 = -1
+  (1 2 -) // 2 - 1 = +1
 \end{lstlisting}
 
 Finally, the \tt{out} keyword normally does not allow for output of more than 2 variables. In \psll the \tt{out} keywords can have any number of inputs, and it gets implicitly expanded to a chain of output statements: 
 \begin{lstlisting}[language=psll,aboveskip=3pt,belowskip=-2pt,frame=none,numbers=none]
-    (out a b c d e) // This
-    (out a b) (out c d) (out e) // Becomes this
+  (out a b c d e) // This
+  (out a b) (out c d) (out e) // Becomes this
 \end{lstlisting}
 Note that this is different to teh left-associative expansion of the binary keywords above. There is no right-associative expansion of the \tt{out} keyword.
 
-\textbf{String literals} Single characters can be created in RDM with the \tt{chr} keyword (Ruby \tt{.to\textunderscore{}i.chr}). It is also possible to construct longer strings in RDM since Ruby's \enquote{\tt{+}} sign overloads string concatenation. The string \textit{\enquote{hello}} is therefore:
-\begin{lstlisting}[language=psll,aboveskip=3pt,belowskip=-2pt]
-(+ (+ (+ (+ (chr 72) (chr 101)) (chr 108))
-	(chr 108)) (chr 111))
+\textbf{String literals} Single characters can be created in the Pyramid Scheme memory with the \tt{chr} keyword (Ruby \tt{.to\textunderscore{}i.chr}). It is also possible to construct longer strings since Ruby's \enquote{\tt{+}} sign overloads string concatenation. The string \textit{\enquote{hello}} is therefore:
+\begin{lstlisting}[language=psll,aboveskip=3pt,belowskip=-2pt,frame=none,numbers=none]
+  (+ (chr 72) (chr 101) (chr 108) (chr 108) (chr 111))
 \end{lstlisting}
-\psll introduces string literals, such that \ilpsll{(set s "hello")} expands into the above code. Note that this is a very left-child heavy tree. To balance it, the above string could also be made by recursively concatenating its binary split:
-\begin{lstlisting}[language=psll,aboveskip=3pt,belowskip=-2pt]
-(+ (+ (chr 72) (chr 101))
-	(+ (chr 108) (+ (chr 108)) (chr 111)))
-\end{lstlisting}
-such that $\textit{\enquote{hello}} = \textit{\enquote{he}} + \textit{\enquote{llo}} = \left(\textit{\enquote{h}} + \textit{\enquote{e}}\,\right) + \left(\textit{\enquote{l}} + \textit{\enquote{lo}}\,\right) = \dots$.
+Where the numbers are the decimal ascii codes for the respective letters, and a LA \tt{+} operator expansion has been assumed. \psll introduces string literals, such that \ilpsll{"hello"} expands into the above code.\footnote{Note that this is a very left-child heavy tree. To balance it, the above string could also be made by recursively concatenating its binary split. This will be implemented in the future.} The simplest "Hello, Sailor!" program in \psll is \ilpsll{(out "Hello, Sailor!")}.
 
-\textbf{Array literals}
+\textbf{Array literals} 
 
 \textbf{\tt{def} keyword}
 
