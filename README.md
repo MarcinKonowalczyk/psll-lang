@@ -257,7 +257,7 @@ This is not a real-purpose language. In this section the 'optimisation' refers t
   - [ ] Make it more robustly than `(arg 999)`
   - [ ] ?? Allow compiler to insert `def`s into preamble
 - [ ] Prettify the intermediate representation
-- [ ] ?? `*( ... )` construct
+- [ ] <s>?? `*( ... )` construct</s> probs no
   - [x] Add testing psll bash script to tests
     - [ ] <s>?? And somehow coverage</s> [`bashcov`](https://github.com/infertux/bashcov)
   - [ ] Use `hypothesis` in testing ?
@@ -271,7 +271,7 @@ This is not a real-purpose language. In this section the 'optimisation' refers t
   - [ ] ?? Or, I guess, rip it out and make it a normal `SyntaxError`
 - [ ] ?? Move the command line code from psll.py to a bash script
 - [ ] Protect `set` and maybe some other keywords from accidentally writing something like `(set (x (set y 1)) (# line))`. `def` is already protected like that, so why not `set`.
-
+- [ ] `++` and `--` keywords (aka increment and decrement?)
 More on the 'project management' front:
 
 - [ ] ?? Easier to use installation. Maybe a makefile which makes a symlink in the correct place...
