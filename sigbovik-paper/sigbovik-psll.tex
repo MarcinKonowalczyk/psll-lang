@@ -154,7 +154,7 @@ Pyramid Scheme is supported by the \enquote{Try It Online!} repository of online
 % aboveskip=0pt,belowskip=0pt
 \begin{lstlisting}[float,language=pyra,
     label=lst:pyra_simple, caption={
-        A simple Pyramid Scheme program. It takes one input from \tt{stdin} -- \ilpsll{(set x (\# stdin))}, increments it by one -- \ilpsll{(set x (+ x 1))} and prints the result computation to the command line.
+        A simple Pyramid Scheme program. It takes one input from \tt{stdin} -- \ilpsll{(set x (\# stdin))}, increments it by one -- \ilpsll{(set x (+ x 1))} and prints the result computation to the command line. \href{https://tio.run/\%23\%23dZDRCoMwDEXf@xWFPY4SRBnsX0JhuILC3IY6cF/fpUlbV91SzDEl9zbk@R4vQ381U9u5wXmvOSwd4XfYPaySfwMaiZJTxKqAEQUJHq8ZNUxuXiVyt4VGJXITwkpOI3G1AQtJk8xh4XzEv1NFpdLZPfhwFV6CthtxhwVVdD5EZ6qgwt9DBUeVXbk/kL7dQLwhuGGxfGjq0ADNmXGq4lr6uysa19cyVLr2vv4A}{Try it online!}
 }]
       ^ ^     ^             ^      ^      ^    ^
      ^-/ \   / \           / \    / \    / \   -^
@@ -198,7 +198,7 @@ In order to assist the programmer in harnessing the power of Pyramid Scheme, we 
 \end{lstlisting}
 Note that the LST approximation has been applied, such that \tt{x} from \tt{out} and\tt{set} are now different. To get the code in Listing~\ref{lst:pyra_simple} the PS source has been modified by-hand post compilation.
 
-This type of local macro expansion is at the core of \psll. Such macros do not add any expressive power to the language,\cite{krishnamurthi2019} but allow one to use higher-level constructs and simplify writing programs. All of the functionality, which will be described shortly, has been implemented by repeatedly leveraging a single python function which performs a depth-first walk through the AST and applies functions at the appropriate nodes (Listing~\ref{lst:tree_traversal}).
+This type of local macro (compile-time code alteration) expansion is at the core of \psll. Such macros do not add any expressive power to the language,\cite{krishnamurthi2019} but allow one to use higher-level constructs and simplify writing programs. All of the functionality, which will be described shortly, has been implemented by repeatedly leveraging a single python function which performs a depth-first walk through the AST and applies functions at the appropriate nodes (Listing~\ref{lst:tree_traversal}).
 
 \begin{lstlisting}[language=python,
     label={lst:tree_traversal},caption={
@@ -227,19 +227,18 @@ def tree_traversal(ast, pre_fun=None, str_fun=None,
 
 \textbf{Implicit bracket expansion} Each bracket must have exactly three elements. For small expressions this is almost always the case, but becomes problematic for larger, flow-control and loop structures where each such expression can contain an arbitrarily large number of sub-expressions which would then have to be manually nested in empty subtrees. An overfull bracket one containing more than - one containing $>2$ other brackets, such as:
 \begin{lstlisting}[language=psll,aboveskip=3pt,belowskip=-2pt,frame=none,numbers=none]
-( (out 1) (out 2) (out 3) (out 4) (out 5) )
+  ( (out 1) (out 2) (out 3) (out 4) (out 5) )
 \end{lstlisting}
 gets expanded as:
 \begin{lstlisting}[language=psll,aboveskip=3pt,belowskip=-2pt,frame=none,numbers=none]
-( (((out 1) (out 2))  ((out 3) (out 4)))  (out 5) )
-( (((_ out 1) (_ out 2))  ((_ out 3) (_ out 4)))  (_ out 5) )
+  ( (((out 1) (out 2))  ((out 3) (out 4)))  (out 5) )
 \end{lstlisting}
 Each neighbouring pair or elements of the parent gets put together into a bracket, until the length of the parent is less than 2. Then, each bracket with exactly 2 other brackets has the empty-marker inserted as the first element. Note that the empty marker is a compiler-only keyword (python empty string) and it cannot be typed directly.\footnote{For completeness sake this will likely be implemented by reusing the underscore keyword, such that, for example, \tt{((out 1) (out 2))} could be then explicitly expanded in \psll as \tt{(\_ (\_ out 1) (\_ out 2))}} This results in a (literal) balanced binary tree in the final PS code, and so for a parent bracket of $N$ sub-expressions will result in a tree of containing $\bigO\left(\log_2\left(N\right)\right)$ pyramids.
 
 \textbf{Expansion of binary operators} A similar type of expansion can be applied to a bracket where the first member is not a child bracket but a keyword. This is done only for all binary operator keywords (\tt{+}, \tt{*} as well as \tt{-}, \tt{/}, \tt{\^}, \tt{=} and \tt{<=>}) in a left-associative (LA) fashion, such that:
 \begin{lstlisting}[language=psll,aboveskip=3pt,belowskip=-2pt,frame=none,numbers=none]
-(+ 1 2 3 4) // This
-(out (+ (+ (+ 1 2) 3) 4) newline) // Becomes this
+  (out (+ (+ (+ 1 2) 3) 4) newline) // Becomes this
+  (+ 1 2 3 4) // This
 \end{lstlisting}
 Addition and subtraction are commutative over the set of most possible inputs, and hence the exact order of operations does not usually matter (string multiplication overloads concatenation and that's not commutative). For a non-commutative operation, e.g. subtraction, the expansion order does matter. Hence, if the keyword is placed at the end of the bracket, a right-associative (RA) expansion is performed:
 \begin{lstlisting}[language=psll,aboveskip=3pt,belowskip=-2pt,frame=none,numbers=none]
@@ -250,8 +249,8 @@ Addition and subtraction are commutative over the set of most possible inputs, a
 \end{lstlisting}
 Note that the order of the last two elements is purposefully reversed, such that the RA expansion is symmetrical with respect to the LA one. For the sake of compatibility with non-expanded brackets, the following two are also allowed for all binary operators.
 \begin{lstlisting}[language=psll,aboveskip=3pt,belowskip=-2pt,frame=none,numbers=none]
-  (- 1 2) // 1 - 2 = -1
-  (1 2 -) // 2 - 1 = +1
+  (- 1 2) // eval to -1
+  (1 2 -) // eval to +1 since arguments reversed
 \end{lstlisting}
 
 Finally, the \tt{out} keyword normally does not allow for output of more than 2 variables. In \psll the \tt{out} keywords can have any number of inputs, and it gets implicitly expanded to a chain of output statements: 
@@ -267,7 +266,44 @@ Note that this is different to teh left-associative expansion of the binary keyw
 \end{lstlisting}
 Where the numbers are the decimal ascii codes for the respective letters, and a LA \tt{+} operator expansion has been assumed. \psll introduces string literals, such that \ilpsll{"hello"} expands into the above code.\footnote{Note that this is a very left-child heavy tree. To balance it, the above string could also be made by recursively concatenating its binary split. This will be implemented in the future.} The simplest "Hello, Sailor!" program in \psll is \ilpsll{(out "Hello, Sailor!")}.
 
-\textbf{Array literals} 
+\textbf{Array literals} Arrays are created in Pyramid Scheme when an empty node has two subtrees. The subtrees get evaluated and concatenated into a length-2 array.\footnote{The key is the \tt{unwrap} function -- body of each empty pyramid and in the PS compiler. It returns the array element if passed only one input, but the entire array if two (\tt{t.size == 1 ? t[0] : t})} Repeated evaluation through nested trees doesn't however produce longer, but instead nested arrays. Ruby's \tt{+} operator overloads array concatenation and allows one to create longer arrays.
+\begin{lstlisting}[language=psll,aboveskip=3pt,belowskip=-2pt,frame=none,numbers=none]
+  (set a (1 2)) // Length-2 array
+  // This results in nested arrays
+  (set a (3 (1 2)))
+  (set a ((1 2) 3))
+  // Add arrays to make longer ones
+  (set a (+ (1 2) (3 4)))
+\end{lstlisting}
+This approach is, however, not fully general, as it does not allow for creation of odd-length arrays, nor an empty array. These can be made since Ruby's \tt{-} overloads array difference (filtering):
+\begin{lstlisting}[language=psll,aboveskip=3pt,belowskip=-2pt,frame=none,numbers=none]
+  (set a (- (0 1) (1 1))) // Length-1 arrays
+  (set a (- (1 1) (1 1))) // Empty array
+\end{lstlisting}
+Array of any length can be made this way. \psll array literals are denoted with square braces. Due to the order of literal expansion, they can contain string literals, as well as numbers and floats and variable references.
+\begin{lstlisting}[language=psll,aboveskip=3pt,belowskip=-2pt,frame=none,numbers=none]
+  (set a 7)
+  (set b [1 "hello" "sailor" 3.1415 2 b 3 "[" ")"])
+\end{lstlisting}
+Note that no escape characters are needed for the brace characters in strings. To reduce the parsing complexity of the particularly tricky part of the parser responsible for context management, brackets are not allowed inside of arrays. This would open the way nested environments (array in bracket in array in bracket ...) which would have to be recursively parsed. The current version of the context parser (\tt{context\_split}) is non-recursive and linear in the size of the input.
+
+Only one additional array keyword is currently implemented:
+\begin{lstlisting}[language=psll,aboveskip=3pt,belowskip=-2pt,frame=none,numbers=none]
+  (set a (range 1 5)) // This
+  // Expands to this
+  (set a
+      (+ (1 2) // Array [1,2]
+          (+ (3 4) // Array [3,4]
+              (- (5 1) (1 1)) // Array [5]
+          )
+      )
+  )
+\end{lstlisting}
+\tt{range} can also create ranges with different step size, but cannot create ranges for variables, since the expansion is happening at compile time:
+\begin{lstlisting}[language=psll,aboveskip=3pt,belowskip=-2pt,frame=none,numbers=none]
+  (range 0 10 3) // [0,3,6,9]
+  (set a 10) (range 0 a 3) // Fails
+\end{lstlisting}
 
 \textbf{\tt{def} keyword}
 
@@ -289,17 +325,26 @@ Because " is used for strings, and [ ] for arrays...
 \section{Example programs}
 \subsection{Pseudorandom number generation}
 
-\begin{lstlisting}[language=psll,aboveskip=3mm,belowskip=3mm]
+Note that ... Insensitive to indentation
+
+Prime divisor is small because of modulo implementation
+
+\begin{lstlisting}[language=psll,aboveskip=3mm,belowskip=3mm,
+    label=lst:prng,caption={
+        \href{https://tio.run/\%23\%23nVbbasMwDH33V/h5JajZYHvZ9iXGUJpAA@tSkm2wr88sX2IpzYgcQ42s5si6W7ff4XTtmmo8X9prO00al9V5URpPdsm2CnfQZuZQ2p@qBdtRCIKx/ZpZhCanzAb3Q5StcIXrKU1OmQ3@DweD0cwaxN0aohW8GOg8cTQRhTho28adn@pHtzfdj/Gyk2T3vb8JzXM7zOob5dmgHdBZ72mU4BBwG7prS/0Trmv6pKrWSWyVaKifo5jIowanFeKwXEvMPxFaxa4ueH17N0x3OZjHC6jFgos7QzTPMRLCvRugPh4NQZcoT7xpN92@YQovFrVDgNasctQeCUmG3WfIHIIcnEOpItmTNobIlqtiq6VjUR2oy5Qh7an/Dk0HFXI/tSsy5V7NMYHBFNflHA04fWLTOl8GOZwURMjxMuWB0HtSe9HJEr4@SiXcNTRSr6q0ograGjCTQbtaFAGBOcvKewkwP4c8kXmaxygkCXIFWGAnw7rgls6wOEeFR1GCwx3Hw8KrjO@xkmcVbTMpwZU4pSQZzWcYUSbxF1H2LkbfHcxaPv2HCj6z7DLBKxjnGN9NCeqj72@bryfoB58r8mFlfUoQjyp0yCur6JhRKb@0m3HERR1cFMc6y1qYsK7jV1lxMxsjbqJpLIOqxmh5exBcieB2pTYKXjDu@DvudmvKBb3O3ZTA9F7jTtMf}{Try it online!}
+    }]
 (set seed 312312)
 (set div (^ 2 16)) // 16-bit divisor
 (set prime 7) // Prime divisor
-// Prime divisor is small because of modulo implementation
 
-// Generate uniformly distributed random number between 0-1
+// Uniformly distributed random number between 0-1
 // mod(prime*seed + current, 2^16)
 (def roll (
     (set seed (+ (* seed prime) 1))
-    (loop (<=> (<=> seed div) -1) (set seed (- seed div)))
+    (loop // mod(seed,div) by repeated subtraction
+        (<=> (<=> seed div) -1)
+        (set seed (- seed div))
+    )
     (set rand (/ seed div))
 ))
 
@@ -417,7 +462,7 @@ Last but not least, I would also like to cordially thank \emph{you} dear reader.
     numberstyle={\tiny\ttfamily\color{black!25!white}},
     label=lst:bubble_sort,
     caption={
-        Bubble sort in Pyramid Scheme. Compiled with \tt{--full-names} and \tt{-co} (considerate optimisation) flags.
+        Bubble sort in Pyramid Scheme. Compiled with \tt{--full-names} and \tt{-co} (considerate optimisation) flags. \href{https://tio.run/\%23\%23tVpdbhw3DH7XKZTXLhbaSdwCBuL2Bj4BIWCcGLEBJ944Ltqe3p0fjUakSEqaWS@QrEeroSjqI/VR4vm/l/7749fjry8P99/v397s@PE2@fj4jZppN@bjzfi/s5A0Hedv9wRH0vmoCxvEjOLcr/tXyKQ9P5@B9talPf89iDGjiPHjsTzUGORZVeL8hrHuB6yjR/U@AFHJ2a/PmsBpsoPA4a/@5RtgzbAR5pGxtpZqbpKuq1o3QOa6qChZb5B1WKSROfpJiLudZnqAxGSS6aLi07JeX18n0xyFD6acJhsk99/6x8G4bvodOIulMJlnGhtHI07C7KSi6yAM7sLrkIk7zMp/eXgJ1kumgvAxyg2yrXVRAjCT9UExb2zafVCoh6Aat3ycSGchn3XSP0w3KsZLtAiTkybjhMen7tQh2JQwxgkNeEFzJzFBgRorNIV7FhJQcGCgln48wbvruhOggOCFOTsBftF04/cSD/plmYJrnIDzT66NImb2fGVpOddY2zKoSJ6EUMS2Ddg4zRjpuiUYTCttdeN7ZnXnadoEHBrcONwgDzE6tjioEH8wIeDwa8Ohg6LLG/dpijGrB@SOOxjQneNf2aqBiWHFs9aDNPCEQAZ0gzNMdFxaQjzVAORxsPLRa2KnoJoGHfcb4AB1NdtGg18eR8MmkETjMHsNebOYp4EcRCfoJ2PjeVUEOU9Dxzjy4u4WTAGiya8fciwEDx/dConScLgwAS6KLBNcRbnfh2lf83jMdVqt7q6uUo0USHL6RDlEGxmU1GbJohhuSTyd@eebP4FfCfq@@ziY5A8MQxzwV8FTrKACGPwFhz4CMaQXppADLyE8KOCeA60yAlmkFr1NfWylA15Sg4FaMr/UFUdVXMcpMoHsUwDZkTILJCXIZoSIEMsohlFTBfJt69/2SVT37Mva65MRTsk/tpf8/jJ/xvq1s9dZVKMEp/xWJ8Kpv1bJcIXfa4RwFJBu2xWKQLmHqZkOlHuYKqtAuYepsy6Ue5jKZarY1U3tgpfTA1WWlO2Ie7upx1ApNVDBwHA@kazOv/@lxR2GrEvM1Za2pPH1YWwUwfHzqBwk1CE8iQrSaM5w2n/6YWdZSMT8pLiBeyUh/kfGJUJ@D@hJxot7eJwnMR@4WHf/72v6zFtWd41AjnHynyeWzg68hcln1D2uXxlH8nzgj4Vq3YVmloiP0I3VbdqS4gTOMUcKrM0dOwtNG722gxKru027hgy9FXD2UpJnBEbc7dr4WSAG@O0lFe/JN96VirwvS3lnArND/N4BXEWfXSO4ql57hnCV/XaM4ap7bh@kzGKb@OxWltvGd7ey4EY@vJUlt/LlrSy6mU9vZdl15ydtgIZqzGxCRJmlc8Bhz2Wa/RSq0OO3mVG6xtAhFMjcXTOn4oJNGUeR9Zndo@3O16rDKpRhZC4wDDeQ3xFpVRZTThHNRQbKToDJvVlbvC2yGzELbQ65FUxn7fuEM6LWqFvFeqyUKF3wnI235JQ/fVwyhXjJYS43GhovO5htgH4DM9pzorJhPOHqtdURWmgZPTYahrixJPmvOUOEpuAG4mFMtVu0ELbcjvzBQd3ZJDRFB3oZNB8r@HrQtlA52pseOkA1dFt4He0dQt0tZKYvUqQWkpf1RsdFzE2auQzj03u73BAH9dzVNgztintZdnNnLsEF9d4rrpJ6OuFarpkYyuUymCqkR6sKeWxhiXJtDeYOCqp9VdDVYlqsW/u5IEpDs1y/BJXxzGXeNBB/GcVO4b5QFcscv7uL6JVL7qQNNMer4Lp3wMdFp@zOebtn1tlLa7/UyhglWa5od6hORm5LND8yo0rVInx7ytOdBbEt2@nJsFLFHC6KAoazLz24NmazN4w6eWld4tjJ6gb/O6TDcW2p9Hhxb3IjTwURd6gU7mktwEpwlVadLp7ItSXSx9uA8M/kPhm5MyqusPiCH1Je3wGuBDlP1QQ0yViqWvMATKu7aEVGXhllUSFrcEy@jYmHpA4sv97zejBmCtjWtnAa8lO7/YRKb7KKSWJb8TyE1oiwaYMQXnyFf0Y5J1xNImQLBVsoHpmld0L9jRPoDzaC5oPl5CTLDVCPxMNKXqcMJacE0XGwTxX8rJQSCokAexRSx5vp8cZZ4PzWrn6TvlX0JQIKjd7n98Xora1npZVEvnTiXcXJC9ytkl7zUlqZso6j5tPuOv5aWHmVilZJ8buuoiSCWK3AjqsjhbY143H3Zdx2K2yJyYwSzcGWytgSRXln2HKX1RL3JGd4e/sf}{Try it online!}
     }]
      ^            ^       ^ ^               ^                               ^
     / \          ^-      /l\-              ^-                              / \
