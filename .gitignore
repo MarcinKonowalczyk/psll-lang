@@ -1,12 +1,28 @@
-.DS_Store
 .vscode/settings.json
+.DS_Store
+
 *.pyc
-examples/*.pyra
 .coverage
-htmlcov
 .pytest_cache
 __pycache__
 .pytest_cache
-python_tests
 psll-venv
+htmlcov
 coverage
+
+# Compiled pyramid schemes in the examples folder
+examples/*.pyra
+
+# LaTeX stuff
+sigbovik-paper/*.synctex.gz
+sigbovik-paper/*.aux
+sigbovik-paper/*.bbl
+sigbovik-paper/*.blg
+sigbovik-paper/*Notes.bib
+sigbovik-paper/*.log
+sigbovik-paper/*.fdb_latexmk
+sigbovik-paper/*.fls
+sigbovik-paper/*.synctex(busy)
+
+
+python_tests
