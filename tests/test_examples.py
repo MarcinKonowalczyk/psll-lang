@@ -103,7 +103,7 @@ class TestArray(unittest.TestCase,MetaTests):
 class TestOperatorChains(unittest.TestCase,MetaTests):
     pass
 
-@skipUnlessExampleExists(examples + 'pseudorandom_number_generation.psll')
+@skipUnlessExampleExists(examples + 'linear_congruential_generator.psll')
 class TestPRNG(unittest.TestCase,MetaTests):
     pass
 
