@@ -156,8 +156,7 @@ def tree_traversal(ast, pre_fun=None, str_fun=None, post_fun=None,  final_fun=No
             raise TypeError('The abstract syntax tree can contain',
             'only strings or other, smaller, trees, not {type(node)}')
     ast2 = tuple(ast2)
-    if final_fun:
-        final_fun(ast2)
+    final_fun(ast2) if final_fun else None
     return ast2 # Return ast back as a tuple
 
 __processing_stack__ = [] # Pre processign functions in order they ought to be applied
@@ -423,8 +422,7 @@ def expand_right_associative(ast):
 
     def expander(node):
         if len(node) > 2 and node[-1] in binary_operators:
-            tree = (node[-1], *node[-3:-1])
-            print(tree)
+            tree = node[-1:-4:-1]; #(node[-1], node[-2], node[-3])
             for element in reversed(node[:-3]):
                 tree = (node[-1], element, tree)
             return tree
@@ -637,7 +635,7 @@ def main(args): # pragma: no cover
 
     stack = __processing_stack__[1:] if args.full_names else __processing_stack__
     ast = reduce(lambda x,y: y(x), [ast] + list(stack))
-    
+    print(ast)
     # TODO  Make optimisation options mutually exclusive
     if args.considerate_optimisation:
         ast = considerate_optimisation(ast, max_iter=None)

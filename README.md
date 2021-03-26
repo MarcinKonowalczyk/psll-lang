@@ -289,6 +289,9 @@ More on the 'project management' front:
     - [ ] psll coverage
     - [x] Test *asymmetric* children in `tree_repr`
 - [ ] `psll.sh` is a mess, therefore (amongst others) `run.sh` is a mess
+- [ ] Allow one to write the empty pyramid keyword explicitly as the underscore, such that `( (a) (b) )` can also be written as `(_ (a) (b) )`, just for completeness.
+- [ ] Expanders shouldn't mutate nodes!
+  - [ ] @functional decorator? Is that a thing?
 
 ## Done's
 
@@ -324,7 +327,6 @@ Bullet points get moved here from the above section when they get finished. (It'
   - [x] Expansion of `+` and `*` commands too
     - [x] Right and left-associative expansion
 
-
 ## Bugs
 
 - [ ] `[`, `]` and `"` Pyramid-Scheme keywords are not working at all at the moment (they ought to be typed as `\[`, `\]` and `\"`) (It's ok. They're really nto that useful, but it would be nice if they did actually work too.)
@@ -334,7 +336,8 @@ Bullet points get moved here from the above section when they get finished. (It'
 - [ ] Bug in greedy optimisation for source code with one major tree
 - [ ] Intermediate representation is ugly since the multiple spaces are gone. This is not really a bug, but would be nice to change.
 - [ ] `def` replacer sometimes adds an extra pyramid
-
+- [ ] ? should `( (x) (y z) )` and `( x (y z) )` have the same intermediate ast?
+- [x] The order of operations in right-associative expansions is reversed in the last bracket!!
 
 ## Bugs no more
 
