@@ -272,6 +272,11 @@ This is not a real-purpose language. In this section the 'optimisation' refers t
 - [ ] ?? Move the command line code from psll.py to a bash script
 - [ ] Protect `set` and maybe some other keywords from accidentally writing something like `(set (x (set y 1)) (# line))`. `def` is already protected like that, so why not `set`.
 - [ ] `++` and `--` keywords (aka increment and decrement?)
+- [ ] Expanders shouldn't mutate nodes!
+  - [ ] @functional decorator? Is that a thing?
+- [ ] Make string expansion balanced binary
+  - [ ] ? should this be a compiler option...
+
 More on the 'project management' front:
 
 - [ ] ?? Easier to use installation. Maybe a makefile which makes a symlink in the correct place...
@@ -290,8 +295,6 @@ More on the 'project management' front:
     - [x] Test *asymmetric* children in `tree_repr`
 - [ ] `psll.sh` is a mess, therefore (amongst others) `run.sh` is a mess
 - [ ] Allow one to write the empty pyramid keyword explicitly as the underscore, such that `( (a) (b) )` can also be written as `(_ (a) (b) )`, just for completeness.
-- [ ] Expanders shouldn't mutate nodes!
-  - [ ] @functional decorator? Is that a thing?
 
 ## Done's
 
