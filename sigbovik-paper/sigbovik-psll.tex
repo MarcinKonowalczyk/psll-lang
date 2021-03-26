@@ -79,18 +79,16 @@ hyperfootnotes=false % Dont link footnotes (This does not work very well)
 \lstdefinelanguage{psll} {%
 otherkeywords={+,!,=,<=>,*,-,^,\#,?,_},
 morekeywords={out,chr,arg,set,do,loop,def}, % ,range,len,nil
-morekeywords={[2]append},
+morekeywords={[2]append, roll}, % cheat with syntax highlighting for the only two defs
 sensitive=false,
 morecomment=[l]{//},%
-morestring=[b]",%
-showspaces=true
+morestring=[b]"
 }
 
 \lstdefinelanguage{pyra} {%
 otherkeywords={+,!,=,<=>,*,\#,?},
 morekeywords={out,chr,arg,set,do,loop},
-sensitive=false,
-showspaces=true
+sensitive=false
 }
 
 \makeatletter
@@ -111,6 +109,9 @@ showspaces=true
   numbersep=3pt,
   tabsize=2,
   captionpos=b,
+%   frame=tb, % tb
+  numbers=left,
+  showspaces=true
 }
 
 \newcommand{\ilpsll}[1]{\lstinline[language=psll,columns=flexible]{#1}}
@@ -133,10 +134,10 @@ showspaces=true
 \date{\today}
 
 \begin{abstract}
-In this work we present a metalanguage which allows simpler writing of Pyramid Scheme programs. We first introduce the Pyramid Scheme itself, pointing out some more interesting features. We then proceed to define a base lisp-like notation for Pyramid Scheme (called psll - Pyramid Scheme Lisp-like), and expand on it with local macros (and semi-local) macro expansions which allow for higher-level constructs. Notably, we introduce strings, arrays and preprocessor definitions. The entire project is available on GitHub at \href{https://github.com/MarcinKonowalczyk/psll-lang}{MarcinKonowalczyk/psll-lang}.
+In this work we present a metalanguage which allows simpler writing of Pyramid Scheme programs. We first introduce the Pyramid Scheme itself, pointing out some more interesting features. We then proceed to define a base lisp-like notation for Pyramid Scheme (called \psll), and expand on it with local macros (and semi-local) macro expansions which allow for higher-level constructs. Notably, we introduce strings, arrays and preprocessor definitions which can be used akin to functions. The entire project is available on GitHub at \href{https://github.com/MarcinKonowalczyk/psll-lang}{MarcinKonowalczyk/psll-lang}.
 \end{abstract}
 
-\keywords{syntax tree; Pyramid Scheme; lisp; compilation}
+\keywords{syntax tree; pyramids; compilation; horizontal gene transfer; sorting; code golf}
 
 \maketitle
 
@@ -148,10 +149,10 @@ PS was designed by Conor O'Brien, in the early 2017 (date of the earliest commit
 
 Pyramid Scheme is supported by the \enquote{Try It Online!} repository of online interpreters,~\cite{tio} and, like many other esolangs, has been featured in many Code Golfing challenges.~\cite{golf_se}
 
-\subsection{Pyramid Scheme}
+\section{Pyramid Scheme}
 
 % aboveskip=0pt,belowskip=0pt
-\begin{lstlisting}[float,language=pyra,frame=tb,numbers=left,
+\begin{lstlisting}[float,language=pyra,
     label=lst:pyra_simple, caption={
         A simple Pyramid Scheme program. It takes one input from \tt{stdin} -- \ilpsll{(set x (\# stdin))}, increments it by one -- \ilpsll{(set x (+ x 1))} and prints the result computation to the command line.
 }]
@@ -174,18 +175,18 @@ PS parser reads the body of each pyramid verbatim, concatenated line by line.\fo
 
 Note, however, that this allows for an existence of direct connection between neighbouring branches of the LST -- in Listing~\ref{lst:pyra_simple}, for example, the first print statement (\tt{out} keyword), shares the node \tt{x} with its neighbouring branch. This is an interesting parallel to the phenomenon of the lateral gene transfer observed in genetics, and suggests a more-proper description of the PS to be that of a Ewok village syntax tree (EVST).\cite{keeling2008,smbc} Although this is undoubtedly one of the more interesting and powerful features of PS, it has not yet been implemented in the project described herein shortly, and therefore will not be considered further, but left for future work.
 
-The specification of the pyramid structure does not preclude the existence of a pyramid with no content. Such a height-0 pyramid is falsey and evaluates to 0.~\footnote{The term \enquote{height-0} can be ambiguous since the pyramid itself has height of 2 characters. In this work the pyramid's height, however, is the number of lines of the text in its body.}~\cite{psnegation} A pyramid with no content \emph{does} however both evaluate its children, and pass them as an its output. This make the height-0 pyramid an important construct for code packing, as can be seen in the first branch in Listing~\ref{lst:pyra_simple}
+The specification of the pyramid structure does not preclude the existence of a pyramid with no content. Such a 0-height pyramid is falsey and evaluates to 0.~\footnote{The term \enquote{0-height} can be ambiguous since the pyramid itself has height of 2 characters. In this work the pyramid's height, however, is the number of lines of the text in its body.}~\cite{psnegation} A pyramid with no content \emph{does} however both evaluate its children, and pass them as an its output. This make the 0-height pyramid an important construct for code packing, as can be seen in the first branch in Listing~\ref{lst:pyra_simple}
 
 There are two types operators in PS: ones which implicitly evaluate both of their children, as well as those which do this only under certain circumstances. The first group maps very closely to its underlying Ruby implementation. There are basic binary arithmetic and comparison operators: \tt{+}, \tt{*}, \tt{-}, \tt{/}, \tt{\^}, \tt{=}, \tt{!} and \tt{<=>}. Keyword \tt{out} prints all of its inputs and \tt{chr} converts number to a character. The keyword \tt{arg} indexes arrays (or input arguments), and keywords \tt{\#} and \tt{"} convert back and forth from and to a string. \tt{\#} character also allows one prompt user for input if given a (semi)keyword \tt{line}.~\footnote{Words \tt{line}, (as well as \tt{stdin}, \tt{readline}) are referenced to as \emph{semi}keywords since they have a keyword meaning only when they're an input of the \# command.}~\cite{pyra_git}
 
-The second group of operators conditionally evaluates only one of their children. \tt{set} sets the variable denoted by its left child to the evaluated right one. \tt{loop} and \tt{do} evaluate the right child subtree as long as the left one evaluates to true (with the difference being when is the check made -- before and after right subtree evaluation respectively). Finally \tt{?} evaluates the right subtree only if the left one evaluates to true, else it evaluates to zero.
+The second group of operators conditionally evaluates only one of their children. \tt{set} sets the variable denoted by its left child to the evaluated right one. \tt{loop} and \tt{do} evaluate the right child subtree as long as the left one evaluates to true (with the difference being when is the check made -- before and after right subtree evaluation respectively). Finally \tt{?} keyword evaluates the right subtree only if the left one evaluates to true, else it evaluates to zero.
 
 \section{psll}
 
-In order to assist the programmer in harnessing the power of Pyramid Scheme, we introduce a meta-language - Pyramid Scheme lisp-like notation (psll). Lets consider the LST approximation of the full EVST structure of Pyramid Scheme. Every node of the LST has at most two children. We will express each node as a bracket containing exactly three, space-separated words, brackets or empty-markers (\ilpsll{_}). Only the first entry is allowed to be a word. A simple statement in such notation may be \ilpsll{(set (x _ _) (+ (x _ _) (1 _ _))} -- the second branch from Listing~\ref{lst:pyra_simple}, increment variable \tt{x} by one. Although this is sufficient to re-serialize any PS program, one quickly notes its the cumbersomeness of having to specify the empty space explicitly. Therefore we add a simple macro-like expansion where, firstly, each lone word in the 2\textsuperscript{nd} or 3\textsuperscript{rd} position is considered to be in a bracket of its own, and secondly each bracket with length of less than 3 is expanded up to the length of 3. Hence the increment branch can be written as \ilpsll{(set x (+ x 1))}, since \ilpsll{x} \textrightarrow \ilpsll{(x)} \textrightarrow \ilpsll{(x _ _)}. This also means that keywords with less than two arguments do not need to specify explicit empty-markers for the second argument. Lastly \tt{//} denotes a comment. Hence, the program from Listing~\ref{lst:pyra_simple} can be written as:
-\begin{lstlisting}[language=psll,frame=tb,numbers=left,
+\textbf{Bracket structure} In order to assist the programmer in harnessing the power of Pyramid Scheme, we introduce a meta-language - Pyramid Scheme lisp-like notation (\psll). Lets consider the LST approximation of the full EVST structure of Pyramid Scheme. Every node of the LST has at most two children. We will express each node as a bracket containing exactly three, space-separated words, brackets or empty-markers (\ilpsll{_}). Only the first entry is allowed to be a word. A simple statement in such notation may be \ilpsll{(set (x _ _) (+ (x _ _) (1 _ _))} -- the second branch from Listing~\ref{lst:pyra_simple}, increment variable \tt{x} by one. Although this is sufficient to re-serialize any PS program, one quickly notes its the cumbersomeness of having to specify the empty space explicitly. Therefore we add a simple macro-like expansion where, firstly, each lone word in the 2\textsuperscript{nd} or 3\textsuperscript{rd} position is considered to be in a bracket of its own, and secondly each bracket with length of less than 3 is expanded up to the length of 3. Hence the increment branch can be written as \ilpsll{(set x (+ x 1))}, since \ilpsll{x} \textrightarrow \ilpsll{(x)} \textrightarrow \ilpsll{(x _ _)}. This also means that keywords with less than two arguments do not need to specify explicit empty-markers for the second argument. Lastly \tt{//} denotes a comment. Hence, the program from Listing~\ref{lst:pyra_simple} can be written as:
+\begin{lstlisting}[language=psll,
     label=lst:psll_simple, caption={
-    LST approximation of the program from Listing~\ref{lst:pyra_simple} in simple psll notation.
+    LST approximation of the program from Listing~\ref{lst:pyra_simple} in simple \psll notation.
 }]
 (set x (# line)) // Get x from stdin
 (out _ x) // Print x
@@ -195,8 +196,46 @@ In order to assist the programmer in harnessing the power of Pyramid Scheme, we 
 \end{lstlisting}
 Note that the LST approximation has been applied, such that \tt{x} from \tt{out} and\tt{set} are now different. To get the code in Listing~\ref{lst:pyra_simple} the PS source has been modified by-hand post compilation.
 
-This type of local macro expansion is at the core of psll. Such macros do not add any expressive power to the language,\cite{krishnamurthi2019} but allow one to use higher-level constructs and leverage complicated 
-This macro is applied locally expand to the corresponding pyramid with explicitly specified leaves. Hence teh increment i s written as \ilpsll{(set x (+ x 1))}. A simmilar macro allows us to implicitly pad any bracket with underscores from the right, up to the length of 3, such that 
+This type of local macro expansion is at the core of \psll. Such macros do not add any expressive power to the language,\cite{krishnamurthi2019} but allow one to use higher-level constructs and simplify writing programs. All of the functionality, which will be described shortly, has been implemented by repeatedly leveraging a single python function which performs a depth-first walk through the AST and applies functions at the appropriate nodes (Listing~\ref{lst:tree_traversal}).
+
+\begin{lstlisting}[language=python,
+    label={lst:tree_traversal},caption={
+    Core \psll function performing a depth-first walk through the abstract syntax tree and application of appropriate functions.
+}]
+def tree_traversal(ast, pre_fun=None, str_fun=None,
+    post_fun=None, final_fun=None):
+    ast2 = [] # Since, ast is immutable, build a new ast
+    for node in ast:
+        if node is None:
+            ast2.append(node)
+        elif is_string(node):
+            ast2.append(str_fun(node) if str_fun else node)
+        elif is_tuple(node):
+            node = pre_fun(node) if pre_fun else node
+            node = tree_traversal(node, pre_fun, str_fun, 
+                post_fun, final_fun)
+            node = post_fun(node) if post_fun else node
+            ast2.append(node)
+        else:
+            raise TypeError
+    ast2 = tuple(ast2)
+    if final_fun:
+        final_fun(ast2)
+    return ast2 # Return ast back as a tuple
+\end{lstlisting}
+
+\textbf{Implicit bracket expansion} Each bracket must have exactly three elements. For small expressions this is almost always the case, but becomes problematic for larger, flow-control and loop structures where each such expression can contain an arbitrarily large number of sub-expressions (see  for an example of such expression). Hence a bracket containing $>2$ other brackets gets expanded as follows:
+\begin{lstlisting}[language=psll,aboveskip=3pt,belowskip=-2pt,frame=none,numbers=none]
+( (out 1) (out 2) (out 3) (out 4) (out 5) )
+\end{lstlisting}
+is interpreted as:
+\begin{lstlisting}[language=psll,aboveskip=3pt,belowskip=-2pt,frame=none,numbers=none]
+( (((out 1) (out 2))  ((out 3) (out 4)))  (out 5) )
+\end{lstlisting}
+Each neighbouring pair or elements of the parent gets put together into a bracket, until the length of the parent is less than 2. This results in a (literal) balanced binary tree in the final PS code, and so for a parent bracket of $N$ sub-expressions will result in a tree of height $\bigO\left(\log_2\left(N\right)\right)$.
+
+
+This macro is applied locally expand to the corresponding pyramid with explicitly specified leaves. Hence the increment is written as \ilpsll{(set x (+ x 1))}. A similar macro allows us to implicitly pad any bracket with underscores from the right, up to the length of 3, such that 
 
 
 
@@ -208,20 +247,32 @@ can therefore express ethe
 
 usually with writing larger, more powerful
 Having described the Pyramid Scheme, we now focus on the main subject of this work the 
-\subsection{Bracket structure}
+
+
+
+
+\textbf{Implicit bracket expansion} Each bracket must have exactly three elements. For small expressions this is almost always the case, but becomes problematic for larger, flow-control and loop structures where each such expression can contain an arbitrarily large number of sub-expressions (see \plinfo for an example of such expression). Hence a bracket containing $>2$ other brackets gets expanded as follows:
+\begin{lstlisting}[language=psll,aboveskip=3pt,belowskip=-2pt,frame=none,numbers=none]
+( (out 1) (out 2) (out 3) (out 4) (out 5) )
+\end{lstlisting}
+is interpreted as:
+\begin{lstlisting}[language=psll,aboveskip=3pt,belowskip=-2pt,frame=none,numbers=none]
+( (((out 1) (out 2))  ((out 3) (out 4)))  (out 5) )
+\end{lstlisting}
+Each neighbouring pair or elements of the parent gets put together into a bracket, until the length of the parent is less than 2. This results in a (literal) balanced binary tree in the final PS code, and so for a parent bracket of $N$ sub-expressions will result in a tree of height $\bigO\left(\log_2\left(N\right)\right)$.
+
+\textbf{Rolling sum and product}
+
+
+
+
 
 \subsection{Syntactic sugar}\label{sec:sugar}
 The above specification is, in principle, enough to create fully fully functional PS programs. Certain tasks are, however, still rather cumbersome. This section outlines these cases, as well as syntactic sugar constructs introduced to \psll to alleviate them. All of these are implemented as local (or semi-local) expansion macros, as described in Section~\ref{sec:macros}. Despite authors best efforts, this introduces some sharp edges into the language (see Section~\ref{sec:sharp_edges}).
 
-\textbf{Implicit bracket expansion} Each bracket must have exactly three elements. For small expressions this is almost always the case, but becomes problematic for larger, flow-control and loop structures where each such expression can contain an arbitrarily large number of sub-expressions (see \plinfo for an example of such expression). Hence a bracket containing $>2$ other brackets gets expanded as follows:
-\begin{lstlisting}[language=psll,aboveskip=3pt,belowskip=-2pt]
-( (out 1) (out 2) (out 3) (out 4) (out 5) )
-\end{lstlisting}
-is interpreted as:
-\begin{lstlisting}[language=psll,aboveskip=3pt,belowskip=-2pt]
-( (((out 1) (out 2))  ((out 3) (out 4)))  (out 5) )
-\end{lstlisting}
-Each neighbouring pair or elements of the parent gets put together into a bracket, until the length of the parent is less than 2. This results in a (literal) balanced binary tree in the final PS code, and so for a parent bracket of $N$ sub-expressions will result in a tree of height $\bigO\left(\log_2\left(N\right)\right)$.
+
+
+
 
 \textbf{String literals} Single characters can be created in RDM with the \tt{chr} keyword (Ruby \tt{.to\textunderscore{}i.chr}). It is also possible to construct longer strings in RDM since Ruby's \enquote{\tt{+}} sign overloads string concatenation. The string \textit{\enquote{hello}} is therefore:
 \begin{lstlisting}[language=psll,aboveskip=3pt,belowskip=-2pt]
@@ -237,43 +288,46 @@ such that $\textit{\enquote{hello}} = \textit{\enquote{he}} + \textit{\enquote{l
 
 \textbf{Array literals}
 
-\textbf{Rolling sum and product}
-
 \textbf{\tt{def} keyword}
 
 Semi-local
+\subsection{Optimisation}
 
 \subsection{Sharp edges}\label{sec:sharp_edges}
 As mentioned at the beginning of Section~\ref{sec:sugar}, the introduction of syntactic sugar into \psll introduces some edge cases which one ought to watch out for.
 
-\textbf{Underscore keyword}
-
 \textbf{Escape characters}
 Because " is used for strings, and [ ] for arrays...
 
-\section{Compiler}
-\subsection{Abstract syntax tree}
-\subsection{Local macro expansion}\label{sec:macros}
-\subsection{Optimisation}
 
 \section{Example programs}
 \subsection{Pseudorandom number generation}
-\subsection{Bubble sort}
-\subsection{Chess engine}
 
-\begin{lstlisting}[language=psll,frame=tb,numbers=left,aboveskip=3mm,belowskip=3mm]
-(set a 0) // Flip-flop
-(set N 10) (set j 0) // N of iteration and loop counter
-(loop (! (= j N)) (
-    // Do some work...
-    (out j (chr 32)) // Print j and space
-    (out a (chr 10)) // Print a and newline
-    (set a (! a)) // Flip a
-(set j (+ j 1))
-)) (set test "hi")
+\begin{lstlisting}[language=psll,aboveskip=3mm,belowskip=3mm]
+(set seed 312312)
+(set div (^ 2 16)) // 16-bit divisor
+(set prime 7) // Prime divisor
+// Prime divisor is small because of modulo implementation
+
+// Generate uniformly distributed random number between 0-1
+// mod(prime*seed + current, 2^16)
+(def roll (
+    (set seed (+ (* seed prime) 1))
+    (loop (<=> (<=> seed div) -1) (set seed (- seed div)))
+    (set rand (/ seed div))
+))
+
+// Print 100 such nubers
+(set i 0)
+(do (<=> i 100) (
+    (roll) (out rand "\n")
+(set i (+ i 1))
+))
 \end{lstlisting}
 
-\begin{lstlisting}[language=psll,frame=tb,numbers=left,aboveskip=3mm,belowskip=3mm]
+\subsection{Bubble sort}
+
+\begin{lstlisting}[language=psll,aboveskip=3mm,belowskip=3mm]
 (set n (arg 999)) // Make nil value
 
 // Array to be sorted
@@ -304,7 +358,7 @@ Because " is used for strings, and [ ] for arrays...
         // Add prefix of a
         (set l 0)
         (loop (= (<=> l p) -1) (
-        (set q l) (append)
+            (set q l) (append)
         (set l (+ l 1))
         ))
         // Add two elements, swapped
@@ -313,7 +367,7 @@ Because " is used for strings, and [ ] for arrays...
         // Add suffix of a
         (set l (+ p 2))
         (loop (= (<=> l N) -1) (
-        (set q l) (append)
+            (set q l) (append)
         (set l (+ l 1))
         ))
         (set a b)
@@ -328,14 +382,15 @@ Because " is used for strings, and [ ] for arrays...
 \section{Conclusions and outlook}
 \textit{\enquote{Program in Pyramid Scheme! Teach your friends! Have them teach \emph{their} friends! Then have those friends teach \emph{their} friends! ...}}
 
-This is by no means a done project, so long as it is a platform for me to learn about all the . I 
-- Joined pyramids
+This is by no means a done project, so long as it is a platform for me to learn and have fun. I also believe tht the future direction of \psll poses some genuinely interesting computational problems, namely efficient code optimisation and performing more advanced code transformations. The language is currently not allowing one to leverage the full power of EVSTs of Pyramid Scheme, but instead uses the LST approximation. The goal is, indeed, to add this to the the language. This will, however, be a major milestone since the EV structure of the resulting syntax tree will require major restructuring of the internals of the compiler. At least initially, EV branching will be available only at the level of intermediate-representation optimisers. However, since one of the purposes of \psll is an esoteric flavour of code-golf, one might want to manually adjust the code structure, similarly to how the underscore keyword is used at the moment. Additional keywords, as well as their supporting architecture will therefore need to be introduced to be able to explicitly specify EV cross-branching structure.
 
+There are a few major parts of \psll which need to be finished before that. Notably there are a few core bugs which any additional functionality would make only harder to track. These are detailed in \tt{README} in the main \psll repository and range from relatively harmless (\tt{def} inserts an extra empty pyramid) to major (\tt{()}) unduly pops the definition stack). There are also some minor support keywords which are yet due to be added. These are, for example, \tt{len} -- expanding to the equivalent of line 10 in Listing~\ref{lst:bubble_sort} and \tt{nil} -- initially expanding to \ilpsll{(set nil (arg 999))}, or something more robust, in the preamble. This is not to mention typical and necessary software project irks like ensuring the project has appropriate test coverage (currently at 69\%) and fighting code bloat (currently at approx 530 core lines + bash support).
 
-Finally, I think every programmer shares a certain latent interest in the underlying structure and of the languages they use every day. I would encourage them to scratch that itch. There are plenty of resources to start, but I'm inclined to mirror the advice of Casey Muratori:~\cite{blow2020qna} \textit{\enquote{Look at all of the resources on these topics in in the following way: rather than reading what someone tells you about how to build a compiler (...) start programming one without knowing what you're doing (...) and see what you can learn. When you cannot make forward progress (...) [look for] solution to that particular problem you're having. (...) Now you have some context to evaluate what people what you (...) whereas if you read about stuff without ever actually having encountered a problem yet, then you're just gonna you have no idea [whether its valuable].}} If you really want a starting point though, I recommend David Beazley's ply and sly projects.
-~\cite{dbeaz2018,sly,ply,levine1992}
+Code golf involves writing a program in a freely-chosen programming language which performs a certain operation under some constraint. This usually comes in the form of the smallest number of characters in the source code and is a platform for one to either learn a new programming language, or explore the depths of an already known one. Code golfing provides one with a set of goals which is almost-orthogonal to what one finds in everyday programming, and therefore often sheds new light on old, seemingly well-known ideas. \psll caters to a new flavour of code-golfing. Large PS programs are not feasible to be written by hand, not to even mention the number of rewrites and code obfuscation which usually happens when golfing. Hence, all the golfing happens at the level of writing compiler and optimisation algorithms therein, rather than the code itself.\cite{psnegation_answer}
 
-\section*{Reproducibility}
+Finally, I think every programmer shares a certain latent interest in the underlying structure and of the languages they use every day. I would encourage them to scratch that itch. There are plenty of resources to start, but I am inclined to mirror the advice of Casey Muratori:~\cite{blow2020qna} \textit{\enquote{Look at all of the resources on these topics in in the following way: rather than reading what someone tells you about how to build a compiler (...) start programming one without knowing what you're doing (...) and see what you can learn. When you cannot make forward progress (...) [look for] solution to that particular problem you're having. (...) Now you have some context to evaluate what people what you (...) whereas if you read about stuff without ever actually having encountered a problem yet, then you're just gonna you have no idea [whether its valuable].}} If you really want a starting point though, I recommend David Beazley's ply and sly projects,~\cite{dbeaz2018,sly,ply} which are based on Yet Another Compiler Compiler (YACC).\cite{levine1992}
+
+\section*{Version notes}
 
 \setlength{\abovedisplayskip}{3pt}
 \setlength{\belowdisplayskip}{3pt}
@@ -349,7 +404,9 @@ and the \psll repo:\cite{psll_git}
     \href{https://github.com/MarcinKonowalczyk/psll-lang/commit/ea6c6d2e9c8278cc752894a9aff43f7d44bd93a9}{\tt{ea6c6d2e9c8278cc752894a9aff43f7d44bd93a9}}
 \]
 
-psll has been written in python >3.6. The only non-core library it depends on is \tt{more-itertools} version, at least, 8.5.0. This dependency was thought to be appropriate since this work led to a pull request to \tt{more-itertools}, added in version 8.5.0.\cite{more_itertools}
+The \psll repository also has all the latex and make files for this very paper. Short of fixing typos, the text will not be modified after the submission.
+
+\psll has been written in python >3.6. The only non-core library it depends on is \tt{more-itertools} version, at least, 8.5.0. This dependency was thought to be appropriate since this work led to a pull request to \tt{more-itertools}, added in version 8.5.0.\cite{more_itertools}
 
 Pyramid Scheme is written in pure Ruby. At the time of witting it works in Ruby version 3.0.0p0 (2020-12-25 revision 95aff21468)
 
@@ -359,6 +416,8 @@ Pyramid Scheme is written in pure Ruby. At the time of witting it works in Ruby 
 
 I would like to thank Blaine Rodgers and Samuel Hutton for discussions and helpful comments on the manuscript, as well as Jonathan Blow and David Beazley, for sparking a long-lasting interest in programming languages.
 
+Last but not least, I would also like to cordially thank \emph{you} dear reader. You have made it! Thank you for reading!
+
 \nocite{*}
 \bibliographystyle{unsrt}
 \bibliography{sigbovik-psll.bib}
@@ -366,7 +425,7 @@ I would like to thank Blaine Rodgers and Samuel Hutton for discussions and helpf
 % \clearpage
 \onecolumngrid
 \begin{lstlisting}[
-    language=pyra,frame=tb,numbers=left,
+    language=pyra,frame=t,
     aboveskip=3mm,belowskip=3mm,
     basicstyle={\footnotesize\ttfamily},
     numberstyle={\tiny\ttfamily\color{black!25!white}},

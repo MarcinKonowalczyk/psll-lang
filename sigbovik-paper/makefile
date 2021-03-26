@@ -43,13 +43,16 @@ pdf: $(NAME).pdf
 bib: $(NAME).bbl
 
 clean:
-	@ rm -f $(NAME).aux $(NAME).log $(NAME)Notes.bib $(NAME).pdf $(NAME).blg $(NAME).bbl
+	@ rm -f $(NAME).aux $(NAME).log $(NAME)Notes.bib $(NAME).blg $(NAME).bbl
     # Also remove files in the image directory which have a corresponding .svg counterpart
 	@ for file in $(IMAGES_DIR)/*; do\
 	    if [ "$${file##*.}" == "pdf" ]; then\
 	        [[ -f $${file%.*}.svg ]] && rm -f $$file;\
 	    fi;\
 	done
+
+clean_pdf: clean
+	@ rm -rf $(NAME).pdf
 
 # TODO: open recompiles because aux is newer
 open: $(NAME).pdf
