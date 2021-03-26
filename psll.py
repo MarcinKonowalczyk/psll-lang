@@ -319,7 +319,7 @@ def expand_array_literals(ast):
 
     def one_element_array(element):
         ''' Put `element` into a one-element array with the subtraction trick '''
-        return ('-',(element,'0'),('0','0')) if element is not '0' else ('-',(element,'1'),('1','1'))
+        return ('-',(element,'0'),('0','0')) if element != '0' else ('-',(element,'1'),('1','1'))
 
     def array_to_tree(string):
         ''' Parse (inner) array string to its ast tree representation '''
@@ -459,7 +459,7 @@ def expand_overfull_brackets(ast):
 def fill_in_empty_trees(ast):
     ''' Fill in the implicit empty strings in brackets with only lists '''
     def filler(node):
-        if node is (): # Empty node
+        if node == (): # Empty node
             return ('')
         elif all(map(is_tuple,node)): # All tuples
             return ('',*node)
@@ -477,17 +477,17 @@ def fill_in_underscores(ast):
 
     def filler(node):
         if len(node)==3:
-            if is_string(node[1]) and node[1] is not '_':
+            if is_string(node[1]) and node[1] != '_':
                 node = (node[0], (node[1], '_', '_'), node[2])
-            if is_string(node[2]) and node[2] is not '_':
+            if is_string(node[2]) and node[2] != '_':
                 node = (node[0], node[1], (node[2], '_', '_'))
             pass
         elif len(node)==2:
-            if is_string(node[1]) and node[1] is not '_':
+            if is_string(node[1]) and node[1] != '_':
                 node = (node[0], (node[1], '_', '_'), '_')
             else:
                 node = (*node,'_')
-        elif len(node)==1 and node[0] is not '_':
+        elif len(node)==1 and node[0] != '_':
             node = (*node,'_','_')
         return node
 
@@ -497,7 +497,7 @@ def fill_in_underscores(ast):
 def underscore_keyword(ast):
 
     def replacer(node):
-        return None if node is '_' else node
+        return None if node == '_' else node
     return tree_traversal(ast,str_fun=replacer)
 
 #=========================================================================================
