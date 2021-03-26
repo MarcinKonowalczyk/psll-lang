@@ -138,7 +138,7 @@ def lex(text):
 #                                                                                                                                                  
 #==================================================================================================================================================
 
-def tree_traversal(ast, str_fun=None, post_fun=None, pre_fun=None, final_fun=None):
+def tree_traversal(ast, pre_fun=None, str_fun=None, post_fun=None,  final_fun=None):
     ''' (Depth-first) walk through the abstract syntax tree and application of appropriate functions '''
     ast2 = [] # Since, ast is immutable, build a new ast
     for node in ast:
@@ -148,11 +148,13 @@ def tree_traversal(ast, str_fun=None, post_fun=None, pre_fun=None, final_fun=Non
             ast2.append(str_fun(node) if str_fun else node)
         elif is_tuple(node):
             node = pre_fun(node) if pre_fun else node
-            node = tree_traversal(node, pre_fun=pre_fun, str_fun=str_fun, post_fun=post_fun, final_fun=final_fun)
+            node = tree_traversal(node, pre_fun, str_fun, 
+                post_fun, final_fun) # ! Make sure order is correct
             node = post_fun(node) if post_fun else node
             ast2.append(node)
         else:
-            raise TypeError(f'The abstract syntax tree can contain only strings or other, smaller, trees, not {type(node)}')
+            raise TypeError('The abstract syntax tree can contain',
+            'only strings or other, smaller, trees, not {type(node)}')
     ast2 = tuple(ast2)
     if final_fun:
         final_fun(ast2)
