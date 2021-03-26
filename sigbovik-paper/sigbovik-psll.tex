@@ -183,7 +183,9 @@ The second group of operators conditionally evaluates only one of their children
 
 \section{psll}
 
-\textbf{Bracket structure} In order to assist the programmer in harnessing the power of Pyramid Scheme, we introduce a meta-language - Pyramid Scheme lisp-like notation (\psll). Lets consider the LST approximation of the full EVST structure of Pyramid Scheme. Every node of the LST has at most two children. We will express each node as a bracket containing exactly three, space-separated words, brackets or empty-markers (\ilpsll{_}). Only the first entry is allowed to be a word. A simple statement in such notation may be \ilpsll{(set (x _ _) (+ (x _ _) (1 _ _))} -- the second branch from Listing~\ref{lst:pyra_simple}, increment variable \tt{x} by one. Although this is sufficient to re-serialize any PS program, one quickly notes its the cumbersomeness of having to specify the empty space explicitly. Therefore we add a simple macro-like expansion where, firstly, each lone word in the 2\textsuperscript{nd} or 3\textsuperscript{rd} position is considered to be in a bracket of its own, and secondly each bracket with length of less than 3 is expanded up to the length of 3. Hence the increment branch can be written as \ilpsll{(set x (+ x 1))}, since \ilpsll{x} \textrightarrow \ilpsll{(x)} \textrightarrow \ilpsll{(x _ _)}. This also means that keywords with less than two arguments do not need to specify explicit empty-markers for the second argument. Lastly \tt{//} denotes a comment. Hence, the program from Listing~\ref{lst:pyra_simple} can be written as:
+In order to assist the programmer in harnessing the power of Pyramid Scheme, we introduce a meta-language - Pyramid Scheme lisp-like notation (\psll).
+
+\textbf{Bracket structure} Lets consider the LST approximation of the full EVST structure of Pyramid Scheme. Every node of the LST has at most two children. We will express each node as a bracket containing exactly three, space-separated words, brackets or null-markers (\ilpsll{_}). Only the first entry is allowed to be a word. A simple statement in such notation may be \ilpsll{(set (x _ _) (+ (x _ _) (1 _ _))} -- the second branch from Listing~\ref{lst:pyra_simple}, increment variable \tt{x} by one. Although this is sufficient to re-serialize any PS program, one quickly notes its the cumbersomeness of having to specify the empty space explicitly. Therefore we add a simple macro-like expansion where, firstly, each lone word in the 2\textsuperscript{nd} or 3\textsuperscript{rd} position is considered to be in a bracket of its own, and secondly each bracket with length of less than 3 is expanded up to the length of 3. Hence the increment branch can be written as \ilpsll{(set x (+ x 1))}, since \ilpsll{x} \textrightarrow \ilpsll{(x)} \textrightarrow \ilpsll{(x _ _)}. This also means that keywords with less than two arguments do not need to specify explicit null-markers for the second argument. Lastly \tt{//} denotes a comment. Hence, the program from Listing~\ref{lst:pyra_simple} can be written as:
 \begin{lstlisting}[language=psll,
     label=lst:psll_simple, caption={
     LST approximation of the program from Listing~\ref{lst:pyra_simple} in simple \psll notation.
@@ -219,60 +221,45 @@ def tree_traversal(ast, pre_fun=None, str_fun=None,
         else:
             raise TypeError
     ast2 = tuple(ast2)
-    if final_fun:
-        final_fun(ast2)
+    final_fun(ast2) if final_fun else None
     return ast2 # Return ast back as a tuple
 \end{lstlisting}
 
-\textbf{Implicit bracket expansion} Each bracket must have exactly three elements. For small expressions this is almost always the case, but becomes problematic for larger, flow-control and loop structures where each such expression can contain an arbitrarily large number of sub-expressions (see  for an example of such expression). Hence a bracket containing $>2$ other brackets gets expanded as follows:
+\textbf{Implicit bracket expansion} Each bracket must have exactly three elements. For small expressions this is almost always the case, but becomes problematic for larger, flow-control and loop structures where each such expression can contain an arbitrarily large number of sub-expressions which would then have to be manually nested in empty subtrees. An overfull bracket one containing more than - one containing $>2$ other brackets, such as:
 \begin{lstlisting}[language=psll,aboveskip=3pt,belowskip=-2pt,frame=none,numbers=none]
 ( (out 1) (out 2) (out 3) (out 4) (out 5) )
 \end{lstlisting}
-is interpreted as:
+gets expanded as:
 \begin{lstlisting}[language=psll,aboveskip=3pt,belowskip=-2pt,frame=none,numbers=none]
 ( (((out 1) (out 2))  ((out 3) (out 4)))  (out 5) )
+( (((_ out 1) (_ out 2))  ((_ out 3) (_ out 4)))  (_ out 5) )
 \end{lstlisting}
-Each neighbouring pair or elements of the parent gets put together into a bracket, until the length of the parent is less than 2. This results in a (literal) balanced binary tree in the final PS code, and so for a parent bracket of $N$ sub-expressions will result in a tree of height $\bigO\left(\log_2\left(N\right)\right)$.
+Each neighbouring pair or elements of the parent gets put together into a bracket, until the length of the parent is less than 2. Then, each bracket with exactly 2 other brackets has the empty-marker inserted as the first element. Note that the empty marker is a compiler-only keyword (python empty string) and it cannot be typed directly.\footnote{For completeness sake this will likely be implemented by reusing the underscore keyword, such that, for example, \tt{((out 1) (out 2))} could be then explicitly expanded in \psll as \tt{(\_ (\_ out 1) (\_ out 2))}} This results in a (literal) balanced binary tree in the final PS code, and so for a parent bracket of $N$ sub-expressions will result in a tree of containing $\bigO\left(\log_2\left(N\right)\right)$ pyramids.
 
-
-This macro is applied locally expand to the corresponding pyramid with explicitly specified leaves. Hence the increment is written as \ilpsll{(set x (+ x 1))}. A similar macro allows us to implicitly pad any bracket with underscores from the right, up to the length of 3, such that 
-
-
-
-
-
-
-The program from Listing~\ref{lst:pyra_simple} can, therefore be written as:
-can therefore express ethe 
-
-usually with writing larger, more powerful
-Having described the Pyramid Scheme, we now focus on the main subject of this work the 
-
-
-
-
-\textbf{Implicit bracket expansion} Each bracket must have exactly three elements. For small expressions this is almost always the case, but becomes problematic for larger, flow-control and loop structures where each such expression can contain an arbitrarily large number of sub-expressions (see \plinfo for an example of such expression). Hence a bracket containing $>2$ other brackets gets expanded as follows:
+\textbf{Expansion of binary operators} A similar type of expansion can be applied to a bracket where the first member is not a child bracket but a keyword. This is done only for all binary operator keywords (\tt{+}, \tt{*} as well as \tt{-}, \tt{/}, \tt{\^}, \tt{=} and \tt{<=>}) in a left-associative (LA) fashion, such that:
 \begin{lstlisting}[language=psll,aboveskip=3pt,belowskip=-2pt,frame=none,numbers=none]
-( (out 1) (out 2) (out 3) (out 4) (out 5) )
+    (+ 1 2 3 4) // This
+    (out (+ (+ (+ 1 2) 3) 4) newline) // Becomes this
 \end{lstlisting}
-is interpreted as:
+Addition and subtraction are commutative over the set of most possible inputs, and hence the exact order of operations does not usually matter (string multiplication overloads concatenation and that's not commutative). For a non-commutative operation, e.g. subtraction, the expansion order does matter. Hence, if the keyword is placed at the end of the bracket, a right-associative (RA) expansion is performed:
 \begin{lstlisting}[language=psll,aboveskip=3pt,belowskip=-2pt,frame=none,numbers=none]
-( (((out 1) (out 2))  ((out 3) (out 4)))  (out 5) )
+    (- 1 2 3 4) // This
+    (- (- (- 1 2) 3) 4) // Does indeed expand into this
+    (1 2 3 4 -) // But this
+    (- 1 (- 2 (- 4 3))) // Expands to this instead
 \end{lstlisting}
-Each neighbouring pair or elements of the parent gets put together into a bracket, until the length of the parent is less than 2. This results in a (literal) balanced binary tree in the final PS code, and so for a parent bracket of $N$ sub-expressions will result in a tree of height $\bigO\left(\log_2\left(N\right)\right)$.
+Note that the order of the last two elements is purposefully reversed, such that the RA expansion is symmetrical with respect to the LA one. For the sake of compatibility with non-expanded brackets, the following two are also allowed for all binary operators.
+\begin{lstlisting}[language=psll,aboveskip=3pt,belowskip=-2pt,frame=none,numbers=none]
+(- 1 2) // 1 - 2 = -1
+(1 2 -) // 2 - 1 = +1
+\end{lstlisting}
 
-\textbf{Rolling sum and product}
-
-
-
-
-
-\subsection{Syntactic sugar}\label{sec:sugar}
-The above specification is, in principle, enough to create fully fully functional PS programs. Certain tasks are, however, still rather cumbersome. This section outlines these cases, as well as syntactic sugar constructs introduced to \psll to alleviate them. All of these are implemented as local (or semi-local) expansion macros, as described in Section~\ref{sec:macros}. Despite authors best efforts, this introduces some sharp edges into the language (see Section~\ref{sec:sharp_edges}).
-
-
-
-
+Finally, the \tt{out} keyword normally does not allow for output of more than 2 variables. In \psll the \tt{out} keywords can have any number of inputs, and it gets implicitly expanded to a chain of output statements: 
+\begin{lstlisting}[language=psll,aboveskip=3pt,belowskip=-2pt,frame=none,numbers=none]
+    (out a b c d e) // This
+    (out a b) (out c d) (out e) // Becomes this
+\end{lstlisting}
+Note that this is different to teh left-associative expansion of the binary keywords above. There is no right-associative expansion of the \tt{out} keyword.
 
 \textbf{String literals} Single characters can be created in RDM with the \tt{chr} keyword (Ruby \tt{.to\textunderscore{}i.chr}). It is also possible to construct longer strings in RDM since Ruby's \enquote{\tt{+}} sign overloads string concatenation. The string \textit{\enquote{hello}} is therefore:
 \begin{lstlisting}[language=psll,aboveskip=3pt,belowskip=-2pt]
@@ -294,7 +281,12 @@ Semi-local
 \subsection{Optimisation}
 
 \subsection{Sharp edges}\label{sec:sharp_edges}
-As mentioned at the beginning of Section~\ref{sec:sugar}, the introduction of syntactic sugar into \psll introduces some edge cases which one ought to watch out for.
+
+
+Despite authors best efforts, this introduces some sharp edges into the language (see Section~\ref{sec:sharp_edges}).
+
+
+As mentioned at the beginning of Section, the introduction of syntactic sugar into \psll introduces some edge cases which one ought to watch out for.
 
 \textbf{Escape characters}
 Because " is used for strings, and [ ] for arrays...
@@ -317,7 +309,7 @@ Because " is used for strings, and [ ] for arrays...
     (set rand (/ seed div))
 ))
 
-// Print 100 such nubers
+// Print 100 such numbers
 (set i 0)
 (do (<=> i 100) (
     (roll) (out rand "\n")
@@ -388,7 +380,7 @@ There are a few major parts of \psll which need to be finished before that. Nota
 
 Code golf involves writing a program in a freely-chosen programming language which performs a certain operation under some constraint. This usually comes in the form of the smallest number of characters in the source code and is a platform for one to either learn a new programming language, or explore the depths of an already known one. Code golfing provides one with a set of goals which is almost-orthogonal to what one finds in everyday programming, and therefore often sheds new light on old, seemingly well-known ideas. \psll caters to a new flavour of code-golfing. Large PS programs are not feasible to be written by hand, not to even mention the number of rewrites and code obfuscation which usually happens when golfing. Hence, all the golfing happens at the level of writing compiler and optimisation algorithms therein, rather than the code itself.\cite{psnegation_answer}
 
-Finally, I think every programmer shares a certain latent interest in the underlying structure and of the languages they use every day. I would encourage them to scratch that itch. There are plenty of resources to start, but I am inclined to mirror the advice of Casey Muratori:~\cite{blow2020qna} \textit{\enquote{Look at all of the resources on these topics in in the following way: rather than reading what someone tells you about how to build a compiler (...) start programming one without knowing what you're doing (...) and see what you can learn. When you cannot make forward progress (...) [look for] solution to that particular problem you're having. (...) Now you have some context to evaluate what people what you (...) whereas if you read about stuff without ever actually having encountered a problem yet, then you're just gonna you have no idea [whether its valuable].}} If you really want a starting point though, I recommend David Beazley's ply and sly projects,~\cite{dbeaz2018,sly,ply} which are based on Yet Another Compiler Compiler (YACC).\cite{levine1992}
+Finally, I think every programmer shares a certain latent interest in the underlying structure and of the languages they use every day. I would encourage them to scratch that itch. There are plenty of resources to start, but I am inclined to mirror the advice of Casey Muratori:~\cite{blow2020qna} \textit{\enquote{Look at all of the resources on these topics in in the following way: rather than reading what someone tells you about how to build a compiler (...) start programming one without knowing what you're doing (...) and see what you can learn. When you cannot make forward progress (...) [look for] solution to that particular problem you're having. (...) Now you have some context to evaluate what people what you (...) whereas if you read about stuff without ever actually having encountered a problem yet, then you're just gonna you have no idea [whether its valuable].}} If you really want a starting point though, I recommend David Beazley's ply and sly projects,~\cite{dbeaz2018,sly,ply} which are based on Yet Another Compiler-Compiler (YACC).\cite{levine1992}
 
 \section*{Version notes}
 
