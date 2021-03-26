@@ -250,6 +250,8 @@ This is not a real-purpose language. In this section the 'optimisation' refers t
 - [ ] ?? Arrays / Linked lists
   - [x] Improve array implementation
   - [ ] `range` keyword
+    - [ ] testing
+    - [ ] re-checking
   - [ ] `len` keyword
 - [ ] `nil` keyword
   - [ ] Make it more robustly than `(arg 999)`
@@ -286,7 +288,7 @@ More on the 'project management' front:
     - [x] tree_repr coverage
     - [ ] psll coverage
     - [x] Test *asymmetric* children in `tree_repr`
-
+- [ ] `psll.sh` is a mess, therefore (amongst others) `run.sh` is a mess
 
 ## Done's
 
@@ -328,7 +330,7 @@ Bullet points get moved here from the above section when they get finished. (It'
 - [ ] `[`, `]` and `"` Pyramid-Scheme keywords are not working at all at the moment (they ought to be typed as `\[`, `\]` and `\"`) (It's ok. They're really nto that useful, but it would be nice if they did actually work too.)
 - [ ] `arrays` example is putting in rouge commas into int literals
 - [ ] `()` pop the scope stack
-- [ ] `(_)` breaks the compiler (Why would someone decide to write this though...?)
+- [ ] <s>`(_)` breaks the compiler (Why would someone decide to write this though...?)</s> Ok, so this is not happening anymore, but I don't know why so I'm leaving it here to investigate.
 - [ ] Bug in greedy optimisation for source code with one major tree
 - [ ] Intermediate representation is ugly since the multiple spaces are gone. This is not really a bug, but would be nice to change.
 - [ ] `def` replacer sometimes adds an extra pyramid
