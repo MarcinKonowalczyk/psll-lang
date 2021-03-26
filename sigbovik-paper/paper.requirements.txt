@@ -1,0 +1,23 @@
+# All the packages which I had to install, in order tex complained about them
+# sudo tlmgr update --self
+# sudo tlmgr install <package_name>
+
+mathdesign
+inconsolata
+multirow
+csquotes
+lipsum
+nopageno
+enumitem
+
+# For texnansi.enc font
+# https://tex.stackexchange.com/a/196214/85504
+ly1
+
+# For putb8a.pfb font
+# https://tex.stackexchange.com/a/574785/85504
+utopia
+
+# To add utopia font needed by mathdesign
+erewhon
+xstring

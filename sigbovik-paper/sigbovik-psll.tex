@@ -1,0 +1,538 @@
+\documentclass[aip,jcp,reprint,footinbib]{revtex4-1}
+
+\usepackage[utf8]{inputenc} % Unicode input encoding
+\usepackage[T1]{fontenc} % Font encoding
+
+\usepackage[utopia]{mathdesign}
+\usepackage{erewhon}
+
+\usepackage{inconsolata}
+\usepackage[english]{babel} % English linebrakes, hyphenation etc.
+\usepackage[%
+	tracking=true,kerning=true,spacing=true,%
+	stretch=10,shrink=10,%
+	factor=1100,%
+	]{microtype}
+\microtypecontext{spacing=nonfrench}
+	
+\usepackage{graphicx}% Include figure files
+\graphicspath{ {./img/} }
+
+\usepackage{multirow}
+
+\usepackage{csquotes}
+\usepackage{parskip} % Change paragraph formatting parindent = 0, parskip > 0
+\usepackage{bm}% bold math
+\usepackage{mathtools}
+\usepackage{xspace}
+\usepackage{xcolor}
+
+\DeclareMathAlphabet{\mathoms}{OMS}{cmsy}{m}{n}
+\DeclareMathOperator{\bigO}{\ensuremath{\mathoms{O}}}
+
+\usepackage{lipsum}
+\usepackage{nopageno}
+\usepackage{enumitem}
+\setlist{nosep}
+
+\raggedbottom
+%\flushbottom
+
+% Placeholders
+\newcommand\plcite{{\color{red}\textbf{[???]}}\xspace}
+\newcommand\plinfo{{\color[rgb]{0.929,0.694,0.125}\textbf{[info]}}\xspace}
+\let\tt\texttt
+\newcommand\psll{\texttt{psll}\xspace}
+
+\usepackage{color}
+
+\definecolor{lines_blue}{rgb}{0, 0.4470, 0.7410}
+\definecolor{lines_red}{rgb}{0.8500, 0.3250, 0.0980}
+\definecolor{lines_yellow}{rgb}{0.9290, 0.6940, 0.1250}
+\definecolor{lines_purple}{rgb}{0.4940, 0.1840, 0.5560}
+\definecolor{lines_green}{rgb}{0.4660, 0.6740, 0.1880}
+\definecolor{lines_cyan}{rgb}{0.3010, 0.7450, 0.9330}
+\definecolor{lines_burgundy}{rgb}{0.6350, 0.0780, 0.1840}
+
+% Hyperref
+\PassOptionsToPackage{anythingbreaks}{url}
+% Hyper reference setup
+\usepackage[%
+bookmarks=false, hypertexnames=false,%
+colorlinks, allcolors={black}, citecolor={black!80!white}, urlcolor={blue!50!black}, %
+unicode, % Encode pdf as unicode
+breaklinks=true, % Allow links to break lines
+hyperfootnotes=false % Dont link footnotes (This does not work very well)
+]{hyperref}%
+
+\usepackage{listings}
+
+% Bold "Listing"
+\renewcommand{\lstlistingname}{\bfseries Listing}
+\makeatletter
+\def\fnum@lstlisting{%
+  \lstlistingname
+  \ifx\lst@@caption\@empty\else~\thelstlisting\normalfont\fi}%
+\makeatother
+
+% " , / , [ and ] keywords don't play nicely with other syntax
+\lstdefinelanguage{psll} {%
+otherkeywords={+,!,=,<=>,*,-,^,\#,?,_},
+morekeywords={out,chr,arg,set,do,loop,def}, % ,range,len,nil
+morekeywords={[2]append},
+sensitive=false,
+morecomment=[l]{//},%
+morestring=[b]",%
+showspaces=true
+}
+
+\lstdefinelanguage{pyra} {%
+otherkeywords={+,!,=,<=>,*,\#,?},
+morekeywords={out,chr,arg,set,do,loop},
+sensitive=false,
+showspaces=true
+}
+
+\makeatletter
+\def\lst@visiblespace{{\color{black!10!white}.}}
+\makeatother
+
+\lstset{
+  aboveskip=3mm,belowskip=3mm,%
+  columns=flexible,%
+  basicstyle={\small\ttfamily},%
+  numberstyle={\scriptsize\ttfamily\color{black!25!white}},%
+  keywordstyle=\color{lines_blue},%
+  keywordstyle={[2]\color{orange}},%
+  keywordstyle={[3]\color{red}},%
+  commentstyle=\color{lines_green},%
+  stringstyle=\color{lines_purple},%
+  breaklines=false,
+  numbersep=3pt,
+  tabsize=2,
+  captionpos=b,
+}
+
+\newcommand{\ilpsll}[1]{\lstinline[language=psll,columns=flexible]{#1}}
+\newcommand{\ilruby}[1]{\lstinline[language=ruby,columns=flexible]{#1}}
+
+% Break links anywhere
+\renewcommand{\UrlBreaks}{\do\/\do\a\do\b\do\c\do\d\do\e\do\f\do\g\do\h\do\i\do\j\do\k\do\l\do\m\do\n\do\o\do\p\do\q\do\r\do\s\do\t\do\u\do\v\do\w\do\x\do\y\do\z\do\A\do\B\do\C\do\D\do\E\do\F\do\G\do\H\do\I\do\J\do\K\do\L\do\M\do\N\do\O\do\P\do\Q\do\R\do\S\do\T\do\U\do\V\do\W\do\X\do\Y\do\Z\do\0\do\1\do\2\do\3\do\4\do\5\do\6\do\7\do\8\do\9\do\-\do\:\do\.}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\begin{document}
+\preprint{AIP/123-QED}
+
+% \title{Design and implementation of \psll\ -- Lisp-like programming language which compiles to Pyramid Scheme}
+\title{Local-macro-driven metalanguage as a platform for writing large Pyramid Scheme programs}
+
+\def\crl{Department of Chemistry, University of Oxford, Chemistry Research Laboratory, Oxford OX1 3TA, U.K.}
+\def\samueli{UCLA Samueli School of Engineering, University of California, Los Angeles, 7400 Boelter Hall, Los Angeles, CA 90095, United States}
+\author{Marcin~Konowalczyk}\email{marcin.konow@lczyk.xyz}\affiliation{\crl}\affiliation{\samueli}
+
+\date{\today}
+
+\begin{abstract}
+In this work we present a metalanguage which allows simpler writing of Pyramid Scheme programs. We first introduce the Pyramid Scheme itself, pointing out some more interesting features. We then proceed to define a base lisp-like notation for Pyramid Scheme (called psll - Pyramid Scheme Lisp-like), and expand on it with local macros (and semi-local) macro expansions which allow for higher-level constructs. Notably, we introduce strings, arrays and preprocessor definitions. The entire project is available on GitHub at \href{https://github.com/MarcinKonowalczyk/psll-lang}{MarcinKonowalczyk/psll-lang}.
+\end{abstract}
+
+\keywords{syntax tree; Pyramid Scheme; lisp; compilation}
+
+\maketitle
+
+\section{Introduction}
+
+In ancient Egypt, pyramids were constructed as the resting places of deceased pharaos, containing not only their mummified remains but also an assortment of keywords and type literals the pharaoh will need in their journey though afterlife. Pyramid Scheme (PS) is a variant of the Scheme dialect of Lisp, which honours these ancient traditions and accompanies \emph{us} thorough our journey of computation.
+
+PS was designed by Conor O'Brien, in the early 2017 (date of the earliest commit to the GitHub repository).~\cite{pyra_git} It is a turing-complete esoteric programming language (esolang)~\,\cite{pyra_esolang} which uses tree-like, as opposed to a serial code structure. Compilers make use of an intermediate representation of the language in the form of an abstract syntax tree (AST).~\cite{cooper2011} In contrast to most contemporary languages / frameworks, which build on top of the existing infrastructure to create \enquote{the stack} of software,~\cite{cantrill2017,muratori2018} Pyramid Scheme aims to shed any unnecessary abstractions, including that of the AST. The computation in Pyramid scheme is therefore represented as a literal syntax tree (LST) of ascii-art pyramidal constructs.
+
+Pyramid Scheme is supported by the \enquote{Try It Online!} repository of online interpreters,~\cite{tio} and, like many other esolangs, has been featured in many Code Golfing challenges.~\cite{golf_se}
+
+\subsection{Pyramid Scheme}
+
+% aboveskip=0pt,belowskip=0pt
+\begin{lstlisting}[float,language=pyra,frame=tb,numbers=left,
+    label=lst:pyra_simple, caption={
+        A simple Pyramid Scheme program. It takes one input from \tt{stdin} -- \ilpsll{(set x (\# stdin))}, increments it by one -- \ilpsll{(set x (+ x 1))} and prints the result computation to the command line.
+}]
+      ^ ^     ^             ^      ^      ^    ^
+     ^-/ \   / \           / \    / \    / \   -^
+    ^-/out\ /set\         /out\  /out\  /out\  / \
+   / \-----^-----^       ^----- ^----- ^----- /out\
+  /set\   /x\   /+\     / \    / \    / \    ^-----
+ ^-----^  ---  ^---^   /chr\  /chr\  /chr\  /x\
+/x\   /#\     /x\ /1\ ^----- ^----- ^-----  ---
+---  ^---     --- ---/ \    / \    / \
+    /l\             /43 \  /49 \  /61 \
+   /ine\            -----  -----  -----
+   -----
+\end{lstlisting}
+
+The original and, so far, the only implementation of PS is written in Ruby.~\cite{pyra_git} The LST of the program is first parsed and then mapped to a recursive evaluation chain. An example of one such program can be seen in Listing~\ref{lst:pyra_simple}.
+
+PS parser reads the body of each pyramid verbatim, concatenated line by line.\footnote{Hence, for example, the bottom pyramid in the first stack in Listing~\ref{lst:pyra_simple} contains the (semi)keyword \tt{line}, as opposed to two words: \tt{l} and \tt{ine}.} The parser begins at the tip (\tt{\^}), and walks down the left (\tt{/}) and the right (\tt{\textbackslash}) side, collecting the characters in-between. When the two sides run out, it first checks for the presence of the pyramid base (\tt{-}),\footnote{Note that the base of the pyramid is a dash (\tt{0x2d}), not an underscore.} and then for the tips of the child pyramids, if present. The pyramids may connect \emph{only} on these corners, such that, for example, the first pyramid with \tt{chr} (which constructs a character \tt{+} to be printed) in Listing~\ref{lst:pyra_simple} rightfully does not consider the pyramid \tt{1} of the \tt{set} branch as its child.
+
+Note, however, that this allows for an existence of direct connection between neighbouring branches of the LST -- in Listing~\ref{lst:pyra_simple}, for example, the first print statement (\tt{out} keyword), shares the node \tt{x} with its neighbouring branch. This is an interesting parallel to the phenomenon of the lateral gene transfer observed in genetics, and suggests a more-proper description of the PS to be that of a Ewok village syntax tree (EVST).\cite{keeling2008,smbc} Although this is undoubtedly one of the more interesting and powerful features of PS, it has not yet been implemented in the project described herein shortly, and therefore will not be considered further, but left for future work.
+
+The specification of the pyramid structure does not preclude the existence of a pyramid with no content. Such a height-0 pyramid is falsey and evaluates to 0.~\footnote{The term \enquote{height-0} can be ambiguous since the pyramid itself has height of 2 characters. In this work the pyramid's height, however, is the number of lines of the text in its body.}~\cite{psnegation} A pyramid with no content \emph{does} however both evaluate its children, and pass them as an its output. This make the height-0 pyramid an important construct for code packing, as can be seen in the first branch in Listing~\ref{lst:pyra_simple}
+
+There are two types operators in PS: ones which implicitly evaluate both of their children, as well as those which do this only under certain circumstances. The first group maps very closely to its underlying Ruby implementation. There are basic binary arithmetic and comparison operators: \tt{+}, \tt{*}, \tt{-}, \tt{/}, \tt{\^}, \tt{=}, \tt{!} and \tt{<=>}. Keyword \tt{out} prints all of its inputs and \tt{chr} converts number to a character. The keyword \tt{arg} indexes arrays (or input arguments), and keywords \tt{\#} and \tt{"} convert back and forth from and to a string. \tt{\#} character also allows one prompt user for input if given a (semi)keyword \tt{line}.~\footnote{Words \tt{line}, (as well as \tt{stdin}, \tt{readline}) are referenced to as \emph{semi}keywords since they have a keyword meaning only when they're an input of the \# command.}~\cite{pyra_git}
+
+The second group of operators conditionally evaluates only one of their children. \tt{set} sets the variable denoted by its left child to the evaluated right one. \tt{loop} and \tt{do} evaluate the right child subtree as long as the left one evaluates to true (with the difference being when is the check made -- before and after right subtree evaluation respectively). Finally \tt{?} evaluates the right subtree only if the left one evaluates to true, else it evaluates to zero.
+
+\section{psll}
+
+In order to assist the programmer in harnessing the power of Pyramid Scheme, we introduce a meta-language - Pyramid Scheme lisp-like notation (psll). Lets consider the LST approximation of the full EVST structure of Pyramid Scheme. Every node of the LST has at most two children. We will express each node as a bracket containing exactly three, space-separated words, brackets or empty-markers (\ilpsll{_}). Only the first entry is allowed to be a word. A simple statement in such notation may be \ilpsll{(set (x _ _) (+ (x _ _) (1 _ _))} -- the second branch from Listing~\ref{lst:pyra_simple}, increment variable \tt{x} by one. Although this is sufficient to re-serialize any PS program, one quickly notes its the cumbersomeness of having to specify the empty space explicitly. Therefore we add a simple macro-like expansion where, firstly, each lone word in the 2\textsuperscript{nd} or 3\textsuperscript{rd} position is considered to be in a bracket of its own, and secondly each bracket with length of less than 3 is expanded up to the length of 3. Hence the increment branch can be written as \ilpsll{(set x (+ x 1))}, since \ilpsll{x} \textrightarrow \ilpsll{(x)} \textrightarrow \ilpsll{(x _ _)}. This also means that keywords with less than two arguments do not need to specify explicit empty-markers for the second argument. Lastly \tt{//} denotes a comment. Hence, the program from Listing~\ref{lst:pyra_simple} can be written as:
+\begin{lstlisting}[language=psll,frame=tb,numbers=left,
+    label=lst:psll_simple, caption={
+    LST approximation of the program from Listing~\ref{lst:pyra_simple} in simple psll notation.
+}]
+(set x (# line)) // Get x from stdin
+(out _ x) // Print x
+(set x (+ x 1)) // Increment x
+// Print "+1=" and then the value of x again
+(out (chr 43)) (out (chr 49)) (out (chr 61)) (out x)
+\end{lstlisting}
+Note that the LST approximation has been applied, such that \tt{x} from \tt{out} and\tt{set} are now different. To get the code in Listing~\ref{lst:pyra_simple} the PS source has been modified by-hand post compilation.
+
+This type of local macro expansion is at the core of psll. Such macros do not add any expressive power to the language,\cite{krishnamurthi2019} but allow one to use higher-level constructs and leverage complicated 
+This macro is applied locally expand to the corresponding pyramid with explicitly specified leaves. Hence teh increment i s written as \ilpsll{(set x (+ x 1))}. A simmilar macro allows us to implicitly pad any bracket with underscores from the right, up to the length of 3, such that 
+
+
+
+
+
+
+The program from Listing~\ref{lst:pyra_simple} can, therefore be written as:
+can therefore express ethe 
+
+usually with writing larger, more powerful
+Having described the Pyramid Scheme, we now focus on the main subject of this work the 
+\subsection{Bracket structure}
+
+\subsection{Syntactic sugar}\label{sec:sugar}
+The above specification is, in principle, enough to create fully fully functional PS programs. Certain tasks are, however, still rather cumbersome. This section outlines these cases, as well as syntactic sugar constructs introduced to \psll to alleviate them. All of these are implemented as local (or semi-local) expansion macros, as described in Section~\ref{sec:macros}. Despite authors best efforts, this introduces some sharp edges into the language (see Section~\ref{sec:sharp_edges}).
+
+\textbf{Implicit bracket expansion} Each bracket must have exactly three elements. For small expressions this is almost always the case, but becomes problematic for larger, flow-control and loop structures where each such expression can contain an arbitrarily large number of sub-expressions (see \plinfo for an example of such expression). Hence a bracket containing $>2$ other brackets gets expanded as follows:
+\begin{lstlisting}[language=psll,aboveskip=3pt,belowskip=-2pt]
+( (out 1) (out 2) (out 3) (out 4) (out 5) )
+\end{lstlisting}
+is interpreted as:
+\begin{lstlisting}[language=psll,aboveskip=3pt,belowskip=-2pt]
+( (((out 1) (out 2))  ((out 3) (out 4)))  (out 5) )
+\end{lstlisting}
+Each neighbouring pair or elements of the parent gets put together into a bracket, until the length of the parent is less than 2. This results in a (literal) balanced binary tree in the final PS code, and so for a parent bracket of $N$ sub-expressions will result in a tree of height $\bigO\left(\log_2\left(N\right)\right)$.
+
+\textbf{String literals} Single characters can be created in RDM with the \tt{chr} keyword (Ruby \tt{.to\textunderscore{}i.chr}). It is also possible to construct longer strings in RDM since Ruby's \enquote{\tt{+}} sign overloads string concatenation. The string \textit{\enquote{hello}} is therefore:
+\begin{lstlisting}[language=psll,aboveskip=3pt,belowskip=-2pt]
+(+ (+ (+ (+ (chr 72) (chr 101)) (chr 108))
+	(chr 108)) (chr 111))
+\end{lstlisting}
+\psll introduces string literals, such that \ilpsll{(set s "hello")} expands into the above code. Note that this is a very left-child heavy tree. To balance it, the above string could also be made by recursively concatenating its binary split:
+\begin{lstlisting}[language=psll,aboveskip=3pt,belowskip=-2pt]
+(+ (+ (chr 72) (chr 101))
+	(+ (chr 108) (+ (chr 108)) (chr 111)))
+\end{lstlisting}
+such that $\textit{\enquote{hello}} = \textit{\enquote{he}} + \textit{\enquote{llo}} = \left(\textit{\enquote{h}} + \textit{\enquote{e}}\,\right) + \left(\textit{\enquote{l}} + \textit{\enquote{lo}}\,\right) = \dots$.
+
+\textbf{Array literals}
+
+\textbf{Rolling sum and product}
+
+\textbf{\tt{def} keyword}
+
+Semi-local
+
+\subsection{Sharp edges}\label{sec:sharp_edges}
+As mentioned at the beginning of Section~\ref{sec:sugar}, the introduction of syntactic sugar into \psll introduces some edge cases which one ought to watch out for.
+
+\textbf{Underscore keyword}
+
+\textbf{Escape characters}
+Because " is used for strings, and [ ] for arrays...
+
+\section{Compiler}
+\subsection{Abstract syntax tree}
+\subsection{Local macro expansion}\label{sec:macros}
+\subsection{Optimisation}
+
+\section{Example programs}
+\subsection{Pseudorandom number generation}
+\subsection{Bubble sort}
+\subsection{Chess engine}
+
+\begin{lstlisting}[language=psll,frame=tb,numbers=left,aboveskip=3mm,belowskip=3mm]
+(set a 0) // Flip-flop
+(set N 10) (set j 0) // N of iteration and loop counter
+(loop (! (= j N)) (
+    // Do some work...
+    (out j (chr 32)) // Print j and space
+    (out a (chr 10)) // Print a and newline
+    (set a (! a)) // Flip a
+(set j (+ j 1))
+)) (set test "hi")
+\end{lstlisting}
+
+\begin{lstlisting}[language=psll,frame=tb,numbers=left,aboveskip=3mm,belowskip=3mm]
+(set n (arg 999)) // Make nil value
+
+// Array to be sorted
+(set a [3 1 4 1 5 9 2 6 5 3 5])
+
+// Get array length
+// This will be: (len a N)
+(set N 0) // Pointer into the array
+// Increment pointer until goes off the end
+(loop (! (= (arg a N) n)) (set N (+ N 1)))
+
+// Append element of a in position q to b
+(def append (set b (+ b (- ((arg a q) n) (n n)))))
+// Usage: (set q ...) (append)
+
+// Bubble sort the array
+(do again (
+    (set again 0)
+    (set p 0) // Position pointer
+    (loop (! (! (<=> p (- N 1)))) ( // For all pairs
+    (set this (arg a p))
+    (set next (arg a (+ p 1)))
+    // This and next need swapping
+    (set swap (! (<=> (<=> this next) -1)))
+    (? swap ( // If swap
+        (set again 1) // Will need to go again
+        (set b []) // Start b as an empty array
+        // Add prefix of a
+        (set l 0)
+        (loop (= (<=> l p) -1) (
+        (set q l) (append)
+        (set l (+ l 1))
+        ))
+        // Add two elements, swapped
+        (set q (+ p 1)) (append)
+        (set q (+ p 0)) (append)
+        // Add suffix of a
+        (set l (+ p 2))
+        (loop (= (<=> l N) -1) (
+        (set q l) (append)
+        (set l (+ l 1))
+        ))
+        (set a b)
+    ))
+    (set p (+ p 1)) // Increment position pointer
+    ))
+    (out (* a ",") "\n") // Print a
+))
+(out "done")
+\end{lstlisting}
+
+\section{Conclusions and outlook}
+\textit{\enquote{Program in Pyramid Scheme! Teach your friends! Have them teach \emph{their} friends! Then have those friends teach \emph{their} friends! ...}}
+
+This is by no means a done project, so long as it is a platform for me to learn about all the . I 
+- Joined pyramids
+
+
+Finally, I think every programmer shares a certain latent interest in the underlying structure and of the languages they use every day. I would encourage them to scratch that itch. There are plenty of resources to start, but I'm inclined to mirror the advice of Casey Muratori:~\cite{blow2020qna} \textit{\enquote{Look at all of the resources on these topics in in the following way: rather than reading what someone tells you about how to build a compiler (...) start programming one without knowing what you're doing (...) and see what you can learn. When you cannot make forward progress (...) [look for] solution to that particular problem you're having. (...) Now you have some context to evaluate what people what you (...) whereas if you read about stuff without ever actually having encountered a problem yet, then you're just gonna you have no idea [whether its valuable].}} If you really want a starting point though, I recommend David Beazley's ply and sly projects.
+~\cite{dbeaz2018,sly,ply,levine1992}
+
+\section*{Reproducibility}
+
+\setlength{\abovedisplayskip}{3pt}
+\setlength{\belowdisplayskip}{3pt}
+
+At the time of writing, the commit SHA of the main Pyramid Scheme GitHub repo\cite{pyra_git} is:
+\[
+    \href{https://github.com/ConorOBrien-Foxx/Pyramid-Scheme/commit/fd183d296f08e0cba8bf55da907697eaf412f6a7}{\tt{fd183d296f08e0cba8bf55da907697eaf412f6a7}}
+\]
+and the \psll repo:\cite{psll_git}
+\[
+    \href{https://github.com/MarcinKonowalczyk/psll-lang/commit/ea6c6d2e9c8278cc752894a9aff43f7d44bd93a9}{\tt{ea6c6d2e9c8278cc752894a9aff43f7d44bd93a9}}
+\]
+
+psll has been written in python >3.6. The only non-core library it depends on is \tt{more-itertools} version, at least, 8.5.0. This dependency was thought to be appropriate since this work led to a pull request to \tt{more-itertools}, added in version 8.5.0.\cite{more_itertools}
+
+Pyramid Scheme is written in pure Ruby. At the time of witting it works in Ruby version 3.0.0p0 (2020-12-25 revision 95aff21468)
+
+\tt{bash} is the the Dorian Gray of programming languages -- timeless.
+
+\section*{Acknowledgements}
+
+I would like to thank Blaine Rodgers and Samuel Hutton for discussions and helpful comments on the manuscript, as well as Jonathan Blow and David Beazley, for sparking a long-lasting interest in programming languages.
+
+\nocite{*}
+\bibliographystyle{unsrt}
+\bibliography{sigbovik-psll.bib}
+
+% \clearpage
+\onecolumngrid
+\begin{lstlisting}[
+    language=pyra,frame=tb,numbers=left,
+    aboveskip=3mm,belowskip=3mm,
+    basicstyle={\footnotesize\ttfamily},
+    numberstyle={\tiny\ttfamily\color{black!25!white}},
+    label=lst:bubble_sort,
+    caption={
+        Bubble sort in Pyramid Scheme. Compiled with \tt{--full-names} and \tt{-co} (considerate optimisation) flags.
+    }]
+     ^            ^       ^ ^               ^                               ^
+    / \          ^-      /l\-              ^-                              / \
+   /set\        ^-      /oop\             / \                             /out\
+  ^-----^      ^-      ^-----^           /   \                           ^-----
+ /n\   / \    ^-      /!\   / \         / do  \                         / \
+ ---  /arg\  ^-      ^---  /set\       ^-------^                       /   \
+     ^----- ^-      /=\   ^-----^     / \     / \                     /  +  \
+    / \    ^-      ^---^ /N\   /+\   /   \   /   \                   ^-------^
+   /999\  ^-      / \ /n\---  ^---^ /again\ /     \                 / \     / \
+   ----- / \     /arg\---    /N\ /1\-------/       \               / + \   /chr\
+        /   \   ^-----^      --- ---      /         \             ^-----^  -----^
+       /     \ /a\   /N\                 /           \           / \   / \     / \
+      /       \---   ---                /             \         /   \ /chr\   /101\
+     ^---------^                       /               \       /  +  \-----^  -----
+    / \       / \                     /                 \     ^-------^   / \
+   /set\     /set\                   ^-------------------^   / \     / \ /110\
+  ^-----^   ^-----^                 / \                 / \ /chr\   /chr\-----
+ /a\   / \ /N\   /0\               /   \               /   \-----^  -----^
+ ---  /   \---   ---              /     \             /     \   / \     / \
+     /     \                     /       \           /       \ /100\   /111\
+    /   +   \                   ^---------^         /         \-----   -----
+   ^---------^                 / \       / \       /           \
+  / \       / \               /set\     /set\     /             \
+ ^---^     /   \             ^-----^   ^-----^   ^---------------^
+/3\ /1\   /  +  \           / \   /0\ /p\   /0\ / \             / \
+--- ---  ^-------^         /   \  --- ---   ---/   \           /out\
+        / \     / \       /again\             /     \         ^-----^
+       ^---^   /   \      -------            /       \       /*\   / \
+      /4\ /1\ /     \                       /         \     ^---^ /chr\
+      --- ---/   +   \                     /   loop    \   /a\ / \-----^
+            ^---------^                   ^-------------^  ---/chr\   / \
+           / \       / \                 /!\           / \    -----^ /10 \
+          ^---^     /   \               ^---          /   \       / \-----
+         /5\ /9\   /  +  \             /!\           /     \     /44 \
+         --- ---  ^-------^           ^---          /       \    -----
+                 / \     / \         / \           ^---------^
+                ^---^   /   \       /<=>\         / \       / \
+               /2\ /6\ /     \     ^-----^       /   \     /set\
+               --- ---/   +   \   /p\   /-\     /     \   ^-----^
+                     ^---------^  ---  ^---^   /       \ /p\   /+\
+                    / \       / \     /N\ /1\ /         \---  ^---^
+                   ^---^     /   \    --- ---/           \   /p\ /1\
+                  /5\ /3\   /  -  \         /             \  --- ---
+                  --- ---  ^-------^       /               \
+                          / \     / \     /                 \
+                         ^---^   ^---^   /                   \
+                        /5\ /0\ /0\ /0\ /                     \
+                        --- --- --- ---/                       \
+                                      /                         \
+                                     /                           \
+                                    /                             \
+                                   /                               \
+                                  ^---------------------------------^
+                                 / \                               / \
+                                /   \                             /   \
+                               /     \                           /     \
+                              /       \                         /       \
+                             /         \                       /         \
+                            /           \                     /           \
+                           /             \                   ^-------------^
+                          ^---------------^                 / \           / \
+                         / \             / \               /set\         / ? \
+                        /   \           /   \             ^-----^       ^-----^
+                       / set \         / set \           /s\   /!\     /s\   / \
+                      ^-------^       ^-------^         /wap\ ^---    /wap\ /   \
+                     /t\     / \     /n\     / \        -----/ \      -----/     \
+                    /his\   /arg\   /ext\   /arg\           /   \         /       \
+                    -----  ^-----^  -----  ^-----^         / <=> \       /         \
+                          /a\   /p\       /a\   /+\       ^-------^     /           \
+                          ---   ---       ---  ^---^     / \     / \   /             \
+                                              /p\ /1\   /<=>\   /-1 \ /               \
+                                              --- ---  ^-----^  -----/                 \
+                                                      /t\   /n\     /                   \
+                                                     /his\ /ext\   /                     \
+                                                     ----- -----  /                       \
+                                                                 /                         \
+                                                                /                           \
+                                                               /                             \
+                                                              /                               \
+                                                             /                                 \
+                                                            /                                   \
+                                                           /                                     \
+                                                          /                                       \
+                                                         /                                         \
+                                                        ^-------------------------------------------^
+                                                       / \                                         / \
+                                                      /   \                                       /   \
+                                                     /     \                                     /     \
+                                                    /       \                                   /       \
+                                                   /         \                                 ^---------^
+                                                  /           \                               / \       / \
+                                                 /             \                             /   \     /set\
+                                                /               \                           /     \   ^-----^
+                                               /                 \                         /       \ /a\   /b\
+                                              /                   \                       /         \---   ---
+                                             /                     \                     /           \
+                                            /                       \                   /             \
+                                           /                         \                 ^---------------^
+                                          /                           \               / \             / \
+                                         /                             \             /set\           /   \
+                                        /                               \           ^-----^         /     \
+                                       /                                 \         /l\   /+\       /       \
+                                      /                                   \        ---  ^---^     /         \
+                                     /                                     \           /p\ /2\   /   loop    \
+                                    /                                       \          --- ---  ^-------------^
+                                   /                                         \                 / \           / \
+                                  /                                           \               /   \         /   \
+                                 ^---------------------------------------------^             /  =  \       /     \
+                                / \                                           / \           ^-------^     /       \
+                               /   \                                         /   \         / \     / \   /         \
+                              /     \                                       /     \       /<=>\   /-1 \ ^-----------^
+                             /       \                                     /       \     ^-----^  -----/ \         / \
+                            /         \                                   /         \   /l\   /N\     /   \       /set\
+                           /           \                                 /           \  ---   ---    /     \     ^-----^
+                          /             \                               /             \             /       \   /l\   /+\
+                         /               \                             /               \           ^---------^  ---  ^---^
+                        /                 \                           /                 \         / \       ^-      /l\ /1\
+                       /                   \                         ^-------------------^       /set\     / \      --- ---
+                      /                     \                       / \                 / \     ^-----^   /set\
+                     ^-----------------------^                     /   \               /   \   /q\   /l\ ^-----^
+                    / \                     / \                   /     \             /     \  ---   ---/b\   /+\
+                   /   \                   /   \                 /       \           /       \          ---  ^---^
+                  /     \                 /     \               /         \         /         \             /b\ / \
+                 /       \               /       \             ^-----------^       ^-----------^            ---/   \
+                ^---------^             ^---------^           / \         ^-      / \         ^-              /  -  \
+               / \       / \           / \       / \         /set\       / \     /set\       / \             ^-------^
+              /set\     /set\         /set\     /   \       ^-----^     /set\   ^-----^     /set\           / \     / \
+             ^-----^   ^-----^       ^-----^   /     \     /q\   /+\   ^-----^ /q\   /+\   ^-----^         ^---^   ^---^
+            / \   /1\ /b\   / \     /l\   /0\ /       \    ---  ^---^ /b\   /+\---  ^---^ /b\   /+\       / \ /n\ /n\ /n\
+           /   \  --- ---  /   \    ---   ---/         \       /p\ /1\---  ^---^   /p\ /0\---  ^---^     /arg\--- --- ---
+          /again\         /  -  \           /   loop    \      --- ---    /b\ / \  --- ---    /b\ / \   ^-----^
+          -------        ^-------^         ^-------------^                ---/   \            ---/   \ /a\   /q\
+                        / \     / \       / \           / \                 /  -  \             /  -  \---   ---
+                       ^---^   ^---^     /   \         /   \               ^-------^           ^-------^
+                      /0\ /0\ /0\ /0\   /  =  \       /     \             / \     / \         / \     / \
+                      --- --- --- ---  ^-------^     /       \           ^---^   ^---^       ^---^   ^---^
+                                      / \     / \   /         \         / \ /n\ /n\ /n\     / \ /n\ /n\ /n\
+                                     /<=>\   /-1 \ ^-----------^       /arg\--- --- ---    /arg\--- --- ---
+                                    ^-----^  -----/ \         / \     ^-----^             ^-----^
+                                   /l\   /p\     /   \       /set\   /a\   /q\           /a\   /q\
+                                   ---   ---    /     \     ^-----^  ---   ---           ---   ---
+                                               /       \   /l\   /+\
+                                              ^---------^  ---  ^---^
+                                             / \       ^-      /l\ /1\
+                                            /set\     / \      --- ---
+                                           ^-----^   /set\
+                                          /q\   /l\ ^-----^
+                                          ---   ---/b\   /+\
+                                                   ---  ^---^
+                                                       /b\ / \
+                                                       ---/   \
+                                                         /  -  \
+                                                        ^-------^
+                                                       / \     / \
+                                                      ^---^   ^---^
+                                                     / \ /n\ /n\ /n\
+                                                    /arg\--- --- ---
+                                                   ^-----^
+                                                  /a\   /q\
+                                                  ---   ---
+\end{lstlisting}
+\end{document}
