@@ -26,6 +26,7 @@
 \usepackage{mathtools}
 \usepackage{xspace}
 \usepackage{xcolor}
+\usepackage{flushend}
 
 \DeclareMathAlphabet{\mathoms}{OMS}{cmsy}{m}{n}
 \DeclareMathOperator{\bigO}{\ensuremath{\mathoms{O}}}
@@ -124,12 +125,14 @@ sensitive=false
 \renewcommand\paragraph{\@startsection{paragraph}{4}{\parindent}{\parskip}{-1em}{\normalfont \normalsize \bfseries}}
 \makeatother
 % \newcommand\heading[1]{\textbf{#1}\hspace{}}
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \begin{document}
 \preprint{AIP/123-QED}
 
 % \title{Design and implementation of \psll\ -- Lisp-like programming language which compiles to Pyramid Scheme}
-\title{Local-macro-driven metalanguage as a platform for writing large Pyramid Scheme programs}
+% \title{Local-macro-driven metalanguage as a platform for writing large Pyramid Scheme programs}
+\title{Macro-driven metalanguage for writing Pyramid Schemes programs}
 
 \def\crl{Department of Chemistry, University of Oxford, Chemistry Research Laboratory, Oxford OX1 3TA, U.K.}
 \def\samueli{UCLA Samueli School of Engineering, University of California, Los Angeles, 7400 Boelter Hall, Los Angeles, CA 90095, United States}
@@ -145,64 +148,64 @@ In this work we present a metalanguage which allows simpler writing of Pyramid S
 
 \maketitle
 
-\section{Introduction}
+\section{Introduction}\label{sec:introduction}
 
-In ancient Egypt, pyramids were constructed as the resting places of deceased pharaos, containing not only their mummified remains but also an assortment of keywords and type literals the pharaoh will need in their journey though afterlife. Pyramid Scheme (PS) is a variant of the Scheme dialect of Lisp, which honours these ancient traditions and accompanies \emph{us} thorough our journey of computation.
+In ancient Egypt, pyramids were constructed as the resting places of deceased pharaohs, containing not only their mummified remains but also an assortment of keywords and type literals the pharaoh will need in their journey though afterlife. Pyramid Scheme (PS) is a variant of the Scheme dialect of Lisp, which honours these ancient traditions and accompanies \emph{us} thorough our journey of computation.
 
-PS was designed by Conor O'Brien, in the early 2017 (date of the earliest commit to the GitHub repository).~\cite{pyra_git} It is a turing-complete esoteric programming language (esolang)~\,\cite{pyra_esolang} which uses tree-like, as opposed to a serial code structure. Compilers make use of an intermediate representation of the language in the form of an abstract syntax tree (AST).~\cite{cooper2011} In contrast to most contemporary languages / frameworks, which build on top of the existing infrastructure to create \enquote{the stack} of software,~\cite{cantrill2017,muratori2018} Pyramid Scheme aims to shed any unnecessary abstractions, including that of the AST. The computation in Pyramid scheme is therefore represented as a literal syntax tree (LST) of ascii-art pyramidal constructs.
+Pyramid Scheme was designed by Conor O'Brien, in early 2017 (date of the earliest commit to the GitHub repository).~\cite{pyra_git} It is a turing-complete esoteric programming language (esolang)~\cite{pyra_esolang,blen_git} which uses tree-like, as opposed to a serial, code structure. Compilers make use of an intermediate representation of the language in the form of an abstract syntax tree (AST).~\cite{cooper2011} In contrast to most contemporary languages / frameworks, which build on top of the existing infrastructure to create \enquote{the stack} of software,~\cite{cantrill2017,muratori2018} Pyramid Scheme aims to shed any unnecessary abstractions, including that of the AST. The computation in Pyramid scheme is therefore represented as a literal syntax tree (LST) of ascii-art pyramidal constructs.
 
-Pyramid Scheme is supported by the \enquote{Try It Online!} repository of online interpreters,~\cite{tio} and, like many other esolangs, has been featured in many Code Golfing challenges.~\cite{golf_se}
+Pyramid Scheme is supported by the \enquote{Try It Online!} repository of online interpreters,~\cite{tio} and, like many other esolangs, has been featured in many code golfing challenges.~\cite{golf_se} Code golf involves writing a program in a freely-chosen programming language which performs a certain operation under some constraint. This usually comes in the form of the smallest number of characters in the source code and is a platform for one to either learn a new programming language, or explore the depths of an already known one. Code golfing provides one with a set of goals which is almost-orthogonal to what one finds in everyday programming, and therefore often sheds new light on old, seemingly well-known ideas.
 
-\section{Pyramid Scheme}
+\section{Pyramid Scheme}\label{sec:pyramid_scheme}
 
 % aboveskip=0pt,belowskip=0pt
 \begin{lstlisting}[float,language=pyra,
     label=lst:pyra_simple, caption={
         A simple Pyramid Scheme program. It takes one input from \tt{stdin} -- \ilpsll{(set x (\# stdin))}, increments it by one -- \ilpsll{(set x (+ x 1))} and prints the result computation to the command line. \href{https://tio.run/\%23\%23dZDRCoMwDEXf@xWFPY4SRBnsX0JhuILC3IY6cF/fpUlbV91SzDEl9zbk@R4vQ381U9u5wXmvOSwd4XfYPaySfwMaiZJTxKqAEQUJHq8ZNUxuXiVyt4VGJXITwkpOI3G1AQtJk8xh4XzEv1NFpdLZPfhwFV6CthtxhwVVdD5EZ6qgwt9DBUeVXbk/kL7dQLwhuGGxfGjq0ADNmXGq4lr6uysa19cyVLr2vv4A}{Try it online!}
 }]
-      ^ ^     ^             ^      ^      ^    ^
-     ^-/ \   / \           / \    / \    / \   -^
-    ^-/out\ /set\         /out\  /out\  /out\  / \
-   / \-----^-----^       ^----- ^----- ^----- /out\
-  /set\   /x\   /+\     / \    / \    / \    ^-----
- ^-----^  ---  ^---^   /chr\  /chr\  /chr\  /x\
-/x\   /#\     /x\ /1\ ^----- ^----- ^-----  ---
----  ^---     --- ---/ \    / \    / \
-    /l\             /43 \  /49 \  /61 \
-   /ine\            -----  -----  -----
-   -----
+        ^ ^     ^             ^      ^      ^    ^
+       ^-/ \   / \           / \    / \    / \   -^
+      ^-/out\ /set\         /out\  /out\  /out\  / \
+     / \-----^-----^       ^----- ^----- ^----- /out\
+    /set\   /x\   /+\     / \    / \    / \    ^-----
+   ^-----^  ---  ^---^   /chr\  /chr\  /chr\  /x\
+  /x\   /#\     /x\ /1\ ^----- ^----- ^-----  ---
+  ---  ^---     --- ---/ \    / \    / \
+      /l\             /43 \  /49 \  /61 \
+     /ine\            -----  -----  -----
+     -----
 \end{lstlisting}
 
 The original and, so far, the only implementation of PS is written in Ruby.~\cite{pyra_git} The LST of the program is first parsed and then mapped to a recursive evaluation chain. An example of one such program can be seen in Listing~\ref{lst:pyra_simple}.
 
-PS parser reads the body of each pyramid verbatim, concatenated line by line.\footnote{Hence, for example, the bottom pyramid in the first stack in Listing~\ref{lst:pyra_simple} contains the (semi)keyword \tt{line}, as opposed to two words: \tt{l} and \tt{ine}.} The parser begins at the tip (\tt{\^}), and walks down the left (\tt{/}) and the right (\tt{\textbackslash}) side, collecting the characters in-between. When the two sides run out, it first checks for the presence of the pyramid base (\tt{-}),\footnote{Note that the base of the pyramid is a dash (\tt{0x2d}), not an underscore.} and then for the tips of the child pyramids, if present. The pyramids may connect \emph{only} on these corners, such that, for example, the first pyramid with \tt{chr} (which constructs a character \tt{+} to be printed) in Listing~\ref{lst:pyra_simple} rightfully does not consider the pyramid \tt{1} of the \tt{set} branch as its child.
+PS parser reads the body of each pyramid verbatim, concatenated line by line.~\footnote{Hence, for example, the bottom pyramid in the first stack in Listing~\ref{lst:pyra_simple} contains the (semi)keyword \tt{line}, as opposed to two words: \tt{l} and \tt{ine}.} The parser begins at the tip (\tt{\^}), and walks down the left (\tt{/}) and the right (\tt{\textbackslash}) side, collecting the characters in-between. When the two sides run out, it first checks for the presence of the pyramid base (\tt{-}),~\footnote{Note that the base of the pyramid is a dash (\tt{0x2d}), not an underscore.} and then for the tips of the child pyramids, if present. The pyramids may connect \emph{only} on these corners, such that, for example, the first pyramid with \tt{chr} (which constructs a character \tt{+} to be printed) in Listing~\ref{lst:pyra_simple} rightfully does not consider the pyramid \tt{1} of the \tt{set} branch as its child.
 
-Note, however, that this allows for an existence of direct connection between neighbouring branches of the LST -- in Listing~\ref{lst:pyra_simple}, for example, the first print statement (\tt{out} keyword), shares the node \tt{x} with its neighbouring branch. This is an interesting parallel to the phenomenon of the lateral gene transfer observed in genetics, and suggests a more-proper description of the PS to be that of a Ewok village syntax tree (EVST).\cite{keeling2008,smbc} Although this is undoubtedly one of the more interesting and powerful features of PS, it has not yet been implemented in the project described herein shortly, and therefore will not be considered further, but left for future work.
+Note, however, that this allows for an existence of direct connection between neighbouring branches of the LST -- in Listing~\ref{lst:pyra_simple}, for example, the first print statement (\tt{out} keyword), shares the node \tt{x} with its neighbouring branch. This is an interesting parallel to the phenomenon of the lateral gene transfer observed in genetics, and suggests a more-proper description of the PS to be that of a Ewok village syntax tree (EVST).~\cite{keeling2008,smbc} Although this is undoubtedly one of the more interesting and powerful features of PS, it has not yet been implemented in the project described herein shortly, and therefore will not be considered further, but left for future work.
 
 The specification of the pyramid structure does not preclude the existence of a pyramid with no content. Such a 0-height pyramid is falsey and evaluates to 0.~\footnote{The term \enquote{0-height} can be ambiguous since the pyramid itself has height of 2 characters. In this work the pyramid's height, however, is the number of lines of the text in its body.}~\cite{psnegation} A pyramid with no content \emph{does} however both evaluate its children, and pass them as an its output. This make the 0-height pyramid an important construct for code packing, as can be seen in the first branch in Listing~\ref{lst:pyra_simple}
 
 There are two types operators in PS: ones which implicitly evaluate both of their children, as well as those which do this only under certain circumstances. The first group maps very closely to its underlying Ruby implementation. There are basic binary arithmetic and comparison operators: \tt{+}, \tt{*}, \tt{-}, \tt{/}, \tt{\^}, \tt{=}, \tt{!} and \tt{<=>}. Keyword \tt{out} prints all of its inputs and \tt{chr} converts number to a character. The keyword \tt{arg} indexes arrays (or input arguments), and keywords \tt{\#} and \tt{"} convert back and forth from and to a string. \tt{\#} character also allows one prompt user for input if given a (semi)keyword \tt{line}.~\footnote{Words \tt{line}, (as well as \tt{stdin}, \tt{readline}) are referenced to as \emph{semi}keywords since they have a keyword meaning only when they're an input of the \# command.}~\cite{pyra_git}
 
-The second group of operators conditionally evaluates only one of their children. \tt{set} sets the variable denoted by its left child to the evaluated right one. \tt{loop} and \tt{do} evaluate the right child subtree as long as the left one evaluates to true (with the difference being when is the check made -- before and after right subtree evaluation respectively). Finally \tt{?} keyword evaluates the right subtree only if the left one evaluates to true, else it evaluates to zero.
+The second group of operators conditionally evaluates only one of their children. \tt{set} sets the variable denoted by its left child to the evaluated right one. \tt{loop} and \tt{do} evaluate the right child subtree as long as the left one is truthy (with the difference being when is the check made -- before and after right subtree evaluation respectively). Finally, keyword \tt{?} evaluates the right subtree only if the left one truthy, else it evaluates to zero.
 
-\section{psll}
+\section{psll}\label{sec:psll}
 
 In order to assist the programmer in harnessing the power of Pyramid Scheme, we introduce a meta-language - Pyramid Scheme lisp-like notation (\psll).
 
-\paragraph{Bracket structure} Lets consider the LST approximation of the full EVST structure of Pyramid Scheme. Every node of the LST has at most two children. We will express each node as a bracket containing exactly three, space-separated words, brackets or null-markers (\ilpsll{_}). Only the first entry is allowed to be a word. A simple statement in such notation may be \ilpsll{(set (x _ _) (+ (x _ _) (1 _ _))} -- the second branch from Listing~\ref{lst:pyra_simple}, increment variable \tt{x} by one. Although this is sufficient to re-serialize any PS program, one quickly notes its the cumbersomeness of having to specify the empty space explicitly. Therefore we add a simple macro-like expansion where, firstly, each lone word in the 2\textsuperscript{nd} or 3\textsuperscript{rd} position is considered to be in a bracket of its own, and secondly each bracket with length of less than 3 is expanded up to the length of 3. Hence the increment branch can be written as \ilpsll{(set x (+ x 1))}, since \ilpsll{x} \textrightarrow \ilpsll{(x)} \textrightarrow \ilpsll{(x _ _)}. This also means that keywords with less than two arguments do not need to specify explicit null-markers for the second argument. Lastly \tt{//} denotes a comment. Hence, the program from Listing~\ref{lst:pyra_simple} can be written as:
+\paragraph{Bracket structure} Lets consider the LST approximation of the full EVST structure of Pyramid Scheme. Every node of the LST consists of at most three pyramids - a parent and two children, maybe. A node will, therefore, be represented by a bracket containing exactly three, space-separated words, brackets or null-markers (\ilpsll{_}). Only the first entry is allowed to be a word. A simple statement in such notation may be \ilpsll{(set (x _ _) (+ (x _ _) (1 _ _))} -- the second branch from Listing~\ref{lst:pyra_simple}, increment variable \tt{x} by one. Although this is sufficient to re-serialize any PS program, one quickly notes the cumbersomeness of having to specify the empty space explicitly. Therefore we add a simple macro-like expansion where, firstly, each lone word in the 2\textsuperscript{nd} or 3\textsuperscript{rd} position is considered to be in a bracket of its own, and secondly each bracket with length of less than 3 is expanded up to the length of 3. Hence the increment branch can be written as \ilpsll{(set x (+ x 1))}, since \ilpsll{x} \textrightarrow \ilpsll{(x)} \textrightarrow \ilpsll{(x _ _)}. This also means that keywords with less than two arguments do not need to specify explicit null-markers for the second argument. Lastly \tt{//} denotes a comment. Hence, the program from Listing~\ref{lst:pyra_simple} can be written as:
 \begin{lstlisting}[language=psll,
     label=lst:psll_simple, caption={
     LST approximation of the program from Listing~\ref{lst:pyra_simple} in simple \psll notation.
 }]
-(set x (# line)) // Get x from stdin
-(out _ x) // Print x
-(set x (+ x 1)) // Increment x
-// Print "+1=" and then the value of x again
-(out (chr 43)) (out (chr 49)) (out (chr 61)) (out x)
+  (set x (# line)) // Get x from stdin
+  (out _ x) // Print x
+  (set x (+ x 1)) // Increment x
+  // Print "+1=" and then the value of x again
+  (out (chr 43)) (out (chr 49)) (out (chr 61)) (out x)
 \end{lstlisting}
-Note that the LST approximation has been applied, such that \tt{x} from \tt{out} and\tt{set} are now different. To get the code in Listing~\ref{lst:pyra_simple} the PS source has been modified by-hand post compilation.
+Note that the LST approximation has been applied, such that \tt{x} from \tt{out} and \tt{set} are now different. To get the code in Listing~\ref{lst:pyra_simple} the PS source has been modified by hand post compilation.
 
-This type of local macro (compile-time code alteration) expansion is at the core of \psll. Such macros do not add any expressive power to the language,\cite{krishnamurthi2019} but allow one to use higher-level constructs and simplify writing programs. All of the functionality, which will be described shortly, has been implemented by repeatedly leveraging a single python function which performs a depth-first walk through the AST and applies functions at the appropriate nodes (Listing~\ref{lst:tree_traversal}).
+This type of local macro (compile-time code alteration) expansion is at the core of \psll. Such macros do not add any expressive power to the language,~\cite{krishnamurthi2019} but allow one to use higher-level constructs and simplify writing programs. All of the functionality, which will be described shortly, has been implemented by repeatedly leveraging a single python function which performs a depth-first walk through the AST and applies functions at the appropriate nodes (Listing~\ref{lst:tree_traversal}).
 
 \begin{lstlisting}[language=python,
     label={lst:tree_traversal},caption={
@@ -229,7 +232,7 @@ def tree_traversal(ast, pre_fun=None, str_fun=None,
     return ast2 # Return ast back as a tuple
 \end{lstlisting}
 
-\paragraph{Implicit bracket expansion} Each bracket must have exactly three elements. For small expressions this is almost always the case, but becomes problematic for larger, flow-control and loop structures where each such expression can contain an arbitrarily large number of sub-expressions which would then have to be manually nested in empty subtrees. An overfull bracket one containing more than - one containing $>2$ other brackets, such as:
+\paragraph{Implicit bracket expansion} Each bracket must have exactly three elements. For small expressions this is almost always the case, but becomes problematic for larger, flow-control and loop structures where each such expression can contain an arbitrarily large number of sub-expressions which would then have to be manually nested in empty subtrees. An overfull bracket is one containing more than two other brackets, such as:
 \begin{lstlisting}[language=psll,aboveskip=3pt,belowskip=-2pt,frame=none,numbers=none]
   ( (out 1) (out 2) (out 3) (out 4) (out 5) )
 \end{lstlisting}
@@ -237,14 +240,14 @@ gets expanded as:
 \begin{lstlisting}[language=psll,aboveskip=3pt,belowskip=-2pt,frame=none,numbers=none]
   ( (((out 1) (out 2))  ((out 3) (out 4)))  (out 5) )
 \end{lstlisting}
-Each neighbouring pair or elements of the parent gets put together into a bracket, until the length of the parent is less than 2. Then, each bracket with exactly 2 other brackets has the empty-marker inserted as the first element. Note that the empty marker is a compiler-only keyword (python empty string) and it cannot be typed directly.\footnote{For completeness sake this will likely be implemented by reusing the underscore keyword, such that, for example, \tt{((out 1) (out 2))} could be then explicitly expanded in \psll as \tt{(\_ (\_ out 1) (\_ out 2))}} This results in a (literal) balanced binary tree in the final PS code, and so for a parent bracket of $N$ sub-expressions will result in a tree of containing $\bigO\left(\log_2\left(N\right)\right)$ pyramids.
+Each neighbouring pair of elements of the parent gets put together into a bracket, until the length of the parent is less than 2. Then, each bracket with exactly 2 other brackets has the empty-marker inserted as the first element. Note that the empty marker is a compiler-only keyword (python empty string) and it cannot be typed directly.~\footnote{For completeness' sake this will likely be implemented by reusing the underscore keyword, such that, for example, \tt{((out 1) (out 2))} could be then explicitly expanded in \psll as \tt{(\_ (\_ out 1) (\_ out 2))}} This results in a (literal) balanced binary tree in the final PS code, and so for a parent bracket of $N$ sub-expressions will result in a tree of containing $\bigO\left(\log_2\left(N\right)\right)$ pyramids.
 
 \paragraph{Expansion of binary operators} A similar type of expansion can be applied to a bracket where the first member is not a child bracket but a keyword. This is done only for all binary operator keywords (\tt{+}, \tt{*} as well as \tt{-}, \tt{/}, \tt{\^}, \tt{=} and \tt{<=>}) in a left-associative (LA) fashion, such that:
 \begin{lstlisting}[language=psll,aboveskip=3pt,belowskip=-2pt,frame=none,numbers=none]
-  (out (+ (+ (+ 1 2) 3) 4) newline) // Becomes this
   (+ 1 2 3 4) // This
+  (out (+ (+ (+ 1 2) 3) 4) newline) // Becomes this
 \end{lstlisting}
-Addition and subtraction are commutative over the set of most possible inputs, and hence the exact order of operations does not usually matter (string multiplication overloads concatenation and that's not commutative). For a non-commutative operation, e.g. subtraction, the expansion order does matter. Hence, if the keyword is placed at the end of the bracket, a right-associative (RA) expansion is performed:
+Addition and multiplication are commutative over the set of most possible inputs, and hence the exact order of operations does not usually matter (string multiplication overloads concatenation and that's not commutative). For a non-commutative operation, e.g. subtraction, the expansion order does matter. Hence, if the keyword is placed at the end of the bracket, a right-associative (RA) expansion is performed:
 \begin{lstlisting}[language=psll,aboveskip=3pt,belowskip=-2pt,frame=none,numbers=none]
   (- 1 2 3 4) // This
   (- (- (- 1 2) 3) 4) // Does indeed expand into this
@@ -257,7 +260,7 @@ Note that the order of the last two elements is purposefully reversed, such that
   (1 2 -) // eval to +1 since arguments reversed
 \end{lstlisting}
 
-Finally, the \tt{out} keyword normally does not allow for output of more than 2 variables. In \psll the \tt{out} keywords can have any number of inputs, and it gets implicitly expanded to a chain of output statements: 
+Finally, the \tt{out} keyword normally does not allow for output of more than 2 variables. In \psll the \tt{out} keyword can have any number of inputs, and it gets implicitly expanded to a chain of output statements: 
 \begin{lstlisting}[language=psll,aboveskip=3pt,belowskip=-2pt,frame=none,numbers=none]
   (out a b c d e) // This
   (out a b) (out c d) (out e) // Becomes this
@@ -268,9 +271,9 @@ Note that this is different to the left-associative expansion of the binary keyw
 \begin{lstlisting}[language=psll,aboveskip=3pt,belowskip=-2pt,frame=none,numbers=none]
   (+ (chr 72) (chr 101) (chr 108) (chr 108) (chr 111))
 \end{lstlisting}
-Where the numbers are the decimal ascii codes for the respective letters, and a LA \tt{+} operator expansion has been assumed. \psll introduces string literals, such that \ilpsll{"hello"} expands into the above code.\footnote{Note that this is a very left-child heavy tree. To balance it, the above string could also be made by recursively concatenating its binary split. This will be implemented in the future.} The simplest "Hello, Sailor!" program in \psll is \ilpsll{(out "Hello, Sailor!")}.
+Where the numbers are the decimal ascii codes for the respective letters, and a LA \tt{+} operator expansion has been assumed. \psll introduces string literals, such that \ilpsll{"hello"} expands into the above code.~\footnote{Note that this is a very left-child heavy tree. To balance it, the above string could also be made by recursively concatenating its binary split. This will be implemented in the future.} The simplest "Hello, Sailor!" program in \psll is \ilpsll{(out "Hello, Sailor!")}.
 
-\paragraph{Array literals} Arrays are created in Pyramid Scheme when an empty node has two subtrees. The subtrees get evaluated and concatenated into a length-2 array.\footnote{The key is the \tt{unwrap} function -- body of each empty pyramid and in the PS compiler. It returns the array element if passed only one input, but the entire array if two (\tt{t.size == 1 ? t[0] : t})} Repeated evaluation through nested trees doesn't however produce longer, but instead nested arrays. Ruby's \tt{+} operator overloads array concatenation and allows one to create longer arrays.
+\paragraph{Array literals} Arrays are created in Pyramid Scheme when an empty node has two subtrees. The subtrees get evaluated and concatenated into a length-2 array.~\footnote{The key is the \tt{unwrap} function -- body of each empty pyramid and in the PS compiler. It returns the array element if passed only one input, but the entire array if two (\tt{t.size == 1 ? t[0] : t})} Repeated evaluation through nested trees doesn't produce longer but nested arrays. Ruby's \tt{+} operator overloads array concatenation and allows one to create longer arrays.
 \begin{lstlisting}[language=psll,aboveskip=3pt,belowskip=-2pt,frame=none,numbers=none]
   (set a (1 2)) // Length-2 array
   // This results in nested arrays
@@ -284,12 +287,13 @@ This approach is, however, not fully general, as it does not allow for creation 
   (set a (- (0 1) (1 1))) // Length-1 arrays
   (set a (- (1 1) (1 1))) // Empty array
 \end{lstlisting}
-Array of any length can be made this way. \psll array literals are denoted with square braces. Due to the order of literal expansion, they can contain string literals, as well as numbers and floats and variable references.
+An array of any length can be made this way. \psll array literals are denoted with square braces. Due to the order of literal expansion, they can contain string literals, as well as numbers and floats and variable references.
 \begin{lstlisting}[language=psll,aboveskip=3pt,belowskip=-2pt,frame=none,numbers=none]
   (set a 7)
   (set b [1 "hello" "sailor" 3.1415 2 b 3 "[" ")"])
 \end{lstlisting}
-Note that no escape characters are needed for the brace characters in strings. To reduce the parsing complexity of the particularly tricky part of the parser responsible for context management, brackets are not allowed inside of arrays. This would open the way nested environments (array in bracket in array in bracket ...) which would have to be recursively parsed. The current version of the context parser (\tt{context\_split}) is non-recursive and linear in the size of the input.
+Note that no escape characters are needed for the brace characters in strings. 
+The context manager is a particularly tricky part of the parser. To reduce it's complexity, brackets are not allowed inside of arrays. If they were, one could create nested environments (array in bracket in array in bracket etc.) which would have to be recursively parsed. The current version of the context parser (\tt{context\_split}) is non-recursive and linear in the size of the input.
 
 Only one additional array keyword is currently implemented:
 \begin{lstlisting}[language=psll,aboveskip=3pt,belowskip=-2pt,frame=none,numbers=none]
@@ -303,13 +307,15 @@ Only one additional array keyword is currently implemented:
       )
   )
 \end{lstlisting}
-\tt{range} can also create ranges with different step size, but cannot create ranges for variables, since the expansion is happening at compile time:
+Note that \psll is insensitive to indentation, and it has been used here purely to aid readability.
+
+Keyword \tt{range} can also create ranges with different step size, but cannot create ranges for variables, since the expansion is happening at compile time:
 \begin{lstlisting}[language=psll,aboveskip=3pt,frame=none,numbers=none]
   (range 0 10 3) // [0,3,6,9]
   (set a 10) (range 0 a 3) // Fails
 \end{lstlisting}
 
-\paragraph{Definitions} Compile-time definitions and their expansion are, so far, the only semi-local macro. Any \ilpsll{(def name ...)} construct gets replaced by a stub tree -- \tt{()} and corresponding definition is stored on a stack. Any string gets matched against \tt{name}s in the stack, top down, and is replaced by the first match (or not at all). Upon leaving the bracket (the scope of the \tt{def}), the stack is popped a number of times corresponding to the number of stub trees in the scope being left.\footnote{This way of keeping track of definitions does, currently, lead to a bug where a stub tree in \psll source code causes a compilation fail since it unduly pops the definition stack. This issued will be addressed, possibly with a different way of keeping track of defs in the scope. This is not, however, a trivial change as it requires the tree traversal function to retain state about each scope through each recursive call.} This is, in fact, the use of \tt{final\_fun} in Listing~\ref{lst:tree_traversal}. All the defs are stored on the stack fully expanded, such that they can be used in other defs downscope. Since defs are parsed and their replacements are made on a single tree traversal, the order of the definitions matter and they cannot be used before they get defined, even within a scope.
+\paragraph{Definitions} Compile-time definitions and their expansion are, so far, the only semi-local macro. Any \ilpsll{(def name ...)} construct gets replaced by a stub tree -- \tt{()} and corresponding definition is stored on a stack. Any string gets matched against \tt{name}s in the stack, top down, and is replaced by the first match (or not at all). Upon leaving the bracket (the scope of the \tt{def}), the stack is popped a number of times equal to the number of stub trees in the scope which is being left.~\footnote{This way of keeping track of definitions does, currently, lead to a bug where a stub tree in \psll source code causes a compilation fail since it unduly pops the definition stack. This issued will be addressed, possibly with a different way of keeping track of defs in the scope. This is not, however, a trivial change as it requires the tree traversal function to retain state about each scope through each recursive call.} This is, in fact, the use of \tt{final\_fun} in Listing~\ref{lst:tree_traversal}. All the defs are stored on the stack fully expanded, such that they can be used in other defs downscope. Since defs are parsed and their replacements are made on a single tree traversal, the order of the definitions matter and they cannot be used before they get defined, even within a scope.
 
 \begin{lstlisting}[language=psll,aboveskip=3pt,belowskip=-2pt,frame=none,numbers=none]
   (set a 0) (set b 0)
@@ -324,41 +330,49 @@ Only one additional array keyword is currently implemented:
   (incr) a = 2, b = 1
 \end{lstlisting}
 
-\paragraph{Optimisation} 
+\paragraph{Optimisation} Since one of the goals of \psll is to allow one to write compact Pyramid Scheme programs (for the purposes of Code Golfing, Section~\ref{sec:introduction}), it implements a few optimisation algorithms. The AST of the \psll program is first passed through a processing stack of tree traversals implementing macros for all of the above features. This pre-processed AST is then passed to the optimisation stage. Greedy optimisation, for example, considers all the possible pairs of branches, as well as single branches of the root level LST and attempts to insert an additional empty tree around each such pair/singleton.~\footnote{This can be done at any parent-child connection in the ast since the resulting empty pyramid will evaluate its child and pass it to the parent in the same manner as is they had a direct connection. Scoping for definitions does not matter since the optimisation is performed \emph{after} on the fully-expanded AST -- after all the macros have been applied.} It immediately accepts the first candidate with a smaller number of characters in the compiled LST and repeats the entre process. It halts if the attempt of inserting the empty pyramid at any of the candidates does not produce a smaller LST.
+
+Currently this is one of the only two, rather similar optimisation algorithms, the other differing slightly in the number of candidates it considers, as well as taking the \tt{min} of each iteration, as opposed to greedily accepting the first better candidate. Both of these methods can result in large reduction in the codebase of elaborate Pyramid Schemes;~\cite{psnegation_answer} however they can only add pyramids and never remove or combine them. Empty pyramids cannot be removed arbitrarily since this could disrupt the evaluation order and break implicit parent-child relationships between parts of the LST. To perform this type of optimisation, the algorithm will have to understand, at least partially, the context within which it is operating -- something which existing algorithms do not take into account. Another interesting direction for the optimisation would be to optimise different features of the LST, for example its width, height, or some arbitrary packing density heuristic.
+
+Note that, regardless of the algorithm and the target of the optimisation, it is crucial that the final step of the compilation -- conversion from \psll AST to the Pyramid Scheme LST (i.e. the Pyramid Scheme source code) needs to be performant, as it will likely be happening thousands of times for any optimisation algorithm. Luckily this process has been made rather robust, and is filled with readily cacheable intermediate results (subtrees don't change much).~\footnote{This is, in fact, the reason why the AST is represented as an immutable data structure. Mutable data structures cannot be cached.}
 
 \paragraph{Sharp edges}
 
-Despite authors best efforts, this introduces some sharp edges into the language (see Section).
+Despite authors best efforts, the introduction of syntactic sugar into \psll introduces some edge cases which one ought to watch out for. Some, which are considered bugs, have been mentioned already but there are some which are indispensable, since they interact with other features of the language. The underscore keyword (\tt{\_}) is one such example -- it is rarely, if ever, used yet it carries with it syntactic meaning. This could lead to confusion.
 
-As mentioned at the beginning of Section, the introduction of syntactic sugar into \psll introduces some edge cases which one ought to watch out for.
+The other sharp edge is due to the fact that \psll re-used \tt{"}, \tt{[} and \tt{]} symbols for its own purposes of string and array literals respectively. These are also Pyramid Scheme keywords and therefore, when typed in \psll they have to be escaped with a backslash.
 
-Escape characters, Because " is used for strings, and [ ] for arrays...
+\section{Sample programs}
 
-\section{Example programs}
+Having introduced the \psll language, let us see what can be done with it.
 
-\subsection{Pseudorandom number generation}
+\paragraph{Linear congruential generator}
 
-Note that ... Insensitive to indentation
+A simple (cryptographically insecure!) pseudorandom number sequence can be generated with a linear congruential generator (LCG). A \emph{very simple} LCG starts with a seed value, a prime multiplier, and a modulo base. The value of the generator changes from one iteration to the next according to the formula:\vspace{-1em}
+\[
+    V_{n+1} \;=\; \mathop{\mathrm{mod}}\left(pV_{n},d\right)
+\]
+where $V_n$ is the value of the LCG at iteration $n$, $p$ is the prime and $d$ is the modulo base. To get the output to be in the range 0-1, one only has to divide $V_n$ by $d$.
 
-Prime divisor is small because of modulo implementation
+Since PS does not implement the modulo function, we have to write it ourselves. In this case we use a very simple implementation which repeatedly subtracts $d$ from $pV_n$ until the result is smaller than $d$. A small prime factor has been chosen to minimise the runtime.
 
 \begin{lstlisting}[language=psll,aboveskip=3mm,belowskip=3mm,
-    label=lst:prng,caption={
-        \href{https://tio.run/\%23\%23nVbbasMwDH33V/h5JajZYHvZ9iXGUJpAA@tSkm2wr88sX2IpzYgcQ42s5si6W7ff4XTtmmo8X9prO00al9V5URpPdsm2CnfQZuZQ2p@qBdtRCIKx/ZpZhCanzAb3Q5StcIXrKU1OmQ3@DweD0cwaxN0aohW8GOg8cTQRhTho28adn@pHtzfdj/Gyk2T3vb8JzXM7zOob5dmgHdBZ72mU4BBwG7prS/0Trmv6pKrWSWyVaKifo5jIowanFeKwXEvMPxFaxa4ueH17N0x3OZjHC6jFgos7QzTPMRLCvRugPh4NQZcoT7xpN92@YQovFrVDgNasctQeCUmG3WfIHIIcnEOpItmTNobIlqtiq6VjUR2oy5Qh7an/Dk0HFXI/tSsy5V7NMYHBFNflHA04fWLTOl8GOZwURMjxMuWB0HtSe9HJEr4@SiXcNTRSr6q0ograGjCTQbtaFAGBOcvKewkwP4c8kXmaxygkCXIFWGAnw7rgls6wOEeFR1GCwx3Hw8KrjO@xkmcVbTMpwZU4pSQZzWcYUSbxF1H2LkbfHcxaPv2HCj6z7DLBKxjnGN9NCeqj72@bryfoB58r8mFlfUoQjyp0yCur6JhRKb@0m3HERR1cFMc6y1qYsK7jV1lxMxsjbqJpLIOqxmh5exBcieB2pTYKXjDu@DvudmvKBb3O3ZTA9F7jTtMf}{Try it online!}
+    label=lst:lcg,caption={
+        \href{https://tio.run/\%23\%23jVbbbsIwDH3PV/h5qDJl0vay7UuiSIhWAgkGgoG0r@@aOBc7l7JI0Do9SU5Pjp1efq/b02Hobrv9eBqnCagZ@hkWxmYUXRE0QGegY2Foc6D8DXgYhbfxRycQeBjC3J9wprPNJJTHUb97Yn94sFPhWicYAQOVyLCzHOkfI8cZ6dkBvvYbxjKtO5w9FB/b433Uc@8MBS3eNtDy5JS/AX8NixQiJZXkooH9x@eXhlKsDExwIRnXrEBbvFcuygQlHtm9dtJhv17rXMGWCECC23FGiMNfXkrRuo9DhHlEJCS2/UqwMpWIK20EN1oejebRu84E9xKugs@Hw0O7iQxzvXx9w3r8YmSQDfkJL9fDaQyUcjXsgthzye3Q/s3tDinNpcPzneTxTpTWiQNy/Uy@TWVLyuFVV11cNyluv4f5f7e/LuBRmC4kUZuPsOlCYi35FJy3m0MaRnXjVZPUYuZWsj0WQbUoIn@Fmioo1KANaughpaPdsb01MIpIi8wuaGAWi0RqlLwcTxK6rFJP4A5I5bncE6xuUEgZ9RS5VOS6/xQ2aNR76ZHCPUqaom0eJZmZtneULCcr3baO4gxNMa19cjyfLxGbTkdXo9rppkLi@GMxq0LNw3EGv0D2uJ1jpRgI82HayjTxuVCZIM83FB4tZ2CR1zzIEwt8ONux693HRJiwC0Oybwh2dpF4fsbFci3ZJN2XijbLu3pvtTyx7Kv31kaxY6vsnabpDw}{Try it online!}
     }]
-(set seed 312312)
-(set div (^ 2 16)) // 16-bit divisor
-(set prime 7) // Prime divisor
+(set value 312312) // seed the lcg value
+(set div (^ 2 16)) // 16-bit divisor / modulo base
+(set prime 7) // Prime factor
 
 // Uniformly distributed random number between 0-1
-// mod(prime*seed + current, 2^16)
+// mod(prime*value + current, 2^16)
 (def roll (
-    (set seed (+ (* seed prime) 1))
-    (loop // mod(seed,div) by repeated subtraction
-        (<=> (<=> seed div) -1)
-        (set seed (- seed div))
+    (set value (+ (* value prime) 1))
+    (loop // mod(value,div) by repeated subtraction
+        (<=> (<=> value div) -1)
+        (set value (- value div))
     )
-    (set rand (/ seed div))
+    (set rand (/ value div))
 ))
 
 // Print 100 such numbers
@@ -369,9 +383,24 @@ Prime divisor is small because of modulo implementation
 ))
 \end{lstlisting}
 
-\subsection{Bubble sort}
+When compiled and run, it steps the LCG 100 times and prints the resulting uniformly distributed random numbers. Here are the first 7:
+\begin{lstlisting}[aboveskip=3pt,belowskip=-2pt,frame=none,numbers=none]
+  0.3585357666015625
+  0.5097656250000000
+  0.5683746337890625
+  0.9786376953125000
+  0.8504791259765625
+  0.9533691406250000
+  0.6735992431640625
+\end{lstlisting}
 
-\begin{lstlisting}[language=psll,aboveskip=3mm,belowskip=3mm]
+
+\paragraph{Bubble sort} As the final flourish, here is an implementation of bubble sort in \psll. Bubble sort goes through a list, compares each pair of elements and, if appropriate, swaps them to appear in ascending order. At the end of the scan, the algorithm runs again if any swaps ocurred or halts if none did. Bubble sort is far from an efficient sort, but it is straightforward to implement, and therefore has been chosen here.
+
+\begin{lstlisting}[language=psll,aboveskip=3mm,belowskip=3mm,
+    label=lst:bubble_sort_psll,caption={
+        Bubbble sort of an array in \psll. For demonstration purposes the array has been hardcoded.
+    }]
 (set n (arg 999)) // Make nil value
 
 // Array to be sorted
@@ -396,7 +425,7 @@ Prime divisor is small because of modulo implementation
     (set next (arg a (+ p 1)))
     // This and next need swapping
     (set swap (! (<=> (<=> this next) -1)))
-    (? swap ( // If swap
+    (? swap (
         (set again 1) // Will need to go again
         (set b []) // Start b as an empty array
         // Add prefix of a
@@ -423,44 +452,57 @@ Prime divisor is small because of modulo implementation
 (out "done")
 \end{lstlisting}
 
-\section{Conclusions and outlook}
+When compiled and run, it produces the following output:
+\begin{lstlisting}[aboveskip=3pt,belowskip=-2pt,frame=none,numbers=none]
+  3,4,1,5,9,2,6,5,3,5,1
+  4,3,5,9,2,6,5,3,5,1,1
+  4,5,9,3,6,5,3,5,2,1,1
+  5,9,4,6,5,3,5,3,2,1,1
+  9,5,6,5,4,5,3,3,2,1,1
+  9,6,5,5,5,4,3,3,2,1,1
+  9,6,5,5,5,4,3,3,2,1,1
+  done
+\end{lstlisting}
+The compiled LST can be seen in Listing~\ref{lst:bubble_sort_pyra} (in the appendix).
+
+\section{Conclusions and outlook}\label{sec:conclusions}
 
 \textit{\enquote{Program in Pyramid Scheme! Teach your friends! Have them teach \emph{their} friends! Then have those friends teach \emph{their} friends! ...}}
 
-This is by no means a done project, so long as it is a platform for me to learn and have fun. I also believe tht the future direction of \psll poses some genuinely interesting computational problems, namely efficient code optimisation and performing more advanced code transformations. The language is currently not allowing one to leverage the full power of EVSTs of Pyramid Scheme, but instead uses the LST approximation. The goal is, indeed, to add this to the the language. This will, however, be a major milestone since the EV structure of the resulting syntax tree will require major restructuring of the internals of the compiler. At least initially, EV branching will be available only at the level of intermediate-representation optimisers. However, since one of the purposes of \psll is an esoteric flavour of code-golf, one might want to manually adjust the code structure, similarly to how the underscore keyword is used at the moment. Additional keywords, as well as their supporting architecture will therefore need to be introduced to be able to explicitly specify EV cross-branching structure.
+This is by no means a done project, so long as it is a platform for learning and having fun. The future direction of \psll poses some genuinely interesting computational problems, such as efficient optimisation algorithms and performing context-aware transformations on the AST. The language does not currently allow one to leverage the full power of EVSTs of Pyramid Scheme, but instead uses the LST approximation. The goal is, indeed, to add this to the the language. This will, however, be a major milestone since the EV structure of the resulting syntax tree will require restructuring of the internals of the compiler. At least initially, EV branching will be available only at the level of intermediate-representation optimisers. However, since one of the purposes of \psll is an esoteric flavour of code-golf, one might want to manually adjust the code structure, similarly to how the underscore keyword is used at the moment. Additional keywords, as well as their supporting architecture, will need to be introduced to be able to explicitly specify EV cross-branching structure.
 
-There are a few major parts of \psll which need to be finished before that. Notably there are a few core bugs which any additional functionality would make only harder to track. These are detailed in \tt{README} in the main \psll repository and range from relatively harmless (\tt{def} inserts an extra empty pyramid) to major (\tt{()}) unduly pops the definition stack). There are also some minor support keywords which are yet due to be added. These are, for example, \tt{len} -- expanding to the equivalent of line 10 in Listing~\ref{lst:bubble_sort} and \tt{nil} -- initially expanding to \ilpsll{(set nil (arg 999))}, or something more robust, in the preamble. This is not to mention typical and necessary software project irks like ensuring the project has appropriate test coverage (currently at 69\%) and fighting code bloat (currently at approx 530 core lines + bash support).
+There are a few major parts of \psll which need to be finished before that. Notably there are a few core bugs which any additional functionality would make only harder to track. These are detailed in \tt{README} in the main \psll repository and range from relatively harmless (\tt{def} inserts an extra empty pyramid) to major (\tt{()} unduly pops the definition stack). There are also some minor support keywords which are yet to be added. These are, for example, \tt{len} -- a concise form of line 10 in Listing~\ref{lst:bubble_sort_psll} and \tt{nil} -- a concise form of \ilpsll{(set nil (arg 999))} in the preamble.~\footnote{\tt{(set nil (arg 999))} is just a way of generating nil value in memory and assigning it to a variable called \tt{nil}. Ideally a more robust solution will be found.} This is not to mention typical and necessary software project irks like ensuring the project has appropriate test coverage (currently at 69\%) and fighting code bloat (currently at approx 530 core lines + bash support).
 
-Code golf involves writing a program in a freely-chosen programming language which performs a certain operation under some constraint. This usually comes in the form of the smallest number of characters in the source code and is a platform for one to either learn a new programming language, or explore the depths of an already known one. Code golfing provides one with a set of goals which is almost-orthogonal to what one finds in everyday programming, and therefore often sheds new light on old, seemingly well-known ideas. \psll caters to a new flavour of code-golfing. Large PS programs are not feasible to be written by hand, not to even mention the number of rewrites and code obfuscation which usually happens when golfing. Hence, all the golfing happens at the level of writing compiler and optimisation algorithms therein, rather than the code itself.\cite{psnegation_answer}
+Interestingly, \psll caters to a new flavour of code-golfing. Large PS programs are not feasible to be written by hand, not to even mention the number of rewrites and code obfuscation which usually happens when golfing. Hence, all the golfing happens at the level of writing compiler and optimisation algorithms therein, rather than the code itself.~\cite{psnegation_answer}
 
-Finally, I think every programmer shares a certain latent interest in the underlying structure and of the languages they use every day. I would encourage them to scratch that itch. There are plenty of resources to start, but I am inclined to mirror the advice of Casey Muratori:~\cite{blow2020qna} \textit{\enquote{Look at all of the resources on these topics in in the following way: rather than reading what someone tells you about how to build a compiler (...) start programming one without knowing what you're doing (...) and see what you can learn. When you cannot make forward progress (...) [look for] solution to that particular problem you're having. (...) Now you have some context to evaluate what people what you (...) whereas if you read about stuff without ever actually having encountered a problem yet, then you're just gonna you have no idea [whether its valuable].}} If you really want a starting point though, I recommend David Beazley's ply and sly projects,~\cite{dbeaz2018,sly,ply} which are based on Yet Another Compiler-Compiler (YACC).\cite{levine1992}
-% \enquote{Engineering A Compiler} by Torczon and Cooper goes though a lot of canonical ideas.\cite{cooper2011} It is a very good book to pick up to pick up \emph{after} one has already understood some basic concepts and challenges in programming languages.
+Finally, very programmer shares a certain latent interest in the underlying structure of the languages they use every day. We would encourage them to scratch that itch. There are plenty of resources to start, but we are inclined to mirror the advice of Casey Muratori:~\cite{blow2020qna} \textit{\enquote{Look at all of the resources on these topics in in the following way: rather than reading what someone tells you about how to build a compiler (...) start programming one without knowing what you're doing (...) and see what you can learn. When you cannot make forward progress (...) [look for] solution to that particular problem you're having. (...) Now you have some context to evaluate what people tell you (...) whereas if you read about stuff without ever actually having encountered a problem yet, then you're just gonna have no idea [whether its valuable].}} If one really wants a starting point though, David Beazley's ply and sly projects,~\cite{dbeaz2018,sly,ply} are a good place to do so. Tey are a python implementation of common parsing tools \tt{lex} (Lexical Analyzer Generator) and \tt{yacc} (Yet Another Compiler-Compiler).~\cite{levine1992} Also, Jonathan Blow is streaming, and uploading recordings of their work on a programming language called \tt{jai} which is currently under development.~\cite{blow2020}
+% \enquote{Engineering A Compiler} by Torczon and Cooper goes though a lot of canonical ideas.~\cite{cooper2011} It is a very good book to pick up to pick up \emph{after} one has already understood some basic concepts and challenges in programming languages.
 
 \section*{Version notes}
 
 \setlength{\abovedisplayskip}{3pt}
 \setlength{\belowdisplayskip}{3pt}
 
-At the time of writing, the commit SHA of the main Pyramid Scheme GitHub repo is:\cite{pyra_git} 
+At the time of writing, the commit SHA of the main Pyramid Scheme GitHub repo is:~\cite{pyra_git} 
 \[
     \href{https://github.com/ConorOBrien-Foxx/Pyramid-Scheme/commit/fd183d296f08e0cba8bf55da907697eaf412f6a7}{\tt{fd183d296f08e0cba8bf55da907697eaf412f6a7}}
 \]
-and the \psll repo:\cite{psll_git}
+and the \psll repo:~\cite{psll_git}
 \[
-    \href{https://github.com/MarcinKonowalczyk/psll-lang/commit/ea6c6d2e9c8278cc752894a9aff43f7d44bd93a9}{\tt{ea6c6d2e9c8278cc752894a9aff43f7d44bd93a9}}
+    \href{https://github.com/MarcinKonowalczyk/psll-lang}{\tt{SHA of this commit goes here}}
+    % \href{https://github.com/MarcinKonowalczyk/psll-lang/commit/...}{\tt{...}}
 \]
 
 The \psll repository also has all the latex and make files for this very paper. Short of fixing typos, the text will not be modified after the submission.
 
-\psll has been written in python >3.6. The only non-core library it depends on is \tt{more-itertools} version, at least, 8.5.0. This dependency was thought to be appropriate since this work led to a pull request to \tt{more-itertools}, added in version 8.5.0.\cite{more_itertools}
+\psll has been written in python >3.6. The only non-core library it depends on is \tt{more-itertools} version, at least, 8.5.0. This dependency was thought to be appropriate since this work led to a pull request to \tt{more-itertools}, added in version 8.5.0.~\cite{more_itertools}
 
 Pyramid Scheme is written in pure Ruby. At the time of witting it works in Ruby version 3.0.0p0 (2020-12-25 revision 95aff21468)
-
-\tt{bash} is the the Dorian Gray of programming languages -- timeless.
+%\tt{bash} is the the Dorian Gray of programming languages -- timeless.
 
 \section*{Acknowledgements}
 
-I would like to thank Blaine Rodgers and Samuel Hutton for discussions and helpful comments on the manuscript, as well as Jonathan Blow and David Beazley, for sparking a long-lasting interest in programming languages.
+I would like to thank Dr Hugh Lindley and Blaine Rodgers for proof-reading and helpful comments on the manuscript,  Samuel Hutton for helpful discussions, as well as Jonathan Blow and David Beazley, for sparking a long-lasting interest in programming languages.
 
 Last but not least, I would also like to cordially thank \emph{you} dear reader. You have made it! Thank you for reading!
 
@@ -468,16 +510,16 @@ Last but not least, I would also like to cordially thank \emph{you} dear reader.
 \bibliographystyle{unsrt}
 \bibliography{sigbovik-psll.bib}
 
-% \clearpage
 \onecolumngrid
+\section*{Appendix}
 \begin{lstlisting}[
     language=pyra,frame=t,
     aboveskip=3mm,belowskip=3mm,
     basicstyle={\footnotesize\ttfamily},
     numberstyle={\tiny\ttfamily\color{black!25!white}},
-    label=lst:bubble_sort,
+    label=lst:bubble_sort_pyra,
     caption={
-        Bubble sort in Pyramid Scheme. Compiled with \tt{--full-names} and \tt{-co} (considerate optimisation) flags. \href{https://tio.run/\%23\%23tVpdbhw3DH7XKZTXLhbaSdwCBuL2Bj4BIWCcGLEBJ944Ltqe3p0fjUakSEqaWS@QrEeroSjqI/VR4vm/l/7749fjry8P99/v397s@PE2@fj4jZppN@bjzfi/s5A0Hedv9wRH0vmoCxvEjOLcr/tXyKQ9P5@B9talPf89iDGjiPHjsTzUGORZVeL8hrHuB6yjR/U@AFHJ2a/PmsBpsoPA4a/@5RtgzbAR5pGxtpZqbpKuq1o3QOa6qChZb5B1WKSROfpJiLudZnqAxGSS6aLi07JeX18n0xyFD6acJhsk99/6x8G4bvodOIulMJlnGhtHI07C7KSi6yAM7sLrkIk7zMp/eXgJ1kumgvAxyg2yrXVRAjCT9UExb2zafVCoh6Aat3ycSGchn3XSP0w3KsZLtAiTkybjhMen7tQh2JQwxgkNeEFzJzFBgRorNIV7FhJQcGCgln48wbvruhOggOCFOTsBftF04/cSD/plmYJrnIDzT66NImb2fGVpOddY2zKoSJ6EUMS2Ddg4zRjpuiUYTCttdeN7ZnXnadoEHBrcONwgDzE6tjioEH8wIeDwa8Ohg6LLG/dpijGrB@SOOxjQneNf2aqBiWHFs9aDNPCEQAZ0gzNMdFxaQjzVAORxsPLRa2KnoJoGHfcb4AB1NdtGg18eR8MmkETjMHsNebOYp4EcRCfoJ2PjeVUEOU9Dxzjy4u4WTAGiya8fciwEDx/dConScLgwAS6KLBNcRbnfh2lf83jMdVqt7q6uUo0USHL6RDlEGxmU1GbJohhuSTyd@eebP4FfCfq@@ziY5A8MQxzwV8FTrKACGPwFhz4CMaQXppADLyE8KOCeA60yAlmkFr1NfWylA15Sg4FaMr/UFUdVXMcpMoHsUwDZkTILJCXIZoSIEMsohlFTBfJt69/2SVT37Mva65MRTsk/tpf8/jJ/xvq1s9dZVKMEp/xWJ8Kpv1bJcIXfa4RwFJBu2xWKQLmHqZkOlHuYKqtAuYepsy6Ue5jKZarY1U3tgpfTA1WWlO2Ie7upx1ApNVDBwHA@kazOv/@lxR2GrEvM1Za2pPH1YWwUwfHzqBwk1CE8iQrSaM5w2n/6YWdZSMT8pLiBeyUh/kfGJUJ@D@hJxot7eJwnMR@4WHf/72v6zFtWd41AjnHynyeWzg68hcln1D2uXxlH8nzgj4Vq3YVmloiP0I3VbdqS4gTOMUcKrM0dOwtNG722gxKru027hgy9FXD2UpJnBEbc7dr4WSAG@O0lFe/JN96VirwvS3lnArND/N4BXEWfXSO4ql57hnCV/XaM4ap7bh@kzGKb@OxWltvGd7ey4EY@vJUlt/LlrSy6mU9vZdl15ydtgIZqzGxCRJmlc8Bhz2Wa/RSq0OO3mVG6xtAhFMjcXTOn4oJNGUeR9Zndo@3O16rDKpRhZC4wDDeQ3xFpVRZTThHNRQbKToDJvVlbvC2yGzELbQ65FUxn7fuEM6LWqFvFeqyUKF3wnI235JQ/fVwyhXjJYS43GhovO5htgH4DM9pzorJhPOHqtdURWmgZPTYahrixJPmvOUOEpuAG4mFMtVu0ELbcjvzBQd3ZJDRFB3oZNB8r@HrQtlA52pseOkA1dFt4He0dQt0tZKYvUqQWkpf1RsdFzE2auQzj03u73BAH9dzVNgztintZdnNnLsEF9d4rrpJ6OuFarpkYyuUymCqkR6sKeWxhiXJtDeYOCqp9VdDVYlqsW/u5IEpDs1y/BJXxzGXeNBB/GcVO4b5QFcscv7uL6JVL7qQNNMer4Lp3wMdFp@zOebtn1tlLa7/UyhglWa5od6hORm5LND8yo0rVInx7ytOdBbEt2@nJsFLFHC6KAoazLz24NmazN4w6eWld4tjJ6gb/O6TDcW2p9Hhxb3IjTwURd6gU7mktwEpwlVadLp7ItSXSx9uA8M/kPhm5MyqusPiCH1Je3wGuBDlP1QQ0yViqWvMATKu7aEVGXhllUSFrcEy@jYmHpA4sv97zejBmCtjWtnAa8lO7/YRKb7KKSWJb8TyE1oiwaYMQXnyFf0Y5J1xNImQLBVsoHpmld0L9jRPoDzaC5oPl5CTLDVCPxMNKXqcMJacE0XGwTxX8rJQSCokAexRSx5vp8cZZ4PzWrn6TvlX0JQIKjd7n98Xora1npZVEvnTiXcXJC9ytkl7zUlqZso6j5tPuOv5aWHmVilZJ8buuoiSCWK3AjqsjhbY143H3Zdx2K2yJyYwSzcGWytgSRXln2HKX1RL3JGd4e/sf}{Try it online!}
+        Bubble sort in Pyramid Scheme. Compiled with \tt{--full-names} and \tt{-co} (considerate optimisation) flags. The single letter \tt{l} has been used instead of more verbose \tt{nil} to reduce the width of the LST. \href{https://tio.run/\%23\%23tVpdbhw3DH7XKZTXLhbaSdwCBuL2Bj4BIWCcGLEBJ944Ltqe3p0fjUakSEqaWS@QrEeroSjqI/VR4vm/l/7749fjry8P99/v397s@PE2@fj4jZppN@bjzfi/s5A0Hedv9wRH0vmoCxvEjOLcr/tXyKQ9P5@B9talPf89iDGjiPHjsTzUGORZVeL8hrHuB6yjR/U@AFHJ2a/PmsBpsoPA4a/@5RtgzbAR5pGxtpZqbpKuq1o3QOa6qChZb5B1WKSROfpJiLudZnqAxGSS6aLi07JeX18n0xyFD6acJhsk99/6x8G4bvodOIulMJlnGhtHI07C7KSi6yAM7sLrkIk7zMp/eXgJ1kumgvAxyg2yrXVRAjCT9UExb2zafVCoh6Aat3ycSGchn3XSP0w3KsZLtAiTkybjhMen7tQh2JQwxgkNeEFzJzFBgRorNIV7FhJQcGCgln48wbvruhOggOCFOTsBftF04/cSD/plmYJrnIDzT66NImb2fGVpOddY2zKoSJ6EUMS2Ddg4zRjpuiUYTCttdeN7ZnXnadoEHBrcONwgDzE6tjioEH8wIeDwa8Ohg6LLG/dpijGrB@SOOxjQneNf2aqBiWHFs9aDNPCEQAZ0gzNMdFxaQjzVAORxsPLRa2KnoJoGHfcb4AB1NdtGg18eR8MmkETjMHsNebOYp4EcRCfoJ2PjeVUEOU9Dxzjy4u4WTAGiya8fciwEDx/dConScLgwAS6KLBNcRbnfh2lf83jMdVqt7q6uUo0USHL6RDlEGxmU1GbJohhuSTyd@eebP4FfCfq@@ziY5A8MQxzwV8FTrKACGPwFhz4CMaQXppADLyE8KOCeA60yAlmkFr1NfWylA15Sg4FaMr/UFUdVXMcpMoHsUwDZkTILJCXIZoSIEMsohlFTBfJt69/2SVT37Mva65MRTsk/tpf8/jJ/xvq1s9dZVKMEp/xWJ8Kpv1bJcIXfa4RwFJBu2xWKQLmHqZkOlHuYKqtAuYepsy6Ue5jKZarY1U3tgpfTA1WWlO2Ie7upx1ApNVDBwHA@kazOv/@lxR2GrEvM1Za2pPH1YWwUwfHzqBwk1CE8iQrSaM5w2n/6YWdZSMT8pLiBeyUh/kfGJUJ@D@hJxot7eJwnMR@4WHf/72v6zFtWd41AjnHynyeWzg68hcln1D2uXxlH8nzgj4Vq3YVmloiP0I3VbdqS4gTOMUcKrM0dOwtNG722gxKru027hgy9FXD2UpJnBEbc7dr4WSAG@O0lFe/JN96VirwvS3lnArND/N4BXEWfXSO4ql57hnCV/XaM4ap7bh@kzGKb@OxWltvGd7ey4EY@vJUlt/LlrSy6mU9vZdl15ydtgIZqzGxCRJmlc8Bhz2Wa/RSq0OO3mVG6xtAhFMjcXTOn4oJNGUeR9Zndo@3O16rDKpRhZC4wDDeQ3xFpVRZTThHNRQbKToDJvVlbvC2yGzELbQ65FUxn7fuEM6LWqFvFeqyUKF3wnI235JQ/fVwyhXjJYS43GhovO5htgH4DM9pzorJhPOHqtdURWmgZPTYahrixJPmvOUOEpuAG4mFMtVu0ELbcjvzBQd3ZJDRFB3oZNB8r@HrQtlA52pseOkA1dFt4He0dQt0tZKYvUqQWkpf1RsdFzE2auQzj03u73BAH9dzVNgztintZdnNnLsEF9d4rrpJ6OuFarpkYyuUymCqkR6sKeWxhiXJtDeYOCqp9VdDVYlqsW/u5IEpDs1y/BJXxzGXeNBB/GcVO4b5QFcscv7uL6JVL7qQNNMer4Lp3wMdFp@zOebtn1tlLa7/UyhglWa5od6hORm5LND8yo0rVInx7ytOdBbEt2@nJsFLFHC6KAoazLz24NmazN4w6eWld4tjJ6gb/O6TDcW2p9Hhxb3IjTwURd6gU7mktwEpwlVadLp7ItSXSx9uA8M/kPhm5MyqusPiCH1Je3wGuBDlP1QQ0yViqWvMATKu7aEVGXhllUSFrcEy@jYmHpA4sv97zejBmCtjWtnAa8lO7/YRKb7KKSWJb8TyE1oiwaYMQXnyFf0Y5J1xNImQLBVsoHpmld0L9jRPoDzaC5oPl5CTLDVCPxMNKXqcMJacE0XGwTxX8rJQSCokAexRSx5vp8cZZ4PzWrn6TvlX0JQIKjd7n98Xora1npZVEvnTiXcXJC9ytkl7zUlqZso6j5tPuOv5aWHmVilZJ8buuoiSCWK3AjqsjhbY143H3Zdx2K2yJyYwSzcGWytgSRXln2HKX1RL3JGd4e/sf}{Try it online!}
     }]
      ^            ^       ^ ^               ^                               ^
     / \          ^-      /l\-              ^-                              / \
