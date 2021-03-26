@@ -2,7 +2,7 @@
 
 import re
 
-from itertools import zip_longest, chain, product
+from itertools import chain #, product, zip_longest
 from more_itertools import windowed, windowed_complete
 
 from functools import partial, reduce
