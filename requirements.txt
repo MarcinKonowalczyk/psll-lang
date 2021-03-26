@@ -18,7 +18,6 @@ ly1
 # https://tex.stackexchange.com/a/574785/85504
 utopia
 
-# To fix `mc` warning of the mathdesign package
-# https://tex.stackexchange.com/a/548607/85504
+# To add utopia font needed by mathdesign
 erewhon
 xstring

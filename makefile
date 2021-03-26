@@ -1,7 +1,16 @@
-# Sigbovik PSLL paper makefile
+#! /usr/bin/make
+# Sigbovik 2021 psll paper makefile
+#
 # Written by Marcin Konowalczyk
+# Feel free to adapt without attribution (CC0)
+#
+# I know there is 'latexmk' which probably does much better job than this
+# but for a simple project it might be better to have ones own makefile.
+# *I*'ve had fun making it anyway. ;)
 
-IMAGES = logo2.pdf cat.jpg
+# All image files + extensions
+# In principle could scan the tex for \includegraphics{...} with awk.
+IMAGES = test.pdf
 NAME = sigbovik-psll # tex file name (without extension)
 IMAGES_DIR = img
 
@@ -42,6 +51,7 @@ clean:
 	    fi;\
 	done
 
+# TODO: open recompiles because aux is newer
 open: $(NAME).pdf
 	open $(NAME).pdf
 
