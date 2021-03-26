@@ -1,52 +1,49 @@
-(set newline "\n")
-(set nil (arg 999))
+(set n (arg 999)) // Make nil value
 
 // Array to be sorted
 (set a [3 1 4 1 5 9 2 6 5 3 5])
 
 // Get array length
-// (len a N)
-
-( (set N 0) (loop (! (= (arg a N) nil)) (set N (+ N 1))) )
-
+// This will be: (len a N)
 (set N 0) // Pointer into the array
-(loop (! (= (arg a N) nil)) (set N (+ N 1))) // Increment pointer until goes off the end
+// Increment pointer until goes off the end
+(loop (! (= (arg a N) n)) (set N (+ N 1)))
 
+// Append element of a in position q to b
+(def append (set b (+ b (- ((arg a q) n) (n n)))))
+// Usage: (set q ...) (append)
 
 // Bubble sort the array
 (do again (
-    (set again 0)
-    (set n 0) // Position pointer
-    (loop (! (! (<=> n (- N 1)))) ( // Go through all the pairs
-        (set this (arg a n))
-        (set next (arg a (+ n 1)))
-
-        // This and next need swapping
-        (set swap (! (<=> (<=> this next) -1)))
-        (? swap (
-            (set again 1) // Will need to go through the list again
-            (set b []) // Start b as an empty array
-            
-            // Add prefix of a
-            (set l 0)
-            (loop (= (<=> l n) -1) (
-                (set b (+ b (- ((arg a l) nil) (nil nil))))
-            (set l (+ l 1))
-            ))
-
-            // Add two elements, swapped
-            (set b (+ b (- ((arg a (+ n 1)) nil) (nil nil))))
-            (set b (+ b (- ((arg a (+ n 0)) nil) (nil nil))))
-
-            // Add suffix of a
-            (set l (+ n 2))
-            (loop (= (<=> l N) -1) (
-                (set b (+ b (- ((arg a l) nil) (nil nil))))
-            (set l (+ l 1))
-            ))
-            (set a b)
-        ))
-    (set n (+ n 1)) // Increment position pointer
+  (set again 0)
+  (set p 0) // Position pointer
+  (loop (! (! (<=> p (- N 1)))) ( // For all pairs
+    (set this (arg a p))
+    (set next (arg a (+ p 1)))
+    // This and next need swapping
+    (set swap (! (<=> (<=> this next) -1)))
+    (? swap ( // If swap
+      (set again 1) // Will need to go again
+      (set b []) // Start b as an empty array
+      // Add prefix of a
+      (set l 0)
+      (loop (= (<=> l p) -1) (
+        (set q l) (append)
+      (set l (+ l 1))
+      ))
+      // Add two elements, swapped
+      (set q (+ p 1)) (append)
+      (set q (+ p 0)) (append)
+      // Add suffix of a
+      (set l (+ p 2))
+      (loop (= (<=> l N) -1) (
+        (set q l) (append)
+      (set l (+ l 1))
+      ))
+      (set a b)
     ))
-    (out (* a ",") newline) // Print b + newline
+  (set p (+ p 1)) // Increment position pointer
+  ))
+  (out (* a ",") "\n") // Print a
 ))
+(out "done")
