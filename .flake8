@@ -1,0 +1,3 @@
+[flake8]
+ignore = E501 # Ignore line length compleatly
+# max-line-length = 119
