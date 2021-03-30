@@ -24,16 +24,16 @@
 // division and exponentiation (since they are not commutative over the set of inputs).
 // Hence, the right-associative expansion can be specified as:
 
-(out (- 1 (- 2 (- 3 4))) newline)
+(out (- 1 (- 2 (- 4 3))) newline)
 (out (1 2 3 4 -) newline)
 
-(out (/ 1 (/ 2 (/ 3 4))) newline)
+(out (/ 1 (/ 2 (/ 4 3))) newline)
 (out (1 2 3 4 /) newline)
 
-(out (^ 1 (^ 2 (^ 3 4))) newline)
+(out (^ 1 (^ 2 (^ 4 3))) newline)
 (out (1 2 3 4 ^) newline)
 
-// For compatibility with non-chaining operations, the following are identical
+// The following also work
 (out (- 1 2) newline)
 (out (1 2 -) newline)
 
