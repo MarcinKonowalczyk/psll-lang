@@ -15,14 +15,14 @@
 	]{microtype}
 \microtypecontext{spacing=nonfrench}
 	
-\usepackage{graphicx}% Include figure files
+\usepackage{graphicx} % Include images (although, actually, none in this document)
 \graphicspath{ {./img/} }
 
-\usepackage{multirow}
+% \usepackage{multirow}
 
 \usepackage{csquotes}
 \usepackage{parskip} % Change paragraph formatting parindent = 0, parskip > 0
-\usepackage{bm}% bold math
+% \usepackage{bm} % bold math
 \usepackage{mathtools}
 \usepackage{xspace}
 \usepackage{xcolor}
@@ -31,7 +31,7 @@
 \DeclareMathAlphabet{\mathoms}{OMS}{cmsy}{m}{n}
 \DeclareMathOperator{\bigO}{\ensuremath{\mathoms{O}}}
 
-\usepackage{lipsum}
+% \usepackage{lipsum}
 \usepackage{nopageno}
 \usepackage{enumitem}
 \setlist{nosep}
@@ -239,7 +239,7 @@ def tree_traversal(ast, pre_fun=None, str_fun=None,
 gets expanded as:
 \begin{lstlisting}[language=psll,aboveskip=3pt,belowskip=-2pt,frame=none,numbers=none]
   ( (((out 1) (out 2))  ((out 3) (out 4)))  (out 5) )
-\end{lstlisting}
+\end{lstlisting} sigbovik-submission
 Each neighbouring pair of elements of the parent gets put together into a bracket, until the length of the parent is less than 2. Then, each bracket with exactly 2 other brackets has the empty-marker inserted as the first element. Note that the empty marker is a compiler-only keyword (python empty string) and it cannot be typed directly.~\footnote{For completeness' sake this will likely be implemented by reusing the underscore keyword, such that, for example, \tt{((out 1) (out 2))} could be then explicitly expanded in \psll as \tt{(\_ (\_ out 1) (\_ out 2))}} This results in a (literal) balanced binary tree in the final PS code, and so for a parent bracket of $N$ sub-expressions will result in a tree of containing $\bigO\left(\log_2\left(N\right)\right)$ pyramids.
 
 \paragraph{Expansion of binary operators} A similar type of expansion can be applied to a bracket where the first member is not a child bracket but a keyword. This is done only for all binary operator keywords (\tt{+}, \tt{*} as well as \tt{-}, \tt{/}, \tt{\^}, \tt{=} and \tt{<=>}) in a left-associative (LA) fashion, such that:
@@ -501,7 +501,7 @@ Pyramid Scheme is written in pure Ruby. At the time of witting it works in Ruby 
 
 \section*{Acknowledgements}
 
-I would like to thank Dr Hugh Lindley and Blaine Rodgers for proof-reading and helpful comments on the manuscript,  Samuel Hutton for helpful discussions, as well as Jonathan Blow and David Beazley, for sparking a long-lasting interest in programming languages.
+I would like to thank Dr Hugh Lindley and Blaine Rogers for proof-reading and helpful comments on the manuscript, Samuel Hutton for helpful discussions, as well as Jonathan Blow and David Beazley, for sparking a long-lasting interest in programming languages.
 
 Last but not least, I would also like to cordially thank \emph{you} dear reader. You have made it! Thank you for reading!
 
