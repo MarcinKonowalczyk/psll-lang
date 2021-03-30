@@ -1,11 +1,29 @@
-# psll-lang
+# psll-lang <!-- omit in toc -->
 
 [![Build Status](https://travis-ci.org/MarcinKonowalczyk/psll-lang.svg?branch=master)](https://travis-ci.org/MarcinKonowalczyk/psll-lang) [![Coverage Status](https://coveralls.io/repos/github/MarcinKonowalczyk/psll-lang/badge.svg?branch=master)](https://coveralls.io/github/MarcinKonowalczyk/psll-lang?branch=master)
 
-A lisp-like language which compiles to [pyramid scheme](https://github.com/ConorOBrien-Foxx/Pyramid-Scheme) (**p**yramid **s**cheme **l**isp-**l**ike syntax, aka `psll`).
+Macro-driven metalanguage which compiles to [Pyramid Scheme](https://github.com/ConorOBrien-Foxx/Pyramid-Scheme). Read [the paper](./sigbovik-paper/sigbovik-psll.pdf)!
+
+---
+
+- [Usage](#Usage)
+- [Examples](#Examples)
+- [Additional features](#Additional-features)
+  - [Bracket expansion](#Bracket-expansion)
+  - [Strings](#Strings)
+  - [Def keyword](#Def-keyword)
+  - [Command expansion](#Command-expansion)
+  - [Underscore keyword](#Underscore-keyword)
+- [Code optimisation](#Code-optimisation)
+  - [Greedy optimisation](#Greedy-optimisation)
+  - [Considerate optimisation](#Considerate-optimisation)
+- [ToDo's](#ToDos)
+- [Done's](#Dones)
+- [Bugs](#Bugs)
+- [Bugs no more](#Bugs-no-more)
 
 
-## Installation
+## Usage
 
 Make  `psll.py` executable:
 
@@ -13,9 +31,6 @@ Make  `psll.py` executable:
 chmod u+x psll.py
 ```
 or use the `psll.sh` bash script which you might want to edit to make it point to the correct files. It compiles and runs a program.
-
-
-## Use
 
 Read the help:
 ```
@@ -262,19 +277,13 @@ This is not a real-purpose language. In this section the 'optimisation' refers t
 - [ ] ?? Arrays / Linked lists
   - [x] Improve array implementation
   - [ ] `range` keyword
-    - [ ] testing
-    - [ ] re-checking
+    - [ ] add testing thereof
   - [ ] `len` keyword
 - [ ] `nil` keyword
   - [ ] Make it more robustly than `(arg 999)`
   - [ ] ?? Allow compiler to insert `def`s into preamble
 - [ ] Prettify the intermediate representation
 - [ ] <s>?? `*( ... )` construct</s> probs no
-  - [x] Add testing psll bash script to tests
-    - [ ] <s>?? And somehow coverage</s> [`bashcov`](https://github.com/infertux/bashcov)
-  - [ ] Use `hypothesis` in testing ?
-  - [ ] Test for correct example output
-  - [ ] ?? Test code optimisation
 - [ ] ?? Tree rendering
   - [ ] ?? Have a look at (optionally!) using `anytree` package for visualisation
   - [ ] ?? Ascii art to LaTeX
@@ -297,22 +306,29 @@ More on the 'project management' front:
 
 - [ ] ?? Easier to use installation. Maybe a makefile which makes a symlink in the correct place...
   - [ ] ?? `pip install psll` ...
-  - [ ] ? Move testing to makefile
-    - [ ] Make sure it works with travis
   - [ ] ??? brew tap. I mean, why not. Its not polluting the core with needless software if its just a tap...
 - [ ] Configure flake8 and fight with it for a while
 - [ ] ?? Same for mypy
 - [ ] Make sure migration to travis.com (from travis.org) went fine (whenever that happens)
 - [ ] Better testing
+  - [ ] Add testing psll bash script to tests
+    - [ ] <s>?? And somehow coverage</s> [`bashcov`](https://github.com/infertux/bashcov)
+    - [ ] Use `hypothesis` in testing ?
+    - [ ] Test for correct example output
+    - [ ] ?? Test code optimisation
   - [ ] Improve test coverage
     - [x] Make the coverage count only the tests for that file
     - [x] tree_repr coverage
     - [ ] psll coverage
     - [x] Test *asymmetric* children in `tree_repr`
+  - [ ] ? Move testing to makefile
+    - [ ] Make sure it works with travis
 - [ ] `psll.sh` is a mess, therefore (amongst others) `run.sh` is a mess
 - [ ] Allow one to write the empty pyramid keyword explicitly as the underscore, such that `( (a) (b) )` can also be written as `(_ (a) (b) )`, just for completeness.
 - [ ] Add section about array expansions to this README
-- [ ] Add mention of the Sigbovik paper to README
+- [ ] Add esolang wiki page. I think I deserve one now.
+- [ ] Add psll to tio...?
+
 
 ## Done's
 
@@ -347,6 +363,8 @@ Bullet points get moved here from the above section when they get finished. (It'
   - [x] Implicit expansion of `out` command, such that one can write `(out "j: " j " | k: " k newline)` and it gets expanded into a pile of `out` commands
   - [x] Expansion of `+` and `*` commands too
     - [x] Right and left-associative expansion
+- [x] Add mention of the Sigbovik paper to README
+
 
 ## Bugs
 
@@ -359,6 +377,7 @@ Bullet points get moved here from the above section when they get finished. (It'
 - [ ] `def` replacer sometimes adds an extra pyramid
 - [ ] ? should `( (x) (y z) )` and `( x (y z) )` have the same intermediate ast?
 - [x] The order of operations in right-associative expansions is reversed in the last bracket!!
+
 
 ## Bugs no more
 
