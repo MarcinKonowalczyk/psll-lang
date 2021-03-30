@@ -13,6 +13,7 @@ PYRA="$DIR/Pyramid-Scheme/pyra.rb"
 # Compile psll into pyramid scheme
 PSLL_FILE="$PWD/${1%.*}.psll"
 PYRA_FILE="$PWD/${1%.*}.pyra"
+
 echo "Compiling psll to pyramid scheme"
 python $PSLL_COMPILER $PSLL_FILE -o $PYRA_FILE -f --full-names #-go #-co #-v
 RESULT=$?
@@ -24,7 +25,7 @@ else
     echo -e "${GREEN} > Compilation successful${NC}"
 fi
 
-# Count characters in file
+# Count characters in the file
 wc $PSLL_FILE | awk {'print " > Psll file: " $2 " lines, " $3 " characters"'}
 wc $PYRA_FILE | awk {'print " > Pyra file: " $2 " lines, " $3 " characters"'}
 # Why, oh why is this ^ so hard to do with sed regular expressions...?
