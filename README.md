@@ -1,6 +1,6 @@
 # psll-lang <!-- omit in toc -->
 
-[![Build Status](https://travis-ci.org/MarcinKonowalczyk/psll-lang.svg?branch=master)](https://travis-ci.org/MarcinKonowalczyk/psll-lang) [![Coverage Status](https://coveralls.io/repos/github/MarcinKonowalczyk/psll-lang/badge.svg?branch=master)](https://coveralls.io/github/MarcinKonowalczyk/psll-lang?branch=master)
+[![Build Status](https://travis-ci.com/MarcinKonowalczyk/psll-lang.svg?branch=master)](https://travis-ci.com/MarcinKonowalczyk/psll-lang) [![Coverage Status](https://coveralls.io/repos/github/MarcinKonowalczyk/psll-lang/badge.svg?branch=master)](https://coveralls.io/github/MarcinKonowalczyk/psll-lang?branch=master)x
 
 Macro-driven metalanguage which compiles to [Pyramid Scheme](https://github.com/ConorOBrien-Foxx/Pyramid-Scheme). Read [the paper](./sigbovik-paper/sigbovik-psll.pdf)!
 
@@ -309,7 +309,7 @@ More on the 'project management' front:
   - [ ] ??? brew tap. I mean, why not. Its not polluting the core with needless software if its just a tap...
 - [ ] Configure flake8 and fight with it for a while
 - [ ] ?? Same for mypy
-- [ ] Make sure migration to travis.com (from travis.org) went fine (whenever that happens)
+- [x] Make sure migration to travis.com (from travis.org) went fine (whenever that happens)
 - [ ] Better testing
   - [ ] Add testing psll bash script to tests
     - [ ] <s>?? And somehow coverage</s> [`bashcov`](https://github.com/infertux/bashcov)
