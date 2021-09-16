@@ -30,6 +30,9 @@ jobs:
         ls -lh
         ls Pyramid-Scheme/ -lh
 
+    - name: Set up Ruby
+      uses: actions/setup-ruby@v1
+
     - name: Set up Python ${{ matrix.python-version }}
       uses: actions/setup-python@v2
       with:
