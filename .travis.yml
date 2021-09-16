@@ -9,18 +9,15 @@ python:
 
 install:
   - pip install coveralls
-  # - pip install hypothesis
   - pip install 'more_itertools>=8.5.0'
   - pip install black
 
 before_script:
-  # - git submodule update --init # Make sure Pyramid-Scheme submodule is up to date
   - ls -lh
   - ls Pyramid-Scheme/ -lh
 
 script:
-  - bash run_coverage.sh # <- This runs tests for the main files too
-  - python -m unittest discover -p "test_examples.py" tests -v
+  - bash test.sh -e -c 
   - black --check --verbose .
 
 after_success:

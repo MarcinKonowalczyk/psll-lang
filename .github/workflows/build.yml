@@ -1,4 +1,4 @@
-name: tests
+name: build
 
 on:
   push:
@@ -21,6 +21,11 @@ jobs:
     steps:
     - uses: actions/checkout@v2
 
+    - name: ls
+      run: |
+        ls -lh
+        ls Pyramid-Scheme/ -lh
+
     - name: Set up Python ${{ matrix.python-version }}
       uses: actions/setup-python@v2
       with:
@@ -32,10 +37,13 @@ jobs:
         pip install coverage
         if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
 
+    - name: Run ony tests
+      if: "matrix.python-version != '3.6'"
+      run: bash test.sh -e
+
     - name: Run tests and coverage
-      run: |
-        bash run_coverage.sh # <- This runs tests for the main files too
-        python -m unittest discover -p "test_examples.py" tests -v
+      if: "matrix.python-version == '3.6'"
+      run: bash test.sh -e -c 
 
     - name: Check with black
       if: "matrix.python-version == '3.6'"
