@@ -20,5 +20,6 @@ script:
   - bash test.sh -e -c 
   - black --check --verbose .
 
-after_success:
-  - coveralls
+# Now done by github workflow
+# after_success:
+#   - coveralls
