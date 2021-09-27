@@ -25,3 +25,9 @@ sigbovik-paper/*.synctex(busy)
 
 
 python_tests
+
+# Stuff from perf-page branch
+.sass-cache
+_site
+.jekyll-metadata
+Gemfile.lock
