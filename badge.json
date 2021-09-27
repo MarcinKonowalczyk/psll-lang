@@ -1,0 +1,7 @@
+{
+  "schemaVersion": 1,
+  "title": "{{ site.title }}",
+  "label": "hello",
+  "message": "sweet world",
+  "color": "orange"
+}

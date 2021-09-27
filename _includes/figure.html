@@ -1,0 +1,11 @@
+<div class="figure-container"><canvas id="{{ include.id }}" height="300"></canvas></div>
+<script>
+    loadData("{{ include.data }}")
+        .then(function(data) {
+            const params = {
+                color: "{{ include.color }}",
+                ylabel: "{{ include.ylabel }}",
+            };
+            drawChart("{{ include.id }}", data.x, data.y, params);
+        });
+</script>

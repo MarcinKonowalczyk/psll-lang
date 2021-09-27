@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html lang="{{ page.lang | default: "en" }}">
+  {%- include head.html -%}
+  <body a="auto">
+    <main class="page-content" aria-label="Content">
+      <div class="w">
+        <header>
+            <h1>{{ site.title }}</h1>
+            {%-if site.theme_config.show_description-%}
+              <p>{{ site.description }}</p>
+            {%-endif-%}
+        </header>
+        {{ content }}
+      </div>
+    </main>
+  </body>
+</html>
