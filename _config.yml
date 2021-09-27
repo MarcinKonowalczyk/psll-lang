@@ -5,7 +5,7 @@ url: https://marcinkonowalczyk.github.io/psll-lang/
 baseurl: "/psll-lang"
 description: Performance graphs for psll-lang
 
-favicon: "logo.png" # name+extension of favicon (which must be put on the root folder)
+favicon: "logo.png"
 
 sass:
   style: :compressed
