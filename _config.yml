@@ -1,8 +1,8 @@
 title: psll-lang performance
 author: Marcin Konowalczyk
 email: marcin.konow@lczyk.xyz
-url:
-baseurl: ""
+url: https://marcinkonowalczyk.github.io/psll-lang/
+baseurl: "/psll-lang"
 description: Performance graphs for psll-lang
 
 favicon: "logo.png" # name+extension of favicon (which must be put on the root folder)
