@@ -56,7 +56,7 @@ function drawChart(canvas, xdata, ydata, params) {
     });
 }
 
-function load_data(filename) {
+function loadData(filename) {
     return fetch(filename).then((data) => (data.text()))
         .then(function(text) {
             lines = text.split("\n");
