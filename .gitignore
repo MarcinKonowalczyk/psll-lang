@@ -31,3 +31,4 @@ python_tests
 _site
 .jekyll-metadata
 Gemfile.lock
+*.perf

@@ -39,7 +39,6 @@ TEST_CONTENT = [
     "hellos",
     "regards",
     "morning!",
-    "Howdy'll",
     "greetings",
 ]
 TEST_PYRAMIDS = [
@@ -52,7 +51,6 @@ TEST_PYRAMIDS = [
     "    ^    \n   / \\   \n  /hel\\  \n / los \\ \n ------- ",
     "    ^    \n   /r\\   \n  /ega\\  \n / rds \\ \n ------- ",
     "    ^    \n   /m\\   \n  /orn\\  \n /ing! \\ \n ------- ",
-    "    ^    \n   /H\\   \n  /owd\\  \n /y'll \\ \n ------- ",
     "    ^    \n   /g\\   \n  /ree\\  \n /tings\\ \n ------- ",
 ]
 
