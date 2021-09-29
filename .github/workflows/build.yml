@@ -7,77 +7,33 @@ on:
     branches: [ master ]
 
 jobs:
-  # build:
+  build:
 
-  #   runs-on: ubuntu-latest
-    
-  #   strategy:
-  #     matrix:
-  #       python-version: [3.9.0]
-  #       # python-version: [3.6, 3.9.0]
-        
-  #   env:
-  #     GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-  #   steps:
-  #   - name: Checkout repository
-  #     uses: actions/checkout@v2
-
-  #   - name: Checkout Pyramid-Scheme
-  #     run: git submodule update --init # --recursive
-
-  #   - name: ls
-  #     run: |
-  #       ls -lh
-  #       ls Pyramid-Scheme/ -lh
-
-  #   - name: Set up Ruby
-  #     uses: ruby/setup-ruby@v1
-  #     with:
-  #       ruby-version: 2.6
-
-  #   - name: Set up Python ${{ matrix.python-version }}
-  #     uses: actions/setup-python@v2
-  #     with:
-  #       python-version: ${{ matrix.python-version }}
-
-  #   - name: Install dependencies
-  #     run: |
-  #       python -m pip install --upgrade pip
-  #       if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
-
-  #   - name: Run only tests
-  #     if: "matrix.python-version != '3.6'"
-  #     run: bash test.sh -e
-
-  #   - name: Run tests and coverage
-  #     if: "matrix.python-version == '3.6'"
-  #     run: |
-  #       pip install -Uq coverage
-  #       bash test.sh -e -c 
-
-  #   - name: Check with black
-  #     if: "matrix.python-version == '3.6'"
-  #     run: |
-  #       pip install -Uq black
-  #       black --check --verbose .
-
-  #   - name: Push to coveralls
-  #     if: "matrix.python-version == '3.6'"
-  #     run: |
-  #       pip install -Uq coveralls
-  #       coveralls --service=github
-
-  perf:
-    # needs: build
     runs-on: ubuntu-latest
-
+    
+    strategy:
+      matrix:
+        python-version: [3.6, 3.9.0]
+        
     env:
-      python-version: 3.9.0
+      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
     steps:
     - name: Checkout repository
       uses: actions/checkout@v2
+
+    - name: Checkout Pyramid-Scheme
+      run: git submodule update --init # --recursive
+
+    # - name: ls
+    #   run: |
+    #     ls -lh
+    #     ls Pyramid-Scheme/ -lh
+
+    - name: Set up Ruby
+      uses: ruby/setup-ruby@v1
+      with:
+        ruby-version: 2.6
 
     - name: Set up Python ${{ matrix.python-version }}
       uses: actions/setup-python@v2
@@ -89,25 +45,51 @@ jobs:
         python -m pip install --upgrade pip
         if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
 
+    - name: Run only tests
+      if: "matrix.python-version != '3.6'"
+      run: bash test.sh -e
+
+    - name: Run tests and coverage
+      if: "matrix.python-version == '3.6'"
+      run: |
+        pip install -Uq coverage
+        bash test.sh -e -c 
+
+    - name: Check with black
+      if: "matrix.python-version == '3.6'"
+      run: |
+        pip install -Uq black
+        black --check --verbose .
+
+    - name: Push to coveralls
+      if: "matrix.python-version == '3.6'"
+      run: |
+        pip install -Uq coveralls
+        coveralls --service=github
+
     - name: Run performance check
+      if: "matrix.python-version == '3.9.0'"
       run: |
         python ./perf/perf_ascii_trees.py result.perf
         cat result.perf
 
     - name: Checkout psll-perf branch
+      if: "matrix.python-version == '3.9.0'"
       uses: actions/checkout@v2
       with:
         ref: psll-perf
-        path: perf
+        path: temp-perf
 
-    - name: Append data
+    - name: Append performance data
+      if: "matrix.python-version == '3.9.0'"
       run: |
-        cd ./perf
+        cd ./temp-perf
         cat ../result.perf | tail -n +2 | awk -v sha=$GITHUB_SHA '{ f = "./data/" $1 ".data"; $1 = sha; print >> f }'
 
     - name: Push to psll-perf
+      if: "matrix.python-version == '3.9.0'"
       run: |
-        cd ./perf
+        cd ./temp-perf
         git status
         git config user.name 'Github Workflow'
         git commit -a -m "Automated report"
