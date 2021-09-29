@@ -71,7 +71,7 @@ jobs:
     needs: build
     runs-on: ubuntu-latest
 
-    strategy:
+    env:
       python-version: 3.9.0
 
     steps:
