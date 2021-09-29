@@ -66,3 +66,42 @@ jobs:
       run: |
         pip install -Uq coveralls
         coveralls --service=github
+
+  perf:
+    needs: build
+    runs-on: ubuntu-latest
+
+    strategy:
+      python-version: 3.9.0
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v2
+
+    - name: Set up Python ${{ matrix.python-version }}
+      uses: actions/setup-python@v2
+      with:
+        python-version: ${{ matrix.python-version }}
+
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+
+    - name: Run performance check
+      run: |
+        python ./perf/perf_ascii_trees.py result.perf
+        cat result.perf
+
+    - name: Checkout psll-perf branch
+      uses: actions/checkout@v2
+      with:
+        branch: psll-perf
+        path: perf
+
+    - name: Push to psll-perf
+      run: |
+        cd perf
+        ls -l
+        echo $GITHUB_SHA
+        # cat result.perf | tail -n +2 | awk -v sha=$GITHUB_SHA '{ f = "./data/" $1 ".data"; $1 = sha; print >> f }'
