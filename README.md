@@ -13,3 +13,7 @@ bundle clean
 bundle install
 bundle exec jekyll serve --incremental
 ```
+
+```
+cat result.perf | tail -n +2 | awk -v sha=$GITHUB_SHA '{ f = "./data/" $1 ".data"; $1 = sha; print >> f }'
+```

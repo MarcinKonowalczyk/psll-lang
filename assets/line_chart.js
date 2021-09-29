@@ -2,7 +2,7 @@ function drawChart(canvas, xdata, ydata, params) {
     const ctx = document.getElementById(canvas).getContext('2d');
 
     const myChart = new Chart(ctx, {
-        type: 'line',
+        type: params.type ? params.type : 'line',
         data: {
             labels: xdata,
             datasets: [{
@@ -51,20 +51,55 @@ function drawChart(canvas, xdata, ydata, params) {
                     hoverRadius: 5,
                     hitRadius: 20
                 }
-            }
+            },
+            errorBarColor: "rgba(" + (params.color ? params.color : [255, 99, 132]) + ", 1.0)",
+            errorBarWhiskerColor: "rgba(" + (params.color ? params.color : [255, 99, 132]) + ", 1.0)",
+            errorBarLineWidth: 1,
+            errorBarWhiskerLineWidth: 1,
+            errorBarWhiskerSize: 10,
         }
     });
 }
 
-function loadData(filename) {
+function loadData(filename, scale) {
+    scale = scale ? parseFloat(scale) : 1.0
     return fetch(filename).then((data) => (data.text()))
         .then(function(text) {
             lines = text.split("\n");
             x = []; y = [];
             for (i in lines) {
-                split_line = lines[i].split(" ");
-                x.push(split_line[0])
-                y.push(parseFloat(split_line[1]))
+                line = lines[i];
+                if (line) {
+                    split_line = line.split(" ");
+                    x.push(split_line[0])
+                    y.push(parseFloat(split_line[1])*scale)
+                }
+            }
+            return {x, y}
+        });
+}
+
+function round(x, n=2) {
+    b = 10**2
+    return Math.round((x + Number.EPSILON) * b) / b
+}
+
+function loadDataWithErrorBars(filename, scale) {
+    scale = scale ? parseFloat(scale) : 1.0
+    return fetch(filename).then((data) => (data.text()))
+        .then(function(text) {
+            lines = text.split("\n");
+            x = []; y = [];
+            for (i in lines) {
+                line = lines[i];
+                if (line) {
+                    split_line = line.split(" ");
+                    x.push(split_line[0])
+                    value = parseFloat(split_line[1])*scale
+                    plus = parseFloat(split_line[2])*scale
+                    minus = parseFloat(split_line[3])*scale
+                    y.push({y: round(value, 2), yMax: round(value+plus, 2), yMin: round(value-minus, 2)})
+                }
             }
             return {x, y}
         });

@@ -1,0 +1,12 @@
+<div class="figure-container"><canvas id="{{ include.id }}" height="300"></canvas></div>
+<script>
+    loadDataWithErrorBars("{{ include.data }}", "{{ include.scale }}")
+        .then(function(data) {
+            const params = {
+                color: "{{ include.color }}",
+                ylabel: "{{ include.ylabel }}",
+                type: 'lineWithErrorBars',
+            };
+            drawChart("{{ include.id }}", data.x, data.y, params);
+        });
+</script>
