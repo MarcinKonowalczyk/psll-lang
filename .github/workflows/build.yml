@@ -107,6 +107,7 @@ on:
 
     - name: Push to psll-perf
       run: |
+        git checkout psll-perf
         git status
         # git config user.name 'Github Workflow'
         # git commit -a -m "Automated report"
