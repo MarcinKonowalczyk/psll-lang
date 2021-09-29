@@ -104,10 +104,12 @@ jobs:
       run: |
         cd ./perf
         cat ../result.perf | tail -n +2 | awk -v sha=$GITHUB_SHA '{ f = "./data/" $1 ".data"; $1 = sha; print >> f }'
+        ls -l
+        git status
 
     - name: Push to psll-perf
       run: |
-        git checkout psll-perf
+        git checkout -b psll-perf
         git status
         # git config user.name 'Github Workflow'
         # git commit -a -m "Automated report"
