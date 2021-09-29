@@ -13,7 +13,8 @@ jobs:
     
     strategy:
       matrix:
-        python-version: [3.6, 3.9.0]
+        python-version: 3.9.0
+        # python-version: [3.6, 3.9.0]
         
     env:
       GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -96,7 +97,7 @@ jobs:
     - name: Checkout psll-perf branch
       uses: actions/checkout@v2
       with:
-        branch: psll-perf
+        ref: psll-perf
         path: perf
 
     - name: Push to psll-perf
