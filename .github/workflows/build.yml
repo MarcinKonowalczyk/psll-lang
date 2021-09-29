@@ -98,15 +98,16 @@ jobs:
       uses: actions/checkout@v2
       with:
         ref: psll-perf
-        path: perf
+        path: ../perf
 
     - name: Append data
       run: |
-        cd perf
-        cat ../result.perf | tail -n +2 | awk -v sha=$GITHUB_SHA '{ f = "./data/" $1 ".data"; $1 = sha; print >> f }'
+        mv results.perf ../perf/
+        cd ../perf
+        cat result.perf | tail -n +2 | awk -v sha=$GITHUB_SHA '{ f = "./data/" $1 ".data"; $1 = sha; print >> f }'
 
     - name: Push to psll-perf
       run: |
-        git config --global user.name 'Github Workflow'
+        git config user.name 'Github Workflow'
         git commit -a -m "Automated report"
         git push
