@@ -108,5 +108,5 @@ jobs:
     - name: Push to psll-perf
       run: |
         git config --global user.name 'Github Workflow'
-        git commit -a m "Automated report"
+        git commit -a -m "Automated report"
         git push
