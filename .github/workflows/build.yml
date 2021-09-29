@@ -68,7 +68,7 @@ on:
   #       pip install -Uq coveralls
   #       coveralls --service=github
 
-  perf:
+  build:
     # needs: build
     runs-on: ubuntu-latest
 
