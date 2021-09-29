@@ -36,8 +36,15 @@ def rms(X):
     return st.sqrt(st.mean([x * x for x in X]))
 
 
-def stats(T, center_fun=st.mode, spread_fun=rms):
+def stats(T, center_fun=st.median, spread_fun=rms, remove_outliers=True):
     """Calculate the central tendency, and upper/lower spread of the timing data"""
+
+    if remove_outliers:
+        # https://doi.org/10.1016/j.jesp.2013.03.013
+        center = st.median(T)
+        mad = (1.4826) * st.median(abs(t - center) for t in T)
+        T = [t for t in T if abs((t - center) / mad) < 3]
+
     center = center_fun(T)
     Tu = [t - center for t in T if t > center]
     Tl = [t - center for t in T if t <= center]
