@@ -59,6 +59,7 @@ jobs:
       # if: "matrix.python-version == '3.6'"
       run: |
         pip install -Uq black
+        black --version
         black --check --verbose .
 
     - name: Push to coveralls
