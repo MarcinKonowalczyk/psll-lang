@@ -47,7 +47,7 @@ def perf_add_side_by_side():
         for p1, p2 in pyramids:
             t = p1 + p2
 
-    T = perf.runtime(f, 1, divisor=len(pyramids))
+    T = perf.runtime(f, 1.0, divisor=len(pyramids))
     # T = perf.ncalls(f, 1000, divisor=len(pyramids))
     return perf.stats(T)
 
@@ -61,6 +61,7 @@ if __name__ == "__main__":
             for name, fun in loc.items():
                 if callable(fun) and name.startswith("perf_"):
                     result = fun()
+                    result = [int(t * 1e9) for t in result[:-1]] + [result[-1]]
                     of.write(f"{name} " + " ".join(f"{x:.0f}" for x in result) + "\n")
     else:
         print("running performance analysis")
@@ -70,4 +71,5 @@ if __name__ == "__main__":
         for name, fun in loc.items():
             if callable(fun) and name.startswith("perf_"):
                 result = fun()
+                result = [int(t * 1e9) for t in result[:-1]] + [result[-1]]
                 print(f"{name:<30} " + " ".join(f"{x:<10.0f}" for x in result))

@@ -1,5 +1,6 @@
-from time import monotonic_ns as now
+from time import perf_counter as now
 import statistics as st
+import math
 from collections import namedtuple
 
 stats_result = namedtuple(
@@ -7,12 +8,11 @@ stats_result = namedtuple(
 )
 
 
-def runtime(fun, runtime=1, divisor=1, *args, **kwargs):
+def runtime(fun, runtime: float = 1.0, divisor=1, *args, **kwargs):
     """Call and time fun() repeatedly for 'runtime' seconds"""
-    rt = runtime * 1e9  # convert to ns
     T = []
     t0 = t2 = now()
-    while (t2 - t0) < rt:
+    while (t2 - t0) < runtime:
         t1 = now()
         fun(*args, **kwargs)
         t2 = now()
@@ -33,7 +33,7 @@ def ncalls(fun, ncalls=1000, divisor=1, *args, **kwargs):
 
 def rms(X):
     """Root mean square"""
-    return st.sqrt(st.mean([x * x for x in X]))
+    return math.sqrt(st.mean([x * x for x in X]))
 
 
 def stats(T, center_fun=st.median, spread_fun=rms, remove_outliers=True):
