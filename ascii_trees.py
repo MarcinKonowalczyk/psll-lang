@@ -119,8 +119,9 @@ class AbstractTree(ABC):
             if i == 0:
                 self.width = rowlen(_row)
             else:
-                assert rowlen(_row) == self.width, \
-                    f"All rows must specify entries of the same length (row {i} has length {rowlen(_row)} while the first row has length {self.width})"
+                assert (
+                    rowlen(_row) == self.width
+                ), f"All rows must specify entries of the same length (row {i} has length {rowlen(_row)} while the first row has length {self.width})"
 
         assert len(_grid) > 0, "Grid must not be empty"
         self.height = len(_grid)
@@ -283,7 +284,9 @@ class Tree(AbstractTree):
             if lr and rr:
                 row = row_tuple(
                     left=lr.left + lp,
-                    center=lr.center + (lr.right + rr.left - squeeze) * SPACE + rr.center,
+                    center=lr.center
+                    + (lr.right + rr.left - squeeze) * SPACE
+                    + rr.center,
                     right=rr.right + rp,
                 )
             elif lr:
@@ -332,26 +335,27 @@ class Tree(AbstractTree):
         )
 
         grid: List[row_tuple] = []
+        row: row_tuple
         for p, c in self.child_row_iterator(self, child):
             if p and not c:
-                left_pad = parent_pad + p.left if left else max(overhang, 0) + p.left
-                center = p.center
-                right_pad = p.right + max(overhang, 0) if left else p.right + parent_pad
-            elif p and c:
-                left_pad = c.left if left else max(overhang, 0) + p.left
-                center = c.center + p.center if left else p.center + c.center
-                right_pad = p.right + max(overhang, 0) if left else c.right
-            elif not p and c:
-                left_pad = c.left if left else max(-overhang, 0) + c.left
-                center = c.center
-                right_pad = c.right + max(-overhang, 0) if left else c.right
-            grid.append(
-                row_tuple(
-                    left=left_pad,
-                    center=center,
-                    right=right_pad,
+                row = row_tuple(
+                    left=parent_pad + p.left if left else max(overhang, 0) + p.left,
+                    center=p.center,
+                    right=p.right + max(overhang, 0) if left else p.right + parent_pad,
                 )
-            )
+            elif p and c:
+                row = row_tuple(
+                    left=c.left if left else max(overhang, 0) + p.left,
+                    center=c.center + p.center if left else p.center + c.center,
+                    right=p.right + max(overhang, 0) if left else c.right,
+                )
+            elif not p and c:
+                row = row_tuple(
+                    left=c.left if left else max(-overhang, 0) + c.left,
+                    center=c.center,
+                    right=c.right + max(-overhang, 0) if left else c.right,
+                )
+            grid.append(row)
         return Tree(grid)
 
     def add_two_children(self, left: AbstractTree, right: AbstractTree):
