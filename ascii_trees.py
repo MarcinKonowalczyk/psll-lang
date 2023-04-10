@@ -1,4 +1,4 @@
-from typing import Iterator, NamedTuple, Optional, List
+from typing import Iterator, NamedTuple, Optional, List, Union, Tuple
 from abc import ABC, abstractmethod
 
 from itertools import zip_longest, product, islice
@@ -97,23 +97,32 @@ class AbstractTree(ABC):
             grid.append((i1, row[i1:i2], len(row) - i2))
         return grid
 
-    def __init__(self, grid: Iterator[row_tuple]):
+    def __init__(self, grid: Iterator[Union[row_tuple, Tuple[int, str, int]]]):
         """Initialise from a grid"""
-        _grid = list(grid)  # Make sure grid is a list
 
         def rowlen(r: row_tuple) -> int:
             return r.left + len(r.row) + r.right
 
+        _grid: List[row_tuple] = []
+        for i, row in enumerate(grid):
+            if isinstance(row, tuple):
+                assert len(row) == 3, "All rows must be 3-length tuples"
+                _row = row_tuple(*row)
+            elif isinstance(row, row_tuple):
+                _row = row
+            else:
+                raise TypeError("Grid must be a list of tuples (or row_tuples)")
+            _grid.append(_row)
+
+            if i == 0:
+                self.width = rowlen(_row)
+            else:
+                assert (
+                    rowlen(_row) == self.width
+                ), "All rows must specify entries of the same length"
+
+        assert len(_grid) > 0, "Grid must not be empty"
         self.height = len(_grid)
-        self.width = rowlen(_grid[0])
-
-        for row in _grid:  # Sanity check on rows of the grid
-            assert isinstance(row, tuple), "All rows of the grid must be tuples"
-            assert len(row) == 3, "All rows must be 3-length tuples"
-            assert (
-                rowlen(row) == self.width
-            ), "All rows must specify entries of the same length"
-
         self.grid = _grid
 
     @classmethod
@@ -265,11 +274,11 @@ class Tree(AbstractTree):
                 left_pad = lp + left[0]
                 middle = left[1] + (left[2] + right[0] - squeeze) * SPACE + right[1]
                 right_pad = right[2] + rp
-            elif l:
+            elif left:
                 left_pad = left[0]
                 middle = left[1]
                 right_pad = left[2] + max(overhang, 0)
-            elif r:
+            elif right:
                 left_pad = max(overhang, 0) + right[0]
                 middle = right[1]
                 right_pad = right[2]

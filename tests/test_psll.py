@@ -9,10 +9,10 @@ import random
 # from itertools import product, permutations
 from contextlib import contextmanager
 
-import psll
-
 # Add '.' to path so running this file by itself also works
 sys.path.append(os.path.realpath("."))
+
+import psll  # noqa: E402
 
 
 def depth(tree):

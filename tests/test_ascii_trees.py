@@ -9,13 +9,14 @@ from itertools import product
 import os
 import sys
 
-import ascii_trees
-from ascii_trees import Pyramid, Tree
 
 from contextlib import contextmanager
 from io import StringIO
 
 sys.path.append(os.path.realpath("."))
+
+import ascii_trees  # noqa: E402
+from ascii_trees import Pyramid, Tree  # noqa: E402
 
 
 @contextmanager
