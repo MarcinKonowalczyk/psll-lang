@@ -113,7 +113,7 @@ def context_split(
             continue
 
         for ci, c in enumerate(contexts):
-            if not any(state[ci + 1 :]):
+            if not any(state[ci + 1 :]):  # noqa: E203
                 if state[ci]:
                     # First try to match the closing context if state is already high
                     # This make matching the same delimiter for opening and closing work
@@ -290,10 +290,10 @@ def shorten_variable_names(ast):
 def apply_replacement_rules(ast, rules):
     """Apply replacement rules to the abstract syntax tree"""
 
-    def singleton_tuple_replacer(node):  #  Replace (f) by def of f
+    def singleton_tuple_replacer(node):  # Replace (f) by def of f
         return rules[node[0]] if len(node) == 1 and node[0] in rules.keys() else node
 
-    def string_replacer(node):  #  Replace f by def of f
+    def string_replacer(node):  # Replace f by def of f
         return rules[node] if node in rules.keys() else node
 
     return tree_traversal(
@@ -327,7 +327,7 @@ def def_keyword(ast):
                     f" {type(node[2])} to {type(node[1])}"
                 )
             if node[1] == "def":
-                raise PsllSyntaxError(f"('def' 'def' (...)) structure is not allowed")
+                raise PsllSyntaxError("('def' 'def' (...)) structure is not allowed")
             defs.append((node[1], apply_replacement_rules(node[2], dict(defs))))
             return ()  # Return empty tuple
         return node
@@ -358,11 +358,11 @@ def range_keyword(ast):
     def ranger(node):
         if len(node) > 0 and node[0] == "range":
             if not all(map(is_string, node[1:])):
-                raise PsllSyntaxError(f"'range' arguments must be integer literals")
+                raise PsllSyntaxError("'range' arguments must be integer literals")
             if len(node) > 4:
                 raise PsllSyntaxError(
-                    f"'range' must be of the form (range begin end) or (range begin end"
-                    f" step)"
+                    "'range' must be of the form (range begin end) or (range begin end"
+                    " step)"
                 )
             start, stop = int(node[1]), int(node[2]) + 1
             step = int(node[3]) if len(node) == 4 else 1
@@ -387,7 +387,7 @@ def range_keyword(ast):
 #     return tree_traversal(ast,pre_fun=lengther)
 
 
-## TESTED
+# TESTED
 @in_processing_stack
 def expand_array_literals(ast):
     def one_element_array(element):
@@ -434,7 +434,7 @@ def expand_array_literals(ast):
 #
 # =========================================================================================
 
-## TESTED
+# TESTED
 @in_processing_stack
 def expand_string_literals(ast):
 
@@ -525,7 +525,7 @@ def expand_right_associative(ast):
 #
 # =============================================================================================================
 
-## TESTED
+# TESTED
 @in_processing_stack
 def expand_overfull_brackets(ast):
     """Expand lists of many lists into lists of length 2"""
@@ -536,7 +536,7 @@ def expand_overfull_brackets(ast):
                 node = tuple(p for p in in_pairs(node))
         elif len(node) > 3:
             raise PsllSyntaxError(
-                f"Invalid bracket structure. Can only expand lists of lists."
+                "Invalid bracket structure. Can only expand lists of lists."
             )
         return node
 
@@ -783,7 +783,7 @@ if __name__ == "__main__":
             raise argparse.ArgumentTypeError(f"The file {filename} does not exist!")
         if os.path.splitext(filename)[1] != ".psll":
             raise argparse.ArgumentTypeError(
-                f"The input file does not have an .psll extension!"
+                "The input file does not have an .psll extension!"
             )
         return filename
 
@@ -803,7 +803,7 @@ if __name__ == "__main__":
         # Check extension
         if os.path.splitext(filename)[1] != ext:
             raise argparse.ArgumentTypeError(
-                f"The output file does not have an .pyra extension!"
+                "The output file does not have an .pyra extension!"
             )
 
     parser = argparse.ArgumentParser(

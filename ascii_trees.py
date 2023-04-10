@@ -1,7 +1,8 @@
+from typing import Iterator, NamedTuple, Optional, List
+from abc import ABC, abstractmethod
+
 from itertools import zip_longest, product, islice
 from more_itertools import pairwise
-
-from abc import ABC, abstractmethod
 
 # ========================================================================================================================================
 #
@@ -20,11 +21,20 @@ R_SIDE = "\\"
 SPACE = " "
 
 
+row_tuple = NamedTuple("row_tuple", [("left", int), ("row", str), ("right", int)])
+
+
 class AbstractTree(ABC):
     """Abstract Tree class"""
 
+    grid: List[row_tuple]
+    width: int
+    height: int
+
     @staticmethod
-    def text2pyramid(text, min_width=None, remove_spaces=False):
+    def text2pyramid(
+        text, min_width: Optional[int] = None, remove_spaces: bool = False
+    ):
         """Put text inside of a pyramid"""
         # N = ceil(sqrt(len(text))) # Number of pyramid levels
         if remove_spaces:
@@ -32,16 +42,13 @@ class AbstractTree(ABC):
         if min_width:
             # Pad the string out such that the pyramid ends up having a correct width
             min_width = min_width // 2 * 2 + 1  # Make sure width is odd
-            text_pad = (
-                min_width - len(text) - 2
-            )  # Figure out by how much would the text have to be padded in a single line
+            # Figure out by how much would the text have to be padded in a single line
+            text_pad = min_width - len(text) - 2
             text_width = ((min_width - 1) // 2) ** 2  # Desired text width
             if text_pad > 0:
-                text = (
-                    (text_pad // 2) * SPACE
-                    + text
-                    + (text_pad - (text_pad // 2)) * SPACE
-                )
+                l_pad = text_pad // 2
+                r_pad = text_pad - (text_pad // 2)
+                text = l_pad * SPACE + text + r_pad * SPACE
             text = (text_width - len(text)) * SPACE + text  # Pad out the rest
 
         # Ensure nice formatting of short keywords (without excessive SPACE)
@@ -59,9 +66,7 @@ class AbstractTree(ABC):
             text = 4 * SPACE + text[:5] + SPACE + text[5:]
 
         level = 0
-        lines = [
-            TOP,
-        ]
+        lines = [TOP]
         while text:
             level += 1
             i = 2 * level - 1
@@ -74,8 +79,10 @@ class AbstractTree(ABC):
         return grid
 
     @staticmethod
-    def grid2string(grid):
-        return "\n".join([SPACE * l + row + SPACE * r for l, row, r in grid])
+    def grid2string(grid: Iterator[row_tuple]) -> str:
+        return "\n".join(
+            [SPACE * left + row + SPACE * right for left, row, right in grid]
+        )
 
     @staticmethod
     def string2grid(string):
@@ -90,20 +97,24 @@ class AbstractTree(ABC):
             grid.append((i1, row[i1:i2], len(row) - i2))
         return grid
 
-    def __init__(self, grid):
+    def __init__(self, grid: Iterator[row_tuple]):
         """Initialise from a grid"""
-        self.height = len(grid)
-        rowlen = lambda r: r[0] + len(r[1]) + r[2]
-        self.width = rowlen(grid[0])
+        _grid = list(grid)  # Make sure grid is a list
 
-        for row in grid:  # Sanity check on rows of the grid
+        def rowlen(r: row_tuple) -> int:
+            return r.left + len(r.row) + r.right
+
+        self.height = len(_grid)
+        self.width = rowlen(_grid[0])
+
+        for row in _grid:  # Sanity check on rows of the grid
             assert isinstance(row, tuple), "All rows of the grid must be tuples"
             assert len(row) == 3, "All rows must be 3-length tuples"
             assert (
                 rowlen(row) == self.width
             ), "All rows must specify entries of the same length"
 
-        self.grid = grid
+        self.grid = _grid
 
     @classmethod
     def from_text(cls, text, **kwargs):
@@ -139,6 +150,9 @@ class AbstractTree(ABC):
 
     def __hash__(self):
         return hash(tuple(self.grid))  # Trees hash the same if their grids are the same
+
+    def __iter__(self):
+        return iter(self.grid)
 
 
 # ==============================================================================================
@@ -205,11 +219,11 @@ class Tree(AbstractTree):
     """Tree of pyramids"""
 
     @staticmethod
-    def distance_row_iterator(left, right):
+    def distance_row_iterator(left_tree: "Tree", right_tree: "Tree") -> Iterator[int]:
         """Return distance of closest approach of each pair of rows"""
-        for l, r in zip(left, right):
-            distance = l[2] + r[0]
-            lc, rc = l[1][-1], r[1][0]
+        for left, right in zip(left_tree, right_tree):
+            distance = left[2] + right[0]
+            lc, rc = left[1][-1], right[1][0]
             if (lc == TOP and rc == BOTTOM) or (lc == BOTTOM and rc == TOP):
                 distance -= 1
             yield distance
@@ -246,19 +260,19 @@ class Tree(AbstractTree):
 
         # Put together self and the other row by row
         grid = []
-        for l, r in zip_longest(self, other):
-            if l and r:
-                left_pad = lp + l[0]
-                middle = l[1] + (l[2] + r[0] - squeeze) * SPACE + r[1]
-                right_pad = r[2] + rp
+        for left, right in zip_longest(self, other):
+            if left and right:
+                left_pad = lp + left[0]
+                middle = left[1] + (left[2] + right[0] - squeeze) * SPACE + right[1]
+                right_pad = right[2] + rp
             elif l:
-                left_pad = l[0]
-                middle = l[1]
-                right_pad = l[2] + max(overhang, 0)
+                left_pad = left[0]
+                middle = left[1]
+                right_pad = left[2] + max(overhang, 0)
             elif r:
-                left_pad = max(overhang, 0) + r[0]
-                middle = r[1]
-                right_pad = r[2]
+                left_pad = max(overhang, 0) + right[0]
+                middle = right[1]
+                right_pad = right[2]
             row = (left_pad, middle, right_pad)
             grid.append(row)
 
@@ -307,7 +321,7 @@ class Tree(AbstractTree):
 
         try:  # Parent *must* be a single pyramid, even if children would fit
             parent = self.toPyramid()
-        except:
+        except Exception:
             raise RuntimeError("Cannot expand non-singleton Trees")
 
         parent_width = len(self[-1][1]) // 2 * 2 + 1  # Make sure parent width is odd

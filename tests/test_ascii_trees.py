@@ -6,15 +6,16 @@ from random import choice
 from itertools import product
 
 # Add '.' to path so running this file by itself also works
-import os, sys
-
-sys.path.append(os.path.realpath("."))
+import os
+import sys
 
 import ascii_trees
 from ascii_trees import Pyramid, Tree
 
 from contextlib import contextmanager
 from io import StringIO
+
+sys.path.append(os.path.realpath("."))
 
 
 @contextmanager
@@ -60,7 +61,7 @@ class PyramidTests(unittest.TestCase):
         """> Create few pyramids"""
         for c in TEST_CONTENT:
             with self.subTest(content=c):
-                p = Pyramid.from_text(c)
+                _ = Pyramid.from_text(c)
 
     def test_default_space(self):
         """> Make sure the default space is a space"""
@@ -78,7 +79,7 @@ class PyramidTests(unittest.TestCase):
         """> Create a few pyramids, but now with minimum width"""
         for c, w in product(TEST_CONTENT, range(10)):
             with self.subTest(content=c, min_width=w):
-                p = Pyramid.from_text(c, min_width=w)
+                _ = Pyramid.from_text(c, min_width=w)
 
     def test_remove_spaces(self):
         """> Don't remove spaces from the input"""

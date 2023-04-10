@@ -1,3 +1,5 @@
+import unittest
+
 import os
 from os.path import exists, splitext
 
@@ -16,8 +18,6 @@ ruby_path = os.popen("which ruby").read().replace("\n", "")
 ruby_exists = exists(ruby_path)
 print("ruby path:", ruby_path)
 print("exists:", ruby_exists)
-
-import unittest
 
 examples = "./examples/"
 

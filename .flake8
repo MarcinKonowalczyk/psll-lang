@@ -1,3 +1,10 @@
 [flake8]
-ignore = E501 # Ignore line length compleatly
-# max-line-length = 119
+# Black compatibility
+# https://github.com/psf/black/blob/06ccb88bf2bd35a4dc5d591bb296b5b299d07323/docs/guides/using_black_with_other_tools.md#flake8
+max-line-length = 88
+extend-ignore =
+    E203,
+
+# Other ignores
+    E501, # Ignore line length compleatly
+    E731 # Ignore assigning lambda expressions

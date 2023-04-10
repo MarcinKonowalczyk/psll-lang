@@ -1,17 +1,18 @@
 import unittest
+import os
+import sys
 
 from functools import partial
 from string import ascii_letters
 import random
-from itertools import product, permutations
+
+# from itertools import product, permutations
 from contextlib import contextmanager
 
-# Add '.' to path so running this file by itself also works
-import os, sys
-
-sys.path.append(os.path.realpath("."))
-
 import psll
+
+# Add '.' to path so running this file by itself also works
+sys.path.append(os.path.realpath("."))
 
 
 def depth(tree):

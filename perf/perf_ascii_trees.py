@@ -1,14 +1,13 @@
 # Add '.' to path so running this file by itself also works
-import os, sys
+import os
+import sys
+from itertools import product
 
-sys.path.append(os.path.realpath("."))
-
-import ascii_trees
+# import ascii_trees
 from ascii_trees import Pyramid, Tree
-
 import perf_helpers as perf
 
-from itertools import product
+sys.path.append(os.path.realpath("."))
 
 TEST_CONTENT = [
     "",
@@ -45,7 +44,7 @@ def perf_add_side_by_side():
 
     def f():
         for p1, p2 in pyramids:
-            t = p1 + p2
+            _ = p1 + p2
 
     T = perf.runtime(f, 1.0, divisor=len(pyramids))
     # T = perf.ncalls(f, 1000, divisor=len(pyramids))
