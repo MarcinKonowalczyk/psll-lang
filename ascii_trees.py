@@ -386,25 +386,23 @@ class Tree(AbstractTree):
         parent_left_pad, _, parent_right_pad = children[0]
 
         grid: List[row_tuple] = []
+        row: row_tuple
         for p, c in self.child_row_iterator(parent, children):
             if p and not c:
-                left_pad = parent_left_pad + p.left
-                center = p.center
-                right_pad = p.right + parent_right_pad
-            elif p and c:
-                left_pad = c.left
-                center = c.center[0] + p.center + c.center[-1]
-                right_pad = c.right
-            elif not p and c:
-                left_pad, center, right_pad = c
-            grid.append(
-                row_tuple(
-                    left=left_pad,
-                    center=center,
-                    right=right_pad,
+                row = row_tuple(
+                    left=parent_left_pad + p.left,
+                    center=p.center,
+                    right=p.right + parent_right_pad,
                 )
-            )
-
+            elif p and c:
+                row = row_tuple(
+                    left=c.left,
+                    center=c.center[0] + p.center + c.center[-1],
+                    right=c.right,
+                )
+            elif not p and c:
+                row = c
+            grid.append(row)
         return Tree(grid)
 
     def toTree(self) -> "Tree":
