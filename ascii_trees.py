@@ -278,26 +278,27 @@ class Tree(AbstractTree):
 
         # Put together self and the other row by row
         grid: List[row_tuple] = []
+        row: row_tuple
         for lr, rr in zip_longest(self, other, fillvalue=None):
             if lr and rr:
-                _lp = lp + lr.left
-                center = lr.center + (lr.right + rr.left - squeeze) * SPACE + rr.center
-                _rp = rp + rr.right
-            elif lr:
-                _lp = lr.left
-                center = lr.center
-                _rp = lr.right + max(overhang, 0)
-            elif rr:
-                _lp = max(overhang, 0) + rr.left
-                center = rr.center
-                _rp = rr.right
-            grid.append(
-                row_tuple(
-                    left=_lp,
-                    center=center,
-                    right=_rp,
+                row = row_tuple(
+                    left=lr.left + lp,
+                    center=lr.center + (lr.right + rr.left - squeeze) * SPACE + rr.center,
+                    right=rr.right + rp,
                 )
-            )
+            elif lr:
+                row = row_tuple(
+                    left=lr.left,
+                    center=lr.center,
+                    right=lr.right + max(overhang, 0),
+                )
+            elif rr:
+                row = row_tuple(
+                    left=max(overhang, 0) + rr.left,
+                    center=rr.center,
+                    right=rr.right,
+                )
+            grid.append(row)
 
         return Tree(grid)
 
