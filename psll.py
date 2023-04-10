@@ -100,7 +100,7 @@ def context_split(
             continue
 
         for ci, c in enumerate(contexts):
-            if not any(state[ci + 1 :]):  # noqa: E203
+            if not any(state[ci + 1 :]):
                 if state[ci]:
                     # First try to match the closing context if state is already high
                     # This make matching the same delimiter for opening and closing work
