@@ -28,28 +28,11 @@ is_string = lambda x: isinstance(x, str)
 is_tuple = lambda x: isinstance(x, tuple)
 # ^ Alas this cannot be done with partial
 
+# fmt: off
 SPACE = " "
-PS_KEYWORDS = {
-    "+",
-    "*",
-    "-",
-    "/",
-    "^",
-    "=",
-    "<=>",
-    "out",
-    "chr",
-    "arg",
-    "#",
-    '"',
-    "!",
-    "[",
-    "]",
-    "set",
-    "do",
-    "loop",
-    "?",
-}
+PS_KEYWORDS = {"+", "*", "-", "/", "^", "=", "<=>", "out", "chr", "arg", "#",
+               '"', "!", "[", "]", "set", "do", "loop", "?"}
+# fmt: on
 
 
 class PsllSyntaxError(SyntaxError):
@@ -100,7 +83,11 @@ def readfile(filename):
 
 
 def context_split(
-    string, delimiter=",", contexts=(), escape_char="\\", remove_empty=False
+    string: str,
+    delimiter=",",
+    contexts=(),
+    escape_char="\\",
+    remove_empty=False,
 ):
     """Split string at delimiter, except for in the middle of the specified contexts"""
 
@@ -210,7 +197,7 @@ def tree_traversal(ast, pre_fun=None, str_fun=None, post_fun=None, final_fun=Non
     return ast2  # Return ast back as a tuple
 
 
-__processing_stack__ = []  # Pre processign functions in order they ought to be applied
+__processing_stack__ = []  # Pre processing functions in order they ought to be applied
 
 
 def in_processing_stack(fun):
@@ -776,12 +763,12 @@ def main(args):  # pragma: no cover
 if __name__ == "__main__":
 
     import argparse
-    import os.path
+    import os.path as op
 
     def valid_input_file(filename):
-        if not os.path.exists(filename):
+        if not op.exists(filename):
             raise argparse.ArgumentTypeError(f"The file {filename} does not exist!")
-        if os.path.splitext(filename)[1] != ".psll":
+        if op.splitext(filename)[1] != ".psll":
             raise argparse.ArgumentTypeError(
                 "The input file does not have an .psll extension!"
             )
@@ -793,15 +780,15 @@ if __name__ == "__main__":
             return  # Return if no -o option
         # Make filename based on the input filename
         if filename == " ":
-            filename = os.path.splitext(args.input)[0] + ext
+            filename = op.splitext(args.input)[0] + ext
             args.output = filename
         # Check whether to overwrite
-        if os.path.exists(filename) and not args.force:
+        if op.exists(filename) and not args.force:
             answer = input(f"File {filename} already exists. Overwrite? [y/N]")
             if answer.lower() != "y":
                 args.output = None
         # Check extension
-        if os.path.splitext(filename)[1] != ext:
+        if op.splitext(filename)[1] != ext:
             raise argparse.ArgumentTypeError(
                 "The output file does not have an .pyra extension!"
             )

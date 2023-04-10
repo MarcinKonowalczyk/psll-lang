@@ -247,7 +247,7 @@ class Tree(AbstractTree):
         tight: bool = True,
         min_spacing: Optional[int] = None,
         odd_spacing: bool = False,
-    ):
+    ) -> "Tree":
         """Add trees side-by-side"""
         # Find tightest squeeze between the pyramids
         squeeze = 0
@@ -318,7 +318,7 @@ class Tree(AbstractTree):
         for row in _child:
             yield (None, row)
 
-    def add_one_child(self, child: AbstractTree, left: bool = True):
+    def add_one_child(self, child: AbstractTree, left: bool = True) -> "Tree":
         """Add a left or right child to the tree"""
         assert isinstance(child, AbstractTree), "The child must be a Tree or a Pyramid"
 
@@ -358,7 +358,7 @@ class Tree(AbstractTree):
             grid.append(row)
         return Tree(grid)
 
-    def add_two_children(self, left: AbstractTree, right: AbstractTree):
+    def add_two_children(self, left: AbstractTree, right: AbstractTree) -> "Tree":
         """Add left and right child to a tree"""
 
         try:  # Parent *must* be a single pyramid, even if children would fit
@@ -373,7 +373,7 @@ class Tree(AbstractTree):
         children = left.add_side_by_side(
             right, min_spacing=parent_width, odd_spacing=True
         )
-        actual_children_width = len(children[0][1]) - 2
+        actual_children_width = len(children[0].center) - 2
 
         # Try to expand oneself to accommodate the width of the children
         if (actual_children_width > parent_width) or (parent_width > len(self[-1][1])):
@@ -383,16 +383,16 @@ class Tree(AbstractTree):
         else:
             parent = self
 
-        parent_left_pad, _, parent_right_pad = children[0]
+        lp, _, rp = children[0]
 
         grid: List[row_tuple] = []
         row: row_tuple
         for p, c in self.child_row_iterator(parent, children):
             if p and not c:
                 row = row_tuple(
-                    left=parent_left_pad + p.left,
+                    left=lp + p.left,
                     center=p.center,
-                    right=p.right + parent_right_pad,
+                    right=p.right + rp,
                 )
             elif p and c:
                 row = row_tuple(
@@ -411,7 +411,9 @@ class Tree(AbstractTree):
     def toPyramid(self) -> "Pyramid":
         return Pyramid(self.grid)
 
-    def __add__(self, other: Union[AbstractTree, Tuple[AbstractTree, AbstractTree]]):
+    def __add__(
+        self, other: Union[AbstractTree, Tuple[AbstractTree, AbstractTree]]
+    ) -> "Tree":
         if isinstance(other, AbstractTree):
             return self.add_side_by_side(other.toTree())
         elif isinstance(other, tuple) and len(other) == 2:
