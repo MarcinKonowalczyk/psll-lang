@@ -6,7 +6,7 @@ from itertools import product
 sys.path.append(os.path.realpath("."))
 
 # import ascii_trees
-from ascii_trees import Pyramid, Tree   # noqa: E402
+from ascii_trees import Pyramid, Tree  # noqa: E402
 import perf_helpers as perf
 
 
