@@ -25,21 +25,24 @@ Macro-driven metalanguage which compiles to [Pyramid Scheme](https://github.com/
 
 ## Usage
 
-Make  `psll.py` executable:
+Run the psll module as a script:
 
 ```
-chmod u+x psll.py
+python -m psll
 ```
+
 or use the `psll.sh` bash script which you might want to edit to make it point to the correct files. It compiles and runs a program.
 
 Read the help:
+
 ```
-./psll.py -h
+python -m psll --help
 ```
 
 Verbose output and save to the file:
+
 ```
-./psll.py ./examples/bubble_sort.psll -o -v
+python -m psll ./examples/bubble_sort.psll -o -v
 ```
 
 
@@ -67,7 +70,7 @@ For the purposed of the markdown README, C# highlighting seems to look fine. The
 It can be compiled and run as follows:
 
 ```
-./psll.py ./examples/nargin_counter.psll -o -f
+python -m psll ./examples/nargin_counter.psll -o -f
 ruby ./Pyramid-Scheme/pyra.rb ./exmaples/nargin_counter.pyra 4 3 5 2 4
 ```
 
@@ -290,7 +293,6 @@ This is not a real-purpose language. In this section the 'optimisation' refers t
 - [ ] ?? Make `PsllSyntaxError` class do more
   - [ ] ?? Backtrace
   - [ ] ?? Or, I guess, rip it out and make it a normal `SyntaxError`
-- [ ] ?? Move the command line code from psll.py to a bash script
 - [ ] Protect `set` and maybe some other keywords from accidentally writing something like `(set (x (set y 1)) (# line))`. `def` is already protected like that, so why not `set`.
 - [ ] `++` and `--` keywords (aka increment and decrement?)
 - [ ] Expanders shouldn't mutate nodes!
@@ -301,15 +303,23 @@ This is not a real-purpose language. In this section the 'optimisation' refers t
 - [ ] ? Actually throw an error if bracket is found in an array, or is this somehow, sometimes desired? After all, braces are not allowed in variable names.
 - [ ] Add more sorting algorithms to examples (because they're fun to code.) Pancake sort?
   - [ ] ? Add something to help with prefix and suffix?
+- [ ] Allow one to write the empty pyramid keyword explicitly as the underscore, such that `( (a) (b) )` can also be written as `(_ (a) (b) )`, just for completeness.
+- [ ] Add section about array expansions to this README
+- [ ] Comments between the pyramids (using inverted trees...?)
+  - [x] Check whether it would even work... (it would!!!)
+  - [ ] Make sure they don't bloat the code...? (don't appear on the right)
+  - [ ] Make sure they appear roughly in the right place...?
+- [ ] Put all the trees under a single root??
+- [ ] Add Ewok-village optimisation (<- this is a *big* one. should probably make it version 2.0.0)
+
 
 More on the 'project management' front:
 
 - [ ] ?? Easier to use installation. Maybe a makefile which makes a symlink in the correct place...
   - [ ] ?? `pip install psll` ...
   - [ ] ??? brew tap. I mean, why not. Its not polluting the core with needless software if its just a tap...
-- [ ] Configure flake8 and fight with it for a while
-- [ ] ?? Same for mypy
 - [x] Make sure migration to travis.com (from travis.org) went fine (whenever that happens)
+  - [ ] ?? deprecate travis?? github actions seem to work better for small projects like this
 - [ ] Better testing
   - [ ] Add testing psll bash script to tests
     - [ ] <s>?? And somehow coverage</s> [`bashcov`](https://github.com/infertux/bashcov)
@@ -323,9 +333,8 @@ More on the 'project management' front:
     - [x] Test *asymmetric* children in `tree_repr`
   - [ ] ? Move testing to makefile
     - [ ] Make sure it works with travis
+  - [ ] Move to pytest
 - [ ] `psll.sh` is a mess, therefore (amongst others) `run.sh` is a mess
-- [ ] Allow one to write the empty pyramid keyword explicitly as the underscore, such that `( (a) (b) )` can also be written as `(_ (a) (b) )`, just for completeness.
-- [ ] Add section about array expansions to this README
 - [ ] Add esolang wiki page. I think I deserve one now.
 - [ ] Add psll to tio...?
 
@@ -364,6 +373,9 @@ Bullet points get moved here from the above section when they get finished. (It'
   - [x] Expansion of `+` and `*` commands too
     - [x] Right and left-associative expansion
 - [x] Add mention of the Sigbovik paper to README
+- [x] <s>?? Move the command line code from psll.py to a bash script</s> (<- not done in favour of abandoning the bash script alltogether)
+- [x] Configure flake8 and fight with it for a while
+- [x] ?? Same for mypy
 
 
 ## Bugs
