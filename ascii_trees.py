@@ -1,4 +1,6 @@
-from typing import Iterator, NamedTuple, Optional, List, Union, Tuple
+from typing import Iterator, NamedTuple, Optional, List, Union, Tuple, Iterable
+
+# from typing import final
 from abc import ABC, abstractmethod
 
 from itertools import zip_longest, product, islice
@@ -21,7 +23,7 @@ R_SIDE = "\\"
 SPACE = " "
 
 
-row_tuple = NamedTuple("row_tuple", [("left", int), ("row", str), ("right", int)])
+row_tuple = NamedTuple("row_tuple", [("left", int), ("center", str), ("right", int)])
 
 
 class AbstractTree(ABC):
@@ -97,11 +99,11 @@ class AbstractTree(ABC):
             grid.append((i1, row[i1:i2], len(row) - i2))
         return grid
 
-    def __init__(self, grid: Iterator[Union[row_tuple, Tuple[int, str, int]]]):
+    def __init__(self, grid: Iterable[Union[row_tuple, Tuple[int, str, int]]]):
         """Initialise from a grid"""
 
         def rowlen(r: row_tuple) -> int:
-            return r.left + len(r.row) + r.right
+            return r.left + len(r.center) + r.right
 
         _grid: List[row_tuple] = []
         for i, row in enumerate(grid):
@@ -117,9 +119,8 @@ class AbstractTree(ABC):
             if i == 0:
                 self.width = rowlen(_row)
             else:
-                assert (
-                    rowlen(_row) == self.width
-                ), "All rows must specify entries of the same length"
+                assert rowlen(_row) == self.width, \
+                    f"All rows must specify entries of the same length (row {i} has length {rowlen(_row)} while the first row has length {self.width})"
 
         assert len(_grid) > 0, "Grid must not be empty"
         self.height = len(_grid)
@@ -138,12 +139,12 @@ class AbstractTree(ABC):
         return cls(grid)
 
     @abstractmethod
-    def toTree(self):
-        return
+    def toTree(self) -> "Tree":
+        return NotImplemented
 
     @abstractmethod
-    def toPyramid(self):
-        return
+    def toPyramid(self) -> "Pyramid":
+        return NotImplemented
 
     def __str__(self):
         return self.grid2string(self.grid)
@@ -151,16 +152,16 @@ class AbstractTree(ABC):
     def __repr__(self):
         return f"<{type(self).__name__} #{hash(self)}:\n{str(self)}\n>"
 
-    def __getitem__(self, key):
+    def __getitem__(self, key: int) -> row_tuple:
         return self.grid[key]
 
-    def __setitem__(self, key, value):
+    def __setitem__(self, key: int, value: row_tuple) -> None:
         self.grid[key] = value
 
-    def __hash__(self):
+    def __hash__(self) -> int:
         return hash(tuple(self.grid))  # Trees hash the same if their grids are the same
 
-    def __iter__(self):
+    def __iter__(self) -> Iterator[row_tuple]:
         return iter(self.grid)
 
 
@@ -174,17 +175,17 @@ class AbstractTree(ABC):
 #
 # ==============================================================================================
 
-
+# @final
 class Pyramid(AbstractTree):
     """Single pyramid"""
 
     def __init__(self, grid):
         super().__init__(grid)
-        assert self[0][1] == TOP, "Pyramid has an invalid top"
+        assert self[0].center == TOP, "Pyramid has an invalid top"
         for row, next_row in pairwise(self):
-            assert row[0] == row[2], "Not a pyramid"
-            if not (row[0] == 1 and next_row[0] == 1):
-                assert (row[0] - 1) == next_row[0], "Not a pyramid"
+            assert row.left == row.right, "Not a pyramid"
+            if not (row.left == 1 and next_row.left == 1):
+                assert (row.left - 1) == next_row.left, "Not a pyramid"
 
     @property
     def content(self):
@@ -194,13 +195,13 @@ class Pyramid(AbstractTree):
         )
         return content.strip()
 
-    def toTree(self):
+    def toTree(self) -> "Tree":
         return Tree(self.grid)
 
-    def toPyramid(self):
+    def toPyramid(self) -> "Pyramid":
         return self
 
-    def __add__(self, other):
+    def __add__(self, other: AbstractTree) -> AbstractTree:
         """Overload the + operator by passing self to Tree"""
         if isinstance(other, AbstractTree):
             return self.toTree() + other.toTree()
@@ -223,21 +224,29 @@ class Pyramid(AbstractTree):
 #
 # =================================================================
 
-
+# @final
 class Tree(AbstractTree):
     """Tree of pyramids"""
 
     @staticmethod
-    def distance_row_iterator(left_tree: "Tree", right_tree: "Tree") -> Iterator[int]:
+    def distance_row_iterator(
+        left_tree: AbstractTree, right_tree: AbstractTree
+    ) -> Iterator[int]:
         """Return distance of closest approach of each pair of rows"""
-        for left, right in zip(left_tree, right_tree):
-            distance = left[2] + right[0]
-            lc, rc = left[1][-1], right[1][0]
+        for left_row, right_row in zip(left_tree, right_tree):
+            distance = left_row.right + right_row.left
+            lc, rc = left_row.center[-1], right_row.center[0]
             if (lc == TOP and rc == BOTTOM) or (lc == BOTTOM and rc == TOP):
                 distance -= 1
             yield distance
 
-    def add_side_by_side(self, other, tight=True, min_spacing=None, odd_spacing=False):
+    def add_side_by_side(
+        self,
+        other: AbstractTree,
+        tight: bool = True,
+        min_spacing: Optional[int] = None,
+        odd_spacing: bool = False,
+    ):
         """Add trees side-by-side"""
         # Find tightest squeeze between the pyramids
         squeeze = 0
@@ -245,11 +254,11 @@ class Tree(AbstractTree):
             squeeze = min(self.distance_row_iterator(self, other))
 
         # Decrease the squeeze if required by the min_width
-        l, r = self[0], other[0]
-        p2p_distance = l[2] + r[0] - squeeze
+        _lr, _rr = self[0], other[0]
+        p2p_distance = _lr.right + _rr.left - squeeze
         if min_spacing:
             squeeze -= max(min_spacing - p2p_distance, 0)
-            p2p_distance = l[2] + r[0] - squeeze
+            p2p_distance = _lr.right + _rr.left - squeeze
 
         # Width of the squeezed pyramid
         squeezed_width = self.width + other.width - squeeze
@@ -268,68 +277,87 @@ class Tree(AbstractTree):
             lp, rp = max(-overhang, 0), 0
 
         # Put together self and the other row by row
-        grid = []
-        for left, right in zip_longest(self, other):
-            if left and right:
-                left_pad = lp + left[0]
-                middle = left[1] + (left[2] + right[0] - squeeze) * SPACE + right[1]
-                right_pad = right[2] + rp
-            elif left:
-                left_pad = left[0]
-                middle = left[1]
-                right_pad = left[2] + max(overhang, 0)
-            elif right:
-                left_pad = max(overhang, 0) + right[0]
-                middle = right[1]
-                right_pad = right[2]
-            row = (left_pad, middle, right_pad)
-            grid.append(row)
+        grid: List[row_tuple] = []
+        for lr, rr in zip_longest(self, other, fillvalue=None):
+            if lr and rr:
+                _lp = lp + lr.left
+                center = lr.center + (lr.right + rr.left - squeeze) * SPACE + rr.center
+                _rp = rp + rr.right
+            elif lr:
+                _lp = lr.left
+                center = lr.center
+                _rp = lr.right + max(overhang, 0)
+            elif rr:
+                _lp = max(overhang, 0) + rr.left
+                center = rr.center
+                _rp = rr.right
+            grid.append(
+                row_tuple(
+                    left=_lp,
+                    center=center,
+                    right=_rp,
+                )
+            )
 
         return Tree(grid)
 
     @staticmethod
-    def child_row_iterator(parent, child):
+    def child_row_iterator(
+        parent: AbstractTree, child: AbstractTree
+    ) -> Iterator[Tuple[Optional[row_tuple], Optional[row_tuple]]]:
         """Yield rows from parent and then from the child, signalling the changeover"""
-        parent, child = iter(parent), iter(child)
-        for row, next_row in pairwise(parent):
+        _parent, _child = iter(parent), iter(child)
+        for row, next_row in pairwise(_parent):
             if next_row is not None:
                 yield (row, None)
-        yield (next_row, next(child))  # Intermediate row
-        for row in child:
+        yield (next_row, next(_child))  # Intermediate row
+        for row in _child:
             yield (None, row)
 
-    def add_one_child(self, child, left=True):
+    def add_one_child(self, child: AbstractTree, left: bool = True):
         """Add a left or right child to the tree"""
         assert isinstance(child, AbstractTree), "The child must be a Tree or a Pyramid"
 
         # Figure out the padding and overhang spacing
-        p, c = self[-1], child[0]  # Last row of parent and first of the child
-        parent_pad = c[0] if left else c[2]
-        overhang = c[2] - (len(p[1]) + p[2]) if left else c[0] - (len(p[1]) + p[2])
+        # Last row of parent and first of the child
+        parent_row, child_row = self[-1], child[0]
 
-        grid = []
+        parent_pad = child_row.left if left else child_row.right
+        # NOTE: This changed whn updating to row_tuple parent_row.right -> parent_row.left
+        overhang = (
+            child_row.right - (len(parent_row.center) + parent_row.left)
+            if left
+            else child_row.left - (len(parent_row.center) + parent_row.right)
+        )
+
+        grid: List[row_tuple] = []
         for p, c in self.child_row_iterator(self, child):
             if p and not c:
-                left_pad = parent_pad + p[0] if left else max(overhang, 0) + p[0]
-                middle = p[1]
-                right_pad = p[2] + max(overhang, 0) if left else p[2] + parent_pad
+                left_pad = parent_pad + p.left if left else max(overhang, 0) + p.left
+                center = p.center
+                right_pad = p.right + max(overhang, 0) if left else p.right + parent_pad
             elif p and c:
-                left_pad = c[0] if left else max(overhang, 0) + p[0]
-                middle = c[1] + p[1] if left else p[1] + c[1]
-                right_pad = p[2] + max(overhang, 0) if left else c[2]
+                left_pad = c.left if left else max(overhang, 0) + p.left
+                center = c.center + p.center if left else p.center + c.center
+                right_pad = p.right + max(overhang, 0) if left else c.right
             elif not p and c:
-                left_pad = c[0] if left else max(-overhang, 0) + c[0]
-                middle = c[1]
-                right_pad = c[2] + max(-overhang, 0) if left else c[2]
-            row = (left_pad, middle, right_pad)
-            grid.append(row)
+                left_pad = c.left if left else max(-overhang, 0) + c.left
+                center = c.center
+                right_pad = c.right + max(-overhang, 0) if left else c.right
+            grid.append(
+                row_tuple(
+                    left=left_pad,
+                    center=center,
+                    right=right_pad,
+                )
+            )
         return Tree(grid)
 
-    def add_two_children(self, left, right):
+    def add_two_children(self, left: AbstractTree, right: AbstractTree):
         """Add left and right child to a tree"""
 
         try:  # Parent *must* be a single pyramid, even if children would fit
-            parent = self.toPyramid()
+            parent_as_pyramid = self.toPyramid()
         except Exception:
             raise RuntimeError("Cannot expand non-singleton Trees")
 
@@ -344,36 +372,43 @@ class Tree(AbstractTree):
 
         # Try to expand oneself to accommodate the width of the children
         if (actual_children_width > parent_width) or (parent_width > len(self[-1][1])):
-            parent = Tree.from_text(parent.content, min_width=actual_children_width)
+            parent = Tree.from_text(
+                parent_as_pyramid.content, min_width=actual_children_width
+            )
         else:
             parent = self
 
         parent_left_pad, _, parent_right_pad = children[0]
 
-        grid = []
+        grid: List[row_tuple] = []
         for p, c in self.child_row_iterator(parent, children):
             if p and not c:
-                left_pad = parent_left_pad + p[0]
-                middle = p[1]
-                right_pad = p[2] + parent_right_pad
+                left_pad = parent_left_pad + p.left
+                center = p.center
+                right_pad = p.right + parent_right_pad
             elif p and c:
-                left_pad = c[0]
-                middle = c[1][0] + p[1] + c[1][-1]
-                right_pad = c[2]
+                left_pad = c.left
+                center = c.center[0] + p.center + c.center[-1]
+                right_pad = c.right
             elif not p and c:
-                left_pad, middle, right_pad = c
-            row = (left_pad, middle, right_pad)
-            grid.append(row)
+                left_pad, center, right_pad = c
+            grid.append(
+                row_tuple(
+                    left=left_pad,
+                    center=center,
+                    right=right_pad,
+                )
+            )
 
         return Tree(grid)
 
-    def toTree(self):
+    def toTree(self) -> "Tree":
         return self
 
-    def toPyramid(self):
+    def toPyramid(self) -> "Pyramid":
         return Pyramid(self.grid)
 
-    def __add__(self, other):
+    def __add__(self, other: Union[AbstractTree, Tuple[AbstractTree, AbstractTree]]):
         if isinstance(other, AbstractTree):
             return self.add_side_by_side(other.toTree())
         elif isinstance(other, tuple) and len(other) == 2:
