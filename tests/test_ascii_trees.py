@@ -15,8 +15,8 @@ from io import StringIO
 
 sys.path.append(os.path.realpath("."))
 
-import ascii_trees  # noqa: E402
-from ascii_trees import Pyramid, Tree  # noqa: E402
+import psll.ascii_trees as ascii_trees  # noqa: E402
+from psll.ascii_trees import Pyramid, Tree  # noqa: E402
 
 
 @contextmanager

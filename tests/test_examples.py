@@ -44,7 +44,7 @@ class MetaTests:
         if exists(pyra_filename):
             os.remove(pyra_filename)
 
-        commands = [f"python psll.py {self.filename} -o -f"]
+        commands = [f"python -m psll {self.filename} -o -f"]
         # commands = [commands[0], commands[0] + ' -go'] # Also test with greedy optimisation
         for com in commands:
             with self.subTest(command=com):
