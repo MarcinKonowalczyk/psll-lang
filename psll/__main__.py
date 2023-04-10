@@ -111,8 +111,10 @@ valid_output_file(args)
 #
 # ======================================================================
 
+from . import preprocessor  # noqa: E402
+from . import lexer  # noqa: E402
 from . import compiler  # noqa: E402
-from functools import reduce  # noqa: E402
+from . import optimisers  # noqa: E402
 
 
 def main(args):  # pragma: no cover
@@ -122,27 +124,24 @@ def main(args):  # pragma: no cover
     if args.output and args.verbose:
         print("Output filename:", args.output)
 
-    text = compiler.readfile(args.input)
+    text = preprocessor.read_file(args.input)
+
+    text = preprocessor.preprocess(text)
     if args.verbose:
         print("Reduced source:", text)
 
-    ast = compiler.lex(text)
-    print(ast, end="\n\n")
+    ast = lexer.lex(text)
+    # print(ast, end="\n\n")
     # names = find_variable_names(ast)
     # print('variables:',variables)
 
-    stack = (
-        compiler.__processing_stack__[1:]
-        if args.full_names
-        else compiler.__processing_stack__
-    )
-    ast = reduce(lambda x, y: y(x), [ast] + list(stack))
-    print(ast)
+    ast = compiler.apply_processing_stack(ast, full_names=args.full_names)
+    # print(ast)
     # TODO  Make optimisation options mutually exclusive
     if args.considerate_optimisation:
-        ast = compiler.considerate_optimisation(ast, max_iter=None)
+        ast = optimisers.considerate_optimisation(ast, max_iter=None)
     if args.greedy_optimisation:
-        ast = compiler.greedy_optimisation(ast, max_iter=None)
+        ast = optimisers.greedy_optimisation(ast, max_iter=None)
 
     program = compiler.compile(ast)
     if args.verbose:

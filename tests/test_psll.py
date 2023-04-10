@@ -95,16 +95,17 @@ class MetaTests:
 
 class Readfile(unittest.TestCase, MetaTests):
     @staticmethod
-    def readfile(content):
-        """psll.readfile proxy"""
+    def read_file(content):
+        """read_file + preprocess"""
         with psll_file(content) as f:
-            return psll.compiler.readfile(f)
+            text = psll.preprocessor.read_file(f)
+            return psll.preprocessor.preprocess(text)
 
     def test_empty(self):
         """> Read and parse files with empty brackets"""
         contents = ["", "()", "( )", "()()", "()()()", "(())", "() (())"]
         targets = ["", "()", "()", "() ()", "() () ()", "(())", "() (())"]
-        self.paired_test(contents, targets, self.readfile)
+        self.paired_test(contents, targets, self.read_file)
 
     def test_simple(self):
         """> Read and parse files with simple contents"""
@@ -116,7 +117,7 @@ class Readfile(unittest.TestCase, MetaTests):
             "(1 2 3 4)",
             "(hi) (salut)",
         ]
-        self.paired_test(contents, contents, self.readfile)
+        self.paired_test(contents, contents, self.read_file)
 
     def test_comments(self):
         """> Removing comments"""
@@ -130,27 +131,27 @@ class Readfile(unittest.TestCase, MetaTests):
             "//()",
         ]
         targets = ["", "()", "()", "()", "()", "()", ""]
-        self.paired_test(contents, targets, self.readfile)
+        self.paired_test(contents, targets, self.read_file)
 
     @unittest.skip("Needs work")
     def test_single_spaces(self):
         """> Only single spaces"""
         contents = ["( )", "(  )", "(   )", "(     )"]
         targets = ["()", "()", "()", "()"]
-        self.paired_test(contents, targets, self.readfile)
+        self.paired_test(contents, targets, self.read_file)
 
     @unittest.skip("Needs work")
     def test_leading_and_trailing_spaces(self):
         """> No leading or trailing whitepace"""
         contents = ["(   hi)", "(hi   )", "(hi   1)", "(   hi 1)", "(hi 1   )"]
         targets = ["(hi)", "(hi)", "(hi 1)", "(hi 1)", "(hi 1)"]
-        self.paired_test(contents, targets, self.readfile)
+        self.paired_test(contents, targets, self.read_file)
 
     def test_multiline(self):
         """> Input over multiple lines"""
         contents = ["()\n()", "\n(hi)", "(\nhi)", "(hi\n)", "(hi)\n"]
         targets = ["() ()", "(hi)", "(hi)", "(hi)", "(hi)"]
-        self.paired_test(contents, targets, self.readfile)
+        self.paired_test(contents, targets, self.read_file)
 
 
 # =============================================================

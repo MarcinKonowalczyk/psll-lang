@@ -1,21 +1,15 @@
-#!/usr/bin/python3
+from typing import List, Tuple, Union, Dict, Callable, Optional, cast
 
-import re
-
-from itertools import chain  # , product, zip_longest
-from more_itertools import windowed, windowed_complete
+from more_itertools import windowed
 
 from functools import partial, reduce
 from functools import lru_cache as cached
 import operator
 from string import ascii_letters
 
-import sys
-
-if sys.version_info < (3, 6):
-    raise RuntimeError("Upgrade to python 3.6, or newer.")  # pragma: no cover
-
-from psll.ascii_trees import Pyramid
+from . import PsllSyntaxError
+from .ascii_trees import Pyramid
+from . import lexer
 
 
 def in_pairs(iterable, in_tuple=False):
@@ -24,141 +18,11 @@ def in_pairs(iterable, in_tuple=False):
         yield p if p[1] else ((p[0],) if in_tuple else p[0])
 
 
-is_string = lambda x: isinstance(x, str)
-is_tuple = lambda x: isinstance(x, tuple)
-# ^ Alas this cannot be done with partial
-
 # fmt: off
 SPACE = " "
 PS_KEYWORDS = {"+", "*", "-", "/", "^", "=", "<=>", "out", "chr", "arg", "#",
                '"', "!", "[", "]", "set", "do", "loop", "?"}
 # fmt: on
-
-
-class PsllSyntaxError(SyntaxError):
-    pass
-
-
-# ==========================================================================================================
-#
-#  #####  ##  ##      #####        ##  ##     ##  #####   ##   ##  ######
-#  ##     ##  ##      ##           ##  ####   ##  ##  ##  ##   ##    ##
-#  #####  ##  ##      #####        ##  ##  ## ##  #####   ##   ##    ##
-#  ##     ##  ##      ##           ##  ##    ###  ##      ##   ##    ##
-#  ##     ##  ######  #####        ##  ##     ##  ##       #####     ##
-#
-# ==========================================================================================================
-
-
-def readfile(filename):
-    """Read the file, remove comments and make sure all the lines are in correct brackets"""
-
-    with open(filename, "r") as f:
-        text = f.read()
-
-    subs = (
-        (r"//.*", ""),  # Remove comments
-        (r"\n+", ""),  # Remove newlines
-        (r"((?<=^)\s+|\s+(?=$))", ""),  # No trailing or leading whitespace
-        (r"((?<=\()\s+|\s+(?=\)))", ""),  # Spaces inside brackets
-        (r"(?<=\))(?=\()", " "),
-    )  # Put single spaces between crammed brackets
-
-    # Apply substitutions
-    for a, b in subs:
-        text = re.sub(a, b, text)
-
-    return text
-
-
-# =======================================================================================================================================
-#
-#   ####   #####   ##     ##  ######  #####  ##    ##  ######         ####  #####   ##      ##  ######
-#  ##     ##   ##  ####   ##    ##    ##      ##  ##     ##          ##     ##  ##  ##      ##    ##
-#  ##     ##   ##  ##  ## ##    ##    #####    ####      ##           ###   #####   ##      ##    ##
-#  ##     ##   ##  ##    ###    ##    ##      ##  ##     ##             ##  ##      ##      ##    ##
-#   ####   #####   ##     ##    ##    #####  ##    ##    ##          ####   ##      ######  ##    ##
-#
-# =======================================================================================================================================
-
-
-def context_split(
-    string: str,
-    delimiter=",",
-    contexts=(),
-    escape_char="\\",
-    remove_empty=False,
-):
-    """Split string at delimiter, except for in the middle of the specified contexts"""
-
-    state = [0 for _ in contexts]  # States of each context
-    last_break, escape, parts = 0, False, []  # Keep track of
-
-    for si, char in enumerate(string):
-        if escape:
-            escape = False
-            continue
-
-        for ci, c in enumerate(contexts):
-            if not any(state[ci + 1 :]):
-                if state[ci]:
-                    # First try to match the closing context if state is already high
-                    # This make matching the same delimiter for opening and closing work
-                    if char is c[1]:
-                        state[ci] -= 1
-                    elif char is c[0]:
-                        state[ci] += 1
-                else:
-                    if char is c[0]:
-                        state[ci] += 1
-                    elif char is c[1]:
-                        state[ci] -= 1
-
-        escape = char is escape_char  # Escape the next char
-
-        if not any(state) and (char is delimiter or not delimiter):
-            parts.append(string[last_break:si])
-            if delimiter:
-                si += 1  # Skip delimiter
-            last_break = si
-
-        if any(s < 0 for s in state):
-            raise PsllSyntaxError("Invalid context structure. Ketbra context match.")
-
-    parts.append(string[last_break:])
-
-    if any(state):
-        raise PsllSyntaxError("Invalid context structure. Incomplete context.")
-
-    if remove_empty:
-        parts = [p for p in parts if p]
-
-    return tuple(parts)
-
-
-# =============================================================
-#
-#  ##      #####  ##    ##
-#  ##      ##      ##  ##
-#  ##      #####    ####
-#  ##      ##      ##  ##
-#  ######  #####  ##    ##
-#
-# =============================================================
-
-lexer_split = partial(
-    context_split, delimiter=" ", contexts=("()", "[]", '""'), remove_empty=True
-)
-incontext = (
-    lambda text, context: len(text) >= 2
-    and text[0] == context[0]
-    and text[-1] == context[1]
-)
-
-
-def lex(text):
-    """Compose a basic abstract syntax tree from the reduced source"""
-    return tuple((lex(s[1:-1]) if incontext(s, "()") else s) for s in lexer_split(text))
 
 
 # ==================================================================================================================================================
@@ -171,30 +35,53 @@ def lex(text):
 #
 # ==================================================================================================================================================
 
+# _Node = Union[None, str, Tuple]
+Node = Union[str, Tuple, None]
 
-def tree_traversal(ast, pre_fun=None, str_fun=None, post_fun=None, final_fun=None):
+
+def tree_traversal(
+    ast: Node,
+    *,
+    pre_fun: Optional[Callable[[Tuple], Tuple]] = None,
+    str_fun: Optional[Callable[[str], Union[Tuple, str]]] = None,
+    post_fun: Optional[Callable[[Tuple], Node]] = None,
+    final_fun: Optional[Callable[[Tuple], Tuple]] = None,
+) -> Node:
     """(Depth-first) walk through the abstract syntax tree and application of appropriate functions"""
-    ast2 = []  # Since, ast is immutable, build a new ast
-    for node in ast:
-        if node is None:
-            ast2.append(node)
-        elif is_string(node):
-            ast2.append(str_fun(node) if str_fun else node)
-        elif is_tuple(node):
-            node = pre_fun(node) if pre_fun else node
-            node = tree_traversal(
-                node, pre_fun, str_fun, post_fun, final_fun
-            )  # ! Make sure order is correct
-            node = post_fun(node) if post_fun else node
-            ast2.append(node)
-        else:
-            raise TypeError(
-                "The abstract syntax tree can contain",
-                "only strings or other, smaller, trees, not {type(node)}",
-            )
-    ast2 = tuple(ast2)
-    final_fun(ast2) if final_fun else None
-    return ast2  # Return ast back as a tuple
+    if isinstance(ast, str):
+        return str_fun(ast) if str_fun else ast
+    elif ast is None:
+        return ast
+    elif isinstance(ast, tuple):
+        ast2: List[Node] = []  # Since, ast is immutable, build a new ast
+        for node in ast:
+            if node is None:
+                ast2.append(node)
+            elif isinstance(node, str):
+                ast2.append(str_fun(node) if str_fun else node)
+            elif isinstance(node, tuple):
+                node = pre_fun(node) if pre_fun else node
+                node = tree_traversal(
+                    node,
+                    pre_fun=pre_fun,
+                    str_fun=str_fun,
+                    post_fun=post_fun,
+                    final_fun=final_fun,
+                )  # ! Make sure order is correct
+                node = cast(Tuple, node)
+                node = post_fun(node) if post_fun else node
+                ast2.append(node)
+            else:
+                raise TypeError(
+                    "The abstract syntax tree can contain",
+                    f"only strings or other, smaller, trees, not {type(node)}",
+                )
+        return final_fun(tuple(ast2)) if final_fun else tuple(ast2)
+    else:
+        raise TypeError(
+            "The abstract syntax tree can contain",
+            f"only strings or other, smaller, trees, not {type(ast)}",
+        )
 
 
 __processing_stack__ = []  # Pre processing functions in order they ought to be applied
@@ -221,9 +108,9 @@ def find_variable_names(ast):
     """Find all the variable names used in the code"""
     names = set()
 
-    def variable_finder(node):
+    def variable_finder(node: Tuple) -> None:
         if len(node) == 3:
-            if node[0] == "set" and is_string(node[1]):
+            if node[0] == "set" and isinstance(node[1], str):
                 names.add(node[1])
 
     tree_traversal(ast, post_fun=variable_finder)
@@ -274,55 +161,61 @@ def shorten_variable_names(ast):
 # =============================================================================================================================
 
 
-def apply_replacement_rules(ast, rules):
+def apply_replacement_rules(ast: Tuple, rules: Dict[str, Tuple]) -> Tuple:
     """Apply replacement rules to the abstract syntax tree"""
 
-    def singleton_tuple_replacer(node):  # Replace (f) by def of f
+    def singleton_tuple_replacer(node: Tuple) -> Tuple:  # Replace (f) by def of f
         return rules[node[0]] if len(node) == 1 and node[0] in rules.keys() else node
 
-    def string_replacer(node):  # Replace f by def of f
+    def string_replacer(node: str) -> Union[Tuple, str]:  # Replace f by def of f
         return rules[node] if node in rules.keys() else node
 
-    return tree_traversal(
+    ast2 = tree_traversal(
         ast, pre_fun=singleton_tuple_replacer, str_fun=string_replacer
     )
+
+    return cast(Tuple, ast2)
 
 
 @in_processing_stack
 def def_keyword(ast):
     """Search for ('def','something',(...)) keywords"""
 
-    defs = []
+    defs: List[Tuple[str, Tuple]] = []
 
-    def replacer(node):
+    def replacer(node: str) -> Node:
         if len(defs) > 0:
             for value, definition in reversed(defs):
                 if node == value:
                     return definition
         return node
 
-    def find_defs(node):
+    def find_defs(node: Tuple) -> Tuple:
         if len(node) > 0 and node[0] == "def":
             if not len(node) == 3:
                 raise PsllSyntaxError(
-                    f"'def' statement must have 3 members, not {len(node)} (node ="
-                    f" {node})"
+                    f"'def' statement must have 3 members, not {len(node)} (node = {node})"
                 )
-            if not is_string(node[1]) or not is_tuple(node[2]):
+            key, value = node[1], node[2]
+            if not isinstance(key, str):
                 raise PsllSyntaxError(
-                    "'def' statement can only assign brackets to values, not"
-                    f" {type(node[2])} to {type(node[1])}"
+                    f"'def' statement can only assign keys to brackets. Got type {type(key)} for key"
                 )
-            if node[1] == "def":
+            if key == "def":
                 raise PsllSyntaxError("('def' 'def' (...)) structure is not allowed")
-            defs.append((node[1], apply_replacement_rules(node[2], dict(defs))))
+            if not isinstance(value, tuple):
+                raise PsllSyntaxError(
+                    f"'def' statement can only assign keys to brackets. Got type {type(value)} for bracket"
+                )
+            defs.append((key, apply_replacement_rules(value, dict(defs))))
             return ()  # Return empty tuple
         return node
 
-    def pop_def_stack(ast):
+    def pop_def_stack(ast: Tuple) -> Tuple:
         for node in ast:
             if node == ():
                 defs.pop()
+        return ast
 
     return tree_traversal(
         ast, str_fun=replacer, pre_fun=find_defs, final_fun=pop_def_stack
@@ -342,9 +235,9 @@ def def_keyword(ast):
 
 @in_processing_stack
 def range_keyword(ast):
-    def ranger(node):
+    def ranger(node: Tuple) -> Tuple:
         if len(node) > 0 and node[0] == "range":
-            if not all(map(is_string, node[1:])):
+            if not all(map(lambda x: isinstance(x, str), node[1:])):
                 raise PsllSyntaxError("'range' arguments must be integer literals")
             if len(node) > 4:
                 raise PsllSyntaxError(
@@ -387,7 +280,7 @@ def expand_array_literals(ast):
 
     def array_to_tree(string):
         """Parse (inner) array string to its ast tree representation"""
-        elements = lexer_split(string)  # Reuse lexer split
+        elements = lexer.split(string)  # Reuse lexer split
         if not elements:
             return ("-", ("0", "0"), ("0", "0"))  # Return empty array
 
@@ -404,7 +297,7 @@ def expand_array_literals(ast):
         return tree
 
     def array_expander(string):
-        if incontext(string, "[]"):
+        if lexer.in_context(string, "[]"):
             return array_to_tree(string[1:-1])
         return string
 
@@ -426,7 +319,7 @@ def expand_array_literals(ast):
 def expand_string_literals(ast):
 
     string_split = partial(
-        context_split, delimiter="", contexts=('""',), remove_empty=True
+        lexer.context_split, delimiter="", contexts=('""',), remove_empty=True
     )
 
     def special(char):
@@ -435,7 +328,7 @@ def expand_string_literals(ast):
         return cases[char] if char in cases else char
 
     def expand(string):
-        if incontext(string, '""'):
+        if lexer.in_context(string, '""'):
             tree = ()
             for char in string_split(string[1:-1]):
                 if len(char) > 1 and char[0] == "\\":
@@ -464,9 +357,9 @@ def expand_string_literals(ast):
 
 @in_processing_stack
 def expand_overfull_outs(ast):
-    def expander(node):
+    def expander(node: Tuple) -> Tuple:
         if len(node) > 3 and node[0] == "out":
-            node = (("out", *p) for p in in_pairs(node[1:], in_tuple=True))
+            return tuple(("out", *p) for p in in_pairs(node[1:], in_tuple=True))
         return node
 
     return tree_traversal(ast, pre_fun=expander)
@@ -477,12 +370,12 @@ binary_operators = set(("+", "-", "*", "/", "^", "=", "<=>"))
 
 @in_processing_stack
 def expand_left_associative(ast):
-    def expander(node):
+    def expander(node: Tuple) -> Tuple:
         if len(node) > 3 and node[0] in binary_operators:
             tree = node[:3]
             for element in node[3:]:
                 tree = (node[0], tree, element)
-            return tree
+            return cast(Tuple, tree)
         return node
 
     return tree_traversal(ast, pre_fun=expander)
@@ -490,13 +383,13 @@ def expand_left_associative(ast):
 
 @in_processing_stack
 def expand_right_associative(ast):
-    def expander(node):
+    def expander(node: Tuple) -> Tuple:
         if len(node) > 2 and node[-1] in binary_operators:
             tree = node[-1:-4:-1]
             # (node[-1], node[-2], node[-3])
             for element in reversed(node[:-3]):
                 tree = (node[-1], element, tree)
-            return tree
+            return cast(Tuple, tree)
         return node
 
     return tree_traversal(ast, pre_fun=expander)
@@ -517,8 +410,8 @@ def expand_right_associative(ast):
 def expand_overfull_brackets(ast):
     """Expand lists of many lists into lists of length 2"""
 
-    def expander(node):
-        if all(map(is_tuple, node)):
+    def expander(node: Tuple) -> Tuple:
+        if all(map(lambda x: isinstance(x, tuple), node)):
             while len(node) > 2:
                 node = tuple(p for p in in_pairs(node))
         elif len(node) > 3:
@@ -534,10 +427,10 @@ def expand_overfull_brackets(ast):
 def fill_in_empty_trees(ast):
     """Fill in the implicit empty strings in brackets with only lists"""
 
-    def filler(node):
+    def filler(node: Tuple) -> Node:
         if node == ():  # Empty node
             return ""
-        elif all(map(is_tuple, node)):  # All tuples
+        elif all(map(lambda x: isinstance(x, tuple), node)):  # All tuples
             return ("", *node)
         elif node[0] == "_":
             return ("", *node)
@@ -554,15 +447,14 @@ def fill_in_empty_trees(ast):
 
 @in_processing_stack
 def fill_in_underscores(ast):
-    def filler(node):
+    def filler(node: Tuple) -> Tuple:
         if len(node) == 3:
-            if is_string(node[1]) and node[1] != "_":
+            if isinstance(node[1], str) and node[1] != "_":
                 node = (node[0], (node[1], "_", "_"), node[2])
-            if is_string(node[2]) and node[2] != "_":
+            if isinstance(node[2], str) and node[2] != "_":
                 node = (node[0], node[1], (node[2], "_", "_"))
-            pass
         elif len(node) == 2:
-            if is_string(node[1]) and node[1] != "_":
+            if isinstance(node[1], str) and node[1] != "_":
                 node = (node[0], (node[1], "_", "_"), "_")
             else:
                 node = (*node, "_")
@@ -575,10 +467,16 @@ def fill_in_underscores(ast):
 
 @in_processing_stack
 def underscore_keyword(ast):
-    def replacer(node):
+    def replacer(node: str) -> Union[str, None]:
         return None if node == "_" else node
 
     return tree_traversal(ast, str_fun=replacer)
+
+
+def apply_processing_stack(ast: Node, full_names: bool = False) -> Node:
+    """Apply the processing stack to the ast"""
+    stack = __processing_stack__[1:] if full_names else __processing_stack__
+    return reduce(lambda x, y: y(x), [ast] + list(stack))  # type: ignore
 
 
 # =========================================================================================
@@ -596,16 +494,16 @@ def underscore_keyword(ast):
 def build_tree(ast):
     """Build the call tree from the leaves to the root"""
 
-    if is_string(ast):
+    if isinstance(ast, str):
         return Pyramid.from_text(ast)
     elif ast is None:
         return None
-    elif is_tuple(ast):
+    elif isinstance(ast, tuple):
         if len(ast) != 3:
             raise RuntimeError(
                 f"Invalid structure of the abstract syntax tree. ({ast})"
             )
-        if not is_string(ast[0]):
+        if not isinstance(ast[0], str):
             raise RuntimeError(
                 "Invalid abstract syntax tree. The first element of each node must be"
                 f" a string, not a {type(ast[0])}"
@@ -619,97 +517,8 @@ def build_tree(ast):
 
 
 # TODO Refactor
-def compile(ast):
+def compile(ast) -> str:
     """Compile text into trees"""
     program = str(reduce(operator.add, (build_tree(a) for a in ast)))
-    program = "\n".join(
-        line[1:].rstrip() for line in program.split("\n")
-    )  # Remove excessive whitespace
-    return program
-
-
-# ===============================================================================================================================
-#
-#   #####   #####   ######  ##  ###    ###  ##   ####    ###    ######  ##   #####   ##     ##
-#  ##   ##  ##  ##    ##    ##  ## #  # ##  ##  ##      ## ##     ##    ##  ##   ##  ####   ##
-#  ##   ##  #####     ##    ##  ##  ##  ##  ##   ###   ##   ##    ##    ##  ##   ##  ##  ## ##
-#  ##   ##  ##        ##    ##  ##      ##  ##     ##  #######    ##    ##  ##   ##  ##    ###
-#   #####   ##        ##    ##  ##      ##  ##  ####   ##   ##    ##    ##   #####   ##     ##
-#
-# ===============================================================================================================================
-
-
-def greedy_optimisation(ast, verbose=True, max_iter=None):
-    """Greedily insert empty trees into the abstract syntax tree"""
-
-    def candidates(ast):
-        for b, m, e in windowed_complete(ast, 2):  # Try all the pairs
-            yield (*b, ("", m[0], m[1]), *e)
-        for b, m, e in windowed_complete(ast, 1):  # Finally try all the single pyramids
-            yield (*b, ("", m[0], None), *e)
-            yield (*b, ("", None, m[0]), *e)
-
-    iter_count = 0
-    if verbose:
-        print("Greedy tree optimisation")
-    while True:
-        iter_count += 1
-        if max_iter and iter_count > max_iter:
-            break
-
-        N = len(compile(ast))
-        for candidate in candidates(ast):
-            M = len(compile(candidate))
-            if M < N:
-                if verbose:
-                    print(f"{iter_count} | Old len: {N} | New len: {M}")
-                ast = candidate
-                break  # Greedilly accept the new ast
-        else:
-            break  # Break from the while loop
-    return ast
-
-
-def repeat(func, n, arg):
-    if n < 0:
-        raise ValueError
-    if n == 0:
-        return arg
-    out = func(arg)
-    for _ in range(n - 1):
-        out = func(out)
-    return out
-
-
-def considerate_optimisation(ast, verbose=True, max_iter=None, max_depth=10):
-    """Consider all the possible places to insert a tree up to ``max_depth``"""
-
-    wrap_left = lambda node: ("", node, None)  # Wrap a node
-    wrap_right = lambda node: ("", None, node)  # Wrap a node
-
-    def candidates(ast):
-        for b, m, e in chain(windowed_complete(ast, 1), windowed_complete(ast, 2)):
-            m = ("", m[0], m[1]) if len(m) == 2 else m[0]
-            for d in range(1, max_depth):
-                yield (*b, repeat(wrap_left, d, m), *e)
-            for d in range(1, max_depth):
-                yield (*b, repeat(wrap_right, d, m), *e)
-
-    iter_count = 0
-    if verbose:
-        print("Considerate optimisation")
-    while True:
-        iter_count += 1
-        if max_iter and iter_count > max_iter:
-            break
-
-        N = len(compile(ast))
-        lengths = ((len(compile(c)), c) for c in candidates(ast))
-        M, candidate = min(lengths, key=operator.itemgetter(0))
-        if M < N:
-            if verbose:
-                print(f"{iter_count} | Old len: {N} | New len: {M}")
-            ast = candidate
-        else:
-            break  # Break from the while loop
-    return ast
+    # Remove excessive whitespace
+    return "\n".join(line[1:].rstrip() for line in program.split("\n"))
