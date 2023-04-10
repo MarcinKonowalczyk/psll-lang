@@ -3,8 +3,9 @@
 *.pyc
 .coverage
 .pytest_cache
+.mypy_cache
+.vscode
 __pycache__
-.pytest_cache
 psll-venv
 htmlcov
 coverage
