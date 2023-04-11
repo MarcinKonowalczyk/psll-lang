@@ -68,7 +68,7 @@ class MetaTests:
         # TODO What if the script takes a command line input? (Add timeout?)
         # TODO Capture stdout better
 
-        commands = [f"python psll.py {self.filename} -o -f"]
+        commands = [f"python -m psll {self.filename} -o -f"]
         # commands = [commands[0], commands[0] + ' -go'] # Also test with greedy optimisation
         for psll_com in commands:
             rb_com = f"{ruby_path} {pyra_path} {pyra_filename}"
