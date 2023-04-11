@@ -92,6 +92,7 @@ jobs:
       run: |
         cd ./temp-perf
         git status
-        git config user.name 'Github Workflow'
+        git config user.name github-actions
+        git config user.email github-actions@github.com
         git commit -a -m "Automated report"
         git push
