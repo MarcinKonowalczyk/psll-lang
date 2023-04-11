@@ -111,10 +111,13 @@ valid_output_file(args)
 #
 # ======================================================================
 
-from . import preprocessor  # noqa: E402
-from . import lexer  # noqa: E402
-from . import compiler  # noqa: E402
-from . import optimisers  # noqa: E402
+from . import (  # noqa: E402
+    preprocessor,
+    lexer,
+    macros,
+    build,
+    optimisers,
+)
 
 
 def main(args):  # pragma: no cover
@@ -135,7 +138,7 @@ def main(args):  # pragma: no cover
     # names = find_variable_names(ast)
     # print('variables:',variables)
 
-    ast = compiler.apply_processing_stack(ast, full_names=args.full_names)
+    ast = macros.apply_processing_stack(ast, full_names=args.full_names)
     # print(ast)
     # TODO  Make optimisation options mutually exclusive
     if args.considerate_optimisation:
@@ -143,7 +146,7 @@ def main(args):  # pragma: no cover
     if args.greedy_optimisation:
         ast = optimisers.greedy_optimisation(ast, max_iter=None)
 
-    program = compiler.compile(ast)
+    program = build.build(ast)
     if args.verbose:
         print("Pyramid scheme:", program, sep="\n")
 

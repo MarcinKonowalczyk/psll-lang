@@ -3,12 +3,9 @@ from typing import List, Tuple, Union, Dict, Callable, Optional, cast
 from more_itertools import windowed
 
 from functools import partial, reduce
-from functools import lru_cache as cached
-import operator
 from string import ascii_letters
 
 from . import PsllSyntaxError
-from .ascii_trees import Pyramid
 from . import lexer
 
 
@@ -477,48 +474,3 @@ def apply_processing_stack(ast: Node, full_names: bool = False) -> Node:
     """Apply the processing stack to the ast"""
     stack = __processing_stack__[1:] if full_names else __processing_stack__
     return reduce(lambda x, y: y(x), [ast] + list(stack))  # type: ignore
-
-
-# =========================================================================================
-#
-#   ####   #####   ###    ###  #####   ##  ##      #####
-#  ##     ##   ##  ## #  # ##  ##  ##  ##  ##      ##
-#  ##     ##   ##  ##  ##  ##  #####   ##  ##      #####
-#  ##     ##   ##  ##      ##  ##      ##  ##      ##
-#   ####   #####   ##      ##  ##      ##  ######  #####
-#
-# =========================================================================================
-
-
-@cached(maxsize=10000)
-def build_tree(ast):
-    """Build the call tree from the leaves to the root"""
-
-    if isinstance(ast, str):
-        return Pyramid.from_text(ast)
-    elif ast is None:
-        return None
-    elif isinstance(ast, tuple):
-        if len(ast) != 3:
-            raise RuntimeError(
-                f"Invalid structure of the abstract syntax tree. ({ast})"
-            )
-        if not isinstance(ast[0], str):
-            raise RuntimeError(
-                "Invalid abstract syntax tree. The first element of each node must be"
-                f" a string, not a {type(ast[0])}"
-            )
-        return build_tree(ast[0]) + (build_tree(ast[1]), build_tree(ast[2]))
-    else:
-        raise TypeError(
-            "Abstract syntax tree must be represented by a list (or just a string) not"
-            f" a {type(ast)}"
-        )
-
-
-# TODO Refactor
-def compile(ast) -> str:
-    """Compile text into trees"""
-    program = str(reduce(operator.add, (build_tree(a) for a in ast)))
-    # Remove excessive whitespace
-    return "\n".join(line[1:].rstrip() for line in program.split("\n"))

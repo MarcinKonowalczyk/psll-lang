@@ -13,7 +13,7 @@ from contextlib import contextmanager
 sys.path.append(os.path.realpath("."))
 
 import psll  # noqa: E402
-import psll.compiler  # noqa: E402
+import psll.macros  # noqa: E402
 
 
 def depth(tree):
@@ -171,7 +171,7 @@ class Split(unittest.TestCase, MetaTests):
         """> Simple inputs"""
         texts = ["", "()", "() ()", "(hi)", "(out 1)", "(set a 1)"]
         targets = [(), ("()",), ("()", "()"), ("(hi)",), ("(out 1)",), ("(set a 1)",)]
-        self.paired_test(texts, targets, psll.compiler.split_into_lines)
+        self.paired_test(texts, targets, psll.macros.split_into_lines)
 
     def test_nested(self):
         """> Nested inputs"""
@@ -183,13 +183,13 @@ class Split(unittest.TestCase, MetaTests):
             ("(() () hi)",),
             ("(() ())", "(())", "()"),
         ]
-        self.paired_test(texts, targets, psll.compiler.split_into_lines)
+        self.paired_test(texts, targets, psll.macros.split_into_lines)
 
     def test_error(self):
         """> Bracket parity and ketbra errors"""
         texts = ["(", ")", ")(", "(hi))", "((hi)", "((", "))", "((()())", "(()()))"]
         self.error_test(
-            texts, psll.compiler.split_into_lines, psll.compiler.PsllSyntaxError
+            texts, psll.macros.split_into_lines, psll.macros.PsllSyntaxError
         )
 
     def test_simple_subtrees(self):
@@ -265,7 +265,7 @@ class TreeTraversal(unittest.TestCase, MetaTests):
         def count_strings(tree):
             global count
             count = 0
-            psll.compiler.tree_traversal(tree, str_fun=self.counter)
+            psll.macros.tree_traversal(tree, str_fun=self.counter)
             return count
 
         self.paired_test(trees, counts, count_strings)
@@ -288,7 +288,7 @@ class TreeTraversal(unittest.TestCase, MetaTests):
         def count_lists(tree):
             global count
             count = 0
-            psll.compiler.tree_traversal(tree, pre_fun=self.counter)
+            psll.macros.tree_traversal(tree, pre_fun=self.counter)
             return count
 
         self.paired_test(trees, counts, count_lists)
@@ -312,7 +312,7 @@ class TreeTraversal(unittest.TestCase, MetaTests):
         def count_lists(tree):
             global count
             count = 0
-            psll.compiler.tree_traversal(tree, post_fun=self.counter)
+            psll.macros.tree_traversal(tree, post_fun=self.counter)
             return count
 
         self.paired_test(trees, counts, count_lists)
@@ -338,7 +338,7 @@ class TreeTraversal(unittest.TestCase, MetaTests):
             return node
 
         fun = partial(
-            psll.compiler.tree_traversal, post_fun=empty_checker, str_fun=lambda x: ""
+            psll.macros.tree_traversal, post_fun=empty_checker, str_fun=lambda x: ""
         )
         self.single_test(trees, fun)
 
@@ -363,7 +363,7 @@ class TreeTraversal(unittest.TestCase, MetaTests):
             return node
 
         fun = partial(
-            psll.compiler.tree_traversal,
+            psll.macros.tree_traversal,
             pre_fun=non_empty_checker,
             str_fun=lambda x: "",
         )
@@ -398,9 +398,7 @@ class TreeTraversal(unittest.TestCase, MetaTests):
                 final_tree = tree  # Pull final_tree out with the global scope
                 return tree
 
-            psll.compiler.tree_traversal(
-                tree, str_fun=lambda x: "", final_fun=final_look
-            )
+            psll.macros.tree_traversal(tree, str_fun=lambda x: "", final_fun=final_look)
             return final_tree
 
         self.paired_test(trees, targets, empty_trees)
@@ -419,7 +417,7 @@ class TreeTraversal(unittest.TestCase, MetaTests):
                 "dog",
             ),
         ]
-        self.error_test(trees, psll.compiler.tree_traversal, TypeError)
+        self.error_test(trees, psll.macros.tree_traversal, TypeError)
 
 
 # =====================================================================================================
@@ -438,16 +436,16 @@ class ArrayExpansion(unittest.TestCase, MetaTests):
         """> Empty array literals"""
         strings = [("set", "a", x) for x in ["[]", "[ ]", "[   ]"]]
         targets = [("set", "a", ("-", ("0", "0"), ("0", "0")))] * len(strings)
-        self.paired_test(strings, targets, psll.compiler.expand_array_literals)
+        self.paired_test(strings, targets, psll.macros.expand_array_literals)
 
     def test_single_char(self):
         """> Array literals with one element"""
         strings = [("set", "a", x) for x in ["[1]", "[1 ]", "[ 1]", "[ 1 ]"]]
         targets = [("set", "a", ("-", ("1", "0"), ("0", "0")))] * len(strings)
-        self.paired_test(strings, targets, psll.compiler.expand_array_literals)
+        self.paired_test(strings, targets, psll.macros.expand_array_literals)
         strings = [("set", "a", x) for x in ["[0]", "[0 ]", "[ 0]", "[ 0 ]"]]
         targets = [("set", "a", ("-", ("0", "1"), ("1", "1")))] * len(strings)
-        self.paired_test(strings, targets, psll.compiler.expand_array_literals)
+        self.paired_test(strings, targets, psll.macros.expand_array_literals)
 
     def test_more_elements(self):
         """> Actually useful arrays"""
@@ -464,7 +462,7 @@ class ArrayExpansion(unittest.TestCase, MetaTests):
                 ("+", ("1", "2"), ("+", ("3", "4"), ("-", ("5", "0"), ("0", "0")))),
             ),
         ]
-        self.paired_test(strings, targets, psll.compiler.expand_array_literals)
+        self.paired_test(strings, targets, psll.macros.expand_array_literals)
 
     def test_last_zero(self):
         """> Make sure last zero in odd-length arrays also works"""
@@ -477,7 +475,7 @@ class ArrayExpansion(unittest.TestCase, MetaTests):
                 ("+", ("1", "2"), ("+", ("3", "4"), ("-", ("0", "1"), ("1", "1")))),
             ),
         ]
-        self.paired_test(strings, targets, psll.compiler.expand_array_literals)
+        self.paired_test(strings, targets, psll.macros.expand_array_literals)
 
     def test_delimiters(self):
         """> Different delimiter patterns"""
@@ -485,7 +483,7 @@ class ArrayExpansion(unittest.TestCase, MetaTests):
             ("set", "a", x) for x in ["[1 2]", "[1  2]", "[ 1 2 ]", "[    1      2  ]"]
         ]
         targets = [("set", "a", ("1", "2"))] * len(strings)
-        self.paired_test(strings, targets, psll.compiler.expand_array_literals)
+        self.paired_test(strings, targets, psll.macros.expand_array_literals)
 
     def test_strings(self):
         """> Make sure psll strings are not expanded"""
@@ -497,7 +495,7 @@ class ArrayExpansion(unittest.TestCase, MetaTests):
             ("set", "a", ('"hi"', '"sup"')),
             ("set", "a", ("+", ('"13"', "angry"), ("-", ("men", "0"), ("0", "0")))),
         ]
-        self.paired_test(strings, targets, psll.compiler.expand_array_literals)
+        self.paired_test(strings, targets, psll.macros.expand_array_literals)
 
 
 class StingExpansion(unittest.TestCase, MetaTests):
@@ -507,25 +505,25 @@ class StingExpansion(unittest.TestCase, MetaTests):
         for prompt in prompts:
             with self.subTest(prompt=prompt):
                 ast = (f'"{prompt}"',)
-                est = psll.compiler.expand_string_literals(ast)
+                est = psll.macros.expand_string_literals(ast)
                 self.assertGreater(depth(est), depth(ast))
 
     def test_empty(self):
         """> Empty string expands to 'eps'"""
         ast = ('""',)
         target = (("eps",),)
-        self.assertEqual(psll.compiler.expand_string_literals(ast), target)
+        self.assertEqual(psll.macros.expand_string_literals(ast), target)
 
     def test_single_char(self):
         """> Expand single character string"""
         trees = [(f'"{c}"',) for c in ascii_letters]
         targets = [(("chr", "_", f"{str(ord(c))}"),) for c in ascii_letters]
-        self.paired_test(trees, targets, psll.compiler.expand_string_literals)
+        self.paired_test(trees, targets, psll.macros.expand_string_literals)
 
     def test_double_quote(self):
         """> Make sure the " sign is *not* is expanded when escaped"""
         ast = ('\\"',)
-        est = psll.compiler.expand_string_literals(ast)
+        est = psll.macros.expand_string_literals(ast)
         self.assertEqual(ast, est)
 
     def test_quote_combinations(self):
@@ -540,7 +538,7 @@ class StingExpansion(unittest.TestCase, MetaTests):
         ]
         for ast in trees:
             with self.subTest(ast=ast):
-                est = psll.compiler.expand_string_literals(ast)
+                est = psll.macros.expand_string_literals(ast)
                 self.assertGreater(depth(est), depth(ast))
 
     def test_nested(self):
@@ -553,7 +551,7 @@ class StingExpansion(unittest.TestCase, MetaTests):
         ]
         for ast in trees:
             with self.subTest(ast=ast):
-                est = psll.compiler.expand_string_literals(ast)
+                est = psll.macros.expand_string_literals(ast)
                 self.assertGreater(depth(est), depth(ast))
 
 
@@ -566,12 +564,12 @@ class BracketExpansion(unittest.TestCase, MetaTests):
             (("a",), ("b",), ("c",)),
             (("a",), ("b",), ("c",), ("d",)),
         ]
-        self.paired_test(trees, trees, psll.compiler.expand_overfull_brackets)
+        self.paired_test(trees, trees, psll.macros.expand_overfull_brackets)
 
     def test_small_brackets(self):
         """> Don't expand 2nd level brackets and beyond if they are less than 2 items"""
         trees = [("hi", (("a",),)), ("hello", (("a",), ("b",)))]
-        self.paired_test(trees, trees, psll.compiler.expand_overfull_brackets)
+        self.paired_test(trees, trees, psll.macros.expand_overfull_brackets)
 
     def test_large_brackets(self):
         """> Expand 2nd level brackets and beyond"""
@@ -585,7 +583,7 @@ class BracketExpansion(unittest.TestCase, MetaTests):
             ("hello", ((("a",), ("b",)), (("c",), ("d",)))),
             ("greetings", (((("a",), ("b",)), (("c",), ("d",))), ("e",))),
         ]
-        self.paired_test(trees, targets, psll.compiler.expand_overfull_brackets)
+        self.paired_test(trees, targets, psll.macros.expand_overfull_brackets)
 
     def test_syntax_error(self):
         """> Throw a syntax error when the overfull bracket is not entirely filled with lists"""
@@ -594,7 +592,7 @@ class BracketExpansion(unittest.TestCase, MetaTests):
             ("greetings", (("a",), "b", ("c",), ("d",), ("e",))),
         )
         self.error_test(
-            trees, psll.compiler.expand_overfull_brackets, psll.compiler.PsllSyntaxError
+            trees, psll.macros.expand_overfull_brackets, psll.macros.PsllSyntaxError
         )
 
 
@@ -614,8 +612,8 @@ class BuildTree(unittest.TestCase, MetaTests):
         """> Simple trees"""
         # trees = [('','_','_'),(' ','_','_'),('hi','_','_'),('out','a','_'),('set','a','1')]
         trees = [("",), (" ",), ("hi",), ("out", "a"), ("set", "a", "1")]
-        trees = [psll.compiler.fill_in_underscores((t,))[0] for t in trees]
-        trees = [psll.compiler.underscore_keyword(t) for t in trees]
+        trees = [psll.macros.fill_in_underscores((t,))[0] for t in trees]
+        trees = [psll.macros.underscore_keyword(t) for t in trees]
         targets = [
             " ^ \n - ",
             "  ^  \n / \\ \n --- ",
@@ -624,7 +622,7 @@ class BuildTree(unittest.TestCase, MetaTests):
             "     ^     \n    / \\    \n   /set\\   \n  ^-----^  \n /a\\   /1\\ \n --- "
             "  --- ",
         ]
-        fun = lambda tree: str(psll.compiler.build_tree(tree))
+        fun = lambda tree: str(psll.build.build_tree(tree))
         self.paired_test(trees, targets, fun)
 
     def test_nested(self):
@@ -636,8 +634,8 @@ class BuildTree(unittest.TestCase, MetaTests):
             ("out", ("chr", "32"), "b"),
             ("loop", ("!", ("<=>", "n", "N")), ("set", "a", ("+", "a", "1"))),
         ]
-        trees = [psll.compiler.fill_in_underscores((t,))[0] for t in trees]
-        trees = [psll.compiler.underscore_keyword(t) for t in trees]
+        trees = [psll.macros.fill_in_underscores((t,))[0] for t in trees]
+        trees = [psll.macros.underscore_keyword(t) for t in trees]
         targets = [
             "     ^  \n    / \\ \n   ^--- \n  / \\   \n /sup\\  \n -----  ",
             "     ^       \n    / \\      \n   /set\\     \n  ^-----^    \n /a\\   /+\\"
@@ -651,18 +649,18 @@ class BuildTree(unittest.TestCase, MetaTests):
             " /a\\   /+\\   \n  ^-----^  ---  ^---^  \n /n\\   /N\\     /a\\ /1\\ \n"
             " ---   ---     --- --- ",
         ]
-        fun = lambda tree: str(psll.compiler.build_tree(tree))
+        fun = lambda tree: str(psll.build.build_tree(tree))
         self.paired_test(trees, targets, fun)
 
     def test_too_many(self):
         """> Invalid number of keywords in a bracket"""
         trees = [("one", "two", "three", "four"), ("1", "2", "3", "4", "5")]
-        fun = psll.compiler.build_tree
+        fun = psll.build.build_tree
         self.error_test(trees, fun, RuntimeError)
 
     def test_invalid(self):
         """> Invalid trees"""
-        fun = psll.compiler.build_tree
+        fun = psll.build.build_tree
         trees = [1, [], {}, set, ("set", "a", 1)]
         self.error_test(trees, fun, TypeError)
         # TODO Split this into multiple tests

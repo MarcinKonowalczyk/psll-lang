@@ -8,7 +8,8 @@ from itertools import chain
 from more_itertools import windowed_complete
 import operator
 
-from . import compiler
+from . import build
+
 
 def greedy_optimisation(ast, verbose: bool = True, max_iter: Optional[int] = None):
     """Greedily insert empty trees into the abstract syntax tree"""
@@ -28,9 +29,9 @@ def greedy_optimisation(ast, verbose: bool = True, max_iter: Optional[int] = Non
         if max_iter and iter_count > max_iter:
             break
 
-        N = len(compiler.compile(ast))
+        N = len(build.build(ast))
         for candidate in candidates(ast):
-            M = len(compiler.compile(candidate))
+            M = len(build.build(candidate))
             if M < N:
                 if verbose:
                     print(f"{iter_count} | Old len: {N} | New len: {M}")
@@ -74,8 +75,8 @@ def considerate_optimisation(ast, verbose=True, max_iter=None, max_depth=10):
         if max_iter and iter_count > max_iter:
             break
 
-        N = len(compiler.compile(ast))
-        lengths = ((len(compiler.compile(c)), c) for c in candidates(ast))
+        N = len(build.build(ast))
+        lengths = ((len(build.build(c)), c) for c in candidates(ast))
         M, candidate = min(lengths, key=operator.itemgetter(0))
         if M < N:
             if verbose:

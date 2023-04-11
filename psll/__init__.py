@@ -1,4 +1,4 @@
-__version__ = "0.1.2"
+__version__ = "0.1.3"
 
 import sys
 
@@ -13,5 +13,7 @@ class PsllSyntaxError(SyntaxError):
 from . import (  # noqa: F401, E402
     preprocessor,
     lexer,
-    compiler,
+    macros,
+    build,
+    optimisers,
 )
