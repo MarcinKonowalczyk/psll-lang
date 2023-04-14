@@ -6,24 +6,25 @@ Macro-driven metalanguage which compiles to [Pyramid Scheme](https://github.com/
 
 ---
 
-- [Usage](#Usage)
-- [Examples](#Examples)
-- [Additional features](#Additional-features)
+- [🔧 Usage](#🔧-usage)
+- [💡 Examples](#💡-examples)
+- [🧬 Additional features](#🧬-additional-features)
   - [Bracket expansion](#Bracket-expansion)
   - [Strings](#Strings)
   - [Def keyword](#Def-keyword)
   - [Command expansion](#Command-expansion)
   - [Underscore keyword](#Underscore-keyword)
-- [Code optimisation](#Code-optimisation)
+- [🧚🏻‍♀️ Code optimisation](#🧚🏻‍♀️-code-optimisation)
   - [Greedy optimisation](#Greedy-optimisation)
   - [Considerate optimisation](#Considerate-optimisation)
-- [ToDo's](#ToDos)
-- [Done's](#Dones)
-- [Bugs](#Bugs)
-- [Bugs no more](#Bugs-no-more)
+- [👩🏻‍💻 Development](#👩🏻‍💻-development)
+  - [ToDo's](#ToDos)
+  - [Done's](#Dones)
+  - [Bugs](#Bugs)
+  - [Bugs no more](#Bugs-no-more)
 
 
-## Usage
+## 🔧 Usage
 
 Run the psll module as a script:
 
@@ -46,7 +47,7 @@ python -m psll ./examples/bubble_sort.psll -o -v
 ```
 
 
-## Examples
+## 💡 Examples
 
 The following is an example lisp-like pyramid scheme which counts the number of input arguments it gets, and then prints it out to the command line. The syntax supports `//` comments and newlines, as well as (almost) random additions of whitespace.
 
@@ -83,7 +84,7 @@ or with the `psll.sh` bash script:
 The output is `nargin: 5`
 
 
-## Additional features
+## 🧬 Additional features
 
 Psll implements a few bits of syntactic sugar, to make writing complicated pyramid schemes easier.
 
@@ -254,7 +255,7 @@ For the sake of compatibility with non-expanded brackets, the following two are 
 The underscore `_` can be used to explicitly specify an empty slot where a pyramid could be. It is not particularly useful from the user point of view (maybe except for fine-tuning the position of the pyramids for code golf), but it is very helpful for the compiler. All the leaves are eventually terminated with `_`, and string expansion used the `_` keyword to help pack the code a bit better.
 
 
-## Code optimisation
+## 🧚🏻‍♀️ Code optimisation
 
 Psll compiler allows for some code optimisation. Optimising the code for speed would be, let's be honest with ourselves, a bit silly at this point. Psll optimisation attempts, therefore, to minimise number of bytes in the source code, such that the result can be used in [code golf challenges](https://codegolf.stackexchange.com/a/208938/68200).
 
@@ -273,7 +274,25 @@ Consider all the possible places to either insert a single pyramid, or package t
 This optimisation technique tends to result in wide pyramid scheme. It is slower than the greedy optimisation, but very often results in a smaller pyramid scheme.
 
 
-## ToDo's
+## 👩🏻‍💻 Development
+
+Run the checks on the code with:
+
+```
+pip install -Uq flake8 mypy black
+black .
+flake8 .
+mypy .
+```
+
+or with pre-commit:
+
+```
+pip install -Uq pre-commit
+pre-commit run --all-files
+```
+
+### ToDo's
 
 This is not a real-purpose language. In this section the 'optimisation' refers to obtaining nicer-looking and more compact pyramids, *not* not efficient code.
 
@@ -337,9 +356,10 @@ More on the 'project management' front:
 - [ ] `psll.sh` is a mess, therefore (amongst others) `run.sh` is a mess
 - [ ] Add esolang wiki page. I think I deserve one now.
 - [ ] Add psll to tio...?
+- [ ] Add more thorough mypy checks
 
 
-## Done's
+### Done's
 
 Bullet points get moved here from the above section when they get finished. (It's nice to keep a history of past ideas and goals)
 
@@ -378,7 +398,7 @@ Bullet points get moved here from the above section when they get finished. (It'
 - [x] ?? Same for mypy
 
 
-## Bugs
+### Bugs
 
 - [ ] `[`, `]` and `"` Pyramid-Scheme keywords are not working at all at the moment (they ought to be typed as `\[`, `\]` and `\"`) (It's ok. They're really nto that useful, but it would be nice if they did actually work too.)
 - [ ] `arrays` example is putting in rouge commas into int literals
@@ -391,7 +411,7 @@ Bullet points get moved here from the above section when they get finished. (It'
 - [x] The order of operations in right-associative expansions is reversed in the last bracket!!
 
 
-## Bugs no more
+### Bugs no more
 
 - [x] Strings do not support escape characters <s>(And maybe they never will! Ha! They're just sugar anyway...)</s> (Fine...)
 - [x] <s>`compact` option breaks when `N`th triangle is wider than all the `1..N-1`s.</s>
