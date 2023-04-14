@@ -1,5 +1,14 @@
-from typing import List, Tuple, Union, Dict, Callable, Optional, cast
-
+from typing import (
+    Union,
+    Callable,
+    Optional,
+    cast,
+    Generator,
+    Iterable,
+    TypeVar,
+    overload,
+)
+from typing_extensions import _T, TypeAlias
 from more_itertools import windowed
 
 from functools import partial, reduce
