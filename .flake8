@@ -4,7 +4,7 @@
 max-line-length = 88
 extend-ignore =
     E203,
-    
+
     ; Other ignores
 
     ; Ignore line length compleatly
