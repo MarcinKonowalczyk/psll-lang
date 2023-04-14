@@ -59,7 +59,7 @@ def build_tree(ast: Union[str, tuple, None]) -> Union[AbstractTree, None]:
     return _build_tree(ast)
 
 
-def build(ast) -> str:
+def build(ast: tuple) -> str:
     """Build the program from the abstract syntax tree"""
     program = str(reduce(operator.add, (build_tree(a) for a in ast)))
     # Remove excessive whitespace

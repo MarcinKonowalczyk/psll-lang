@@ -156,7 +156,11 @@ def tree_traversal(
 __processing_stack__ = []  # Pre processing functions in order they ought to be applied
 
 
-def in_processing_stack(fun):
+Macro = Callable[[tuple], tuple]
+_T_Macro = TypeVar("_T_Macro", bound="Macro")
+
+
+def in_processing_stack(fun: _T_Macro) -> _T_Macro:
     """Append function to the processing stack"""
     __processing_stack__.append(fun)
     return fun
@@ -173,11 +177,11 @@ def in_processing_stack(fun):
 # ==================================================================================================================================================
 
 
-def find_variable_names(ast):
+def find_variable_names(ast: tuple) -> set[str]:
     """Find all the variable names used in the code"""
     names = set()
 
-    def variable_finder(node: Tuple) -> None:
+    def variable_finder(node: tuple) -> None:
         if len(node) == 3:
             if node[0] == "set" and isinstance(node[1], str):
                 names.add(node[1])
@@ -187,11 +191,11 @@ def find_variable_names(ast):
 
 
 @in_processing_stack
-def shorten_variable_names(ast):
+def shorten_variable_names(ast: tuple) -> tuple:
     """Shorten variable names to single letter, is possible"""
     names = find_variable_names(ast)
     future_names = set(n for n in names if len(n) == 1)
-    rules = {}
+    rules: dict[str, str] = {}
     for name in names:
         if len(name) == 1:  # Name is already short
             rules[name] = name
@@ -213,7 +217,8 @@ def shorten_variable_names(ast):
                     rules[name] = name
                     future_names.add(name)
 
-    def string_replacer(node):  # Shorten the names
+    def string_replacer(node: str) -> str:
+        """Replace variable names with shorter ones"""
         return rules[node] if node in rules.keys() else node
 
     return tree_traversal(ast, str_fun=string_replacer)
@@ -230,57 +235,60 @@ def shorten_variable_names(ast):
 # =============================================================================================================================
 
 
-def apply_replacement_rules(ast: Tuple, rules: Dict[str, Tuple]) -> Tuple:
+def apply_replacement_rules(ast: tuple, rules: dict[str, tuple]) -> tuple:
     """Apply replacement rules to the abstract syntax tree"""
 
-    def singleton_tuple_replacer(node: Tuple) -> Tuple:  # Replace (f) by def of f
+    def singleton_tuple_replacer(node: tuple) -> tuple:  # Replace (f) by def of f
         return rules[node[0]] if len(node) == 1 and node[0] in rules.keys() else node
 
-    def string_replacer(node: str) -> Union[Tuple, str]:  # Replace f by def of f
+    def string_replacer(node: str) -> Union[tuple, str]:  # Replace f by def of f
         return rules[node] if node in rules.keys() else node
 
     ast2 = tree_traversal(
         ast, pre_fun=singleton_tuple_replacer, str_fun=string_replacer
     )
 
-    return cast(Tuple, ast2)
+    return cast(tuple, ast2)
 
 
 @in_processing_stack
-def def_keyword(ast):
+def def_keyword(ast: tuple) -> tuple:
     """Search for ('def','something',(...)) keywords"""
 
-    defs: List[Tuple[str, Tuple]] = []
+    defs: list[tuple[str, tuple]] = []
 
-    def replacer(node: str) -> Node:
+    def replacer(node: str) -> Union[tuple, str]:
         if len(defs) > 0:
             for value, definition in reversed(defs):
                 if node == value:
                     return definition
         return node
 
-    def find_defs(node: Tuple) -> Tuple:
+    def find_defs(node: tuple) -> tuple:
         if len(node) > 0 and node[0] == "def":
             if not len(node) == 3:
                 raise PsllSyntaxError(
-                    f"'def' statement must have 3 members, not {len(node)} (node = {node})"
+                    f"'def' statement must have 3 members, not {len(node)} (node ="
+                    f" {node})"
                 )
             key, value = node[1], node[2]
             if not isinstance(key, str):
                 raise PsllSyntaxError(
-                    f"'def' statement can only assign keys to brackets. Got type {type(key)} for key"
+                    "'def' statement can only assign keys to brackets. Got type"
+                    f" {type(key)} for key"
                 )
             if key == "def":
                 raise PsllSyntaxError("('def' 'def' (...)) structure is not allowed")
             if not isinstance(value, tuple):
                 raise PsllSyntaxError(
-                    f"'def' statement can only assign keys to brackets. Got type {type(value)} for bracket"
+                    "'def' statement can only assign keys to brackets. Got type"
+                    f" {type(value)} for bracket"
                 )
             defs.append((key, apply_replacement_rules(value, dict(defs))))
             return ()  # Return empty tuple
         return node
 
-    def pop_def_stack(ast: Tuple) -> Tuple:
+    def pop_def_stack(ast: tuple) -> tuple:
         for node in ast:
             if node == ():
                 defs.pop()
@@ -303,8 +311,8 @@ def def_keyword(ast):
 
 
 @in_processing_stack
-def range_keyword(ast):
-    def ranger(node: Tuple) -> Tuple:
+def range_keyword(ast: tuple) -> tuple:
+    def ranger(node: tuple) -> tuple:
         if len(node) > 0 and node[0] == "range":
             if not all(map(lambda x: isinstance(x, str), node[1:])):
                 raise PsllSyntaxError("'range' arguments must be integer literals")
@@ -338,8 +346,8 @@ def range_keyword(ast):
 
 # TESTED
 @in_processing_stack
-def expand_array_literals(ast):
-    def one_element_array(element):
+def expand_array_literals(ast: tuple) -> tuple:
+    def one_element_array(element: str) -> tuple:
         """Put `element` into a one-element array with the subtraction trick"""
         return (
             ("-", (element, "0"), ("0", "0"))
@@ -347,7 +355,7 @@ def expand_array_literals(ast):
             else ("-", (element, "1"), ("1", "1"))
         )
 
-    def array_to_tree(string):
+    def array_to_tree(string: str) -> tuple:
         """Parse (inner) array string to its ast tree representation"""
         elements = lexer.split(string)  # Reuse lexer split
         if not elements:
@@ -365,7 +373,7 @@ def expand_array_literals(ast):
 
         return tree
 
-    def array_expander(string):
+    def array_expander(string: str) -> Union[tuple, str]:
         if lexer.in_context(string, "[]"):
             return array_to_tree(string[1:-1])
         return string
@@ -386,19 +394,19 @@ def expand_array_literals(ast):
 
 # TESTED
 @in_processing_stack
-def expand_string_literals(ast):
+def expand_string_literals(ast: tuple) -> tuple:
     string_split = partial(
         lexer.context_split, delimiter="", contexts=('""',), remove_empty=True
     )
 
-    def special(char):
+    def special(char: str) -> str:
         """Convert char to its special character representation"""
         cases = {"n": "\n", "t": "\t", "r": "\r"}
         return cases[char] if char in cases else char
 
-    def expand(string):
+    def expand(string: str) -> Union[tuple, str]:
         if lexer.in_context(string, '""'):
-            tree = ()
+            tree: tuple = ()
             for char in string_split(string[1:-1]):
                 if len(char) > 1 and char[0] == "\\":
                     char = special(char[1])
@@ -425,8 +433,8 @@ def expand_string_literals(ast):
 
 
 @in_processing_stack
-def expand_overfull_outs(ast):
-    def expander(node: Tuple) -> Tuple:
+def expand_overfull_outs(ast: tuple) -> tuple:
+    def expander(node: tuple) -> tuple:
         if len(node) > 3 and node[0] == "out":
             return tuple(("out", *p) for p in in_pairs(node[1:], in_tuple=True))
         return node
@@ -438,27 +446,27 @@ binary_operators = set(("+", "-", "*", "/", "^", "=", "<=>"))
 
 
 @in_processing_stack
-def expand_left_associative(ast):
-    def expander(node: Tuple) -> Tuple:
+def expand_left_associative(ast: tuple) -> tuple:
+    def expander(node: tuple) -> tuple:
         if len(node) > 3 and node[0] in binary_operators:
             tree = node[:3]
             for element in node[3:]:
                 tree = (node[0], tree, element)
-            return cast(Tuple, tree)
+            return cast(tuple, tree)
         return node
 
     return tree_traversal(ast, pre_fun=expander)
 
 
 @in_processing_stack
-def expand_right_associative(ast):
-    def expander(node: Tuple) -> Tuple:
+def expand_right_associative(ast: tuple) -> tuple:
+    def expander(node: tuple) -> tuple:
         if len(node) > 2 and node[-1] in binary_operators:
             tree = node[-1:-4:-1]
             # (node[-1], node[-2], node[-3])
             for element in reversed(node[:-3]):
                 tree = (node[-1], element, tree)
-            return cast(Tuple, tree)
+            return cast(tuple, tree)
         return node
 
     return tree_traversal(ast, pre_fun=expander)
@@ -477,10 +485,10 @@ def expand_right_associative(ast):
 
 # TESTED
 @in_processing_stack
-def expand_overfull_brackets(ast):
+def expand_overfull_brackets(ast: tuple) -> tuple:
     """Expand lists of many lists into lists of length 2"""
 
-    def expander(node: Tuple) -> Tuple:
+    def expander(node: tuple) -> tuple:
         if all(map(lambda x: isinstance(x, tuple), node)):
             while len(node) > 2:
                 node = tuple(p for p in in_pairs(node))
@@ -494,10 +502,10 @@ def expand_overfull_brackets(ast):
 
 
 @in_processing_stack
-def fill_in_empty_trees(ast):
+def fill_in_empty_trees(ast: tuple) -> tuple:
     """Fill in the implicit empty strings in brackets with only lists"""
 
-    def filler(node: Tuple) -> Node:
+    def filler(node: tuple) -> Node:
         if node == ():  # Empty node
             return ""
         elif all(map(lambda x: isinstance(x, tuple), node)):  # All tuples
@@ -516,8 +524,8 @@ def fill_in_empty_trees(ast):
 
 
 @in_processing_stack
-def fill_in_underscores(ast):
-    def filler(node: Tuple) -> Tuple:
+def fill_in_underscores(ast: tuple) -> tuple:
+    def filler(node: tuple) -> tuple:
         if len(node) == 3:
             if isinstance(node[1], str) and node[1] != "_":
                 node = (node[0], (node[1], "_", "_"), node[2])
@@ -536,14 +544,16 @@ def fill_in_underscores(ast):
 
 
 @in_processing_stack
-def underscore_keyword(ast):
+def underscore_keyword(ast: tuple) -> tuple:
     def replacer(node: str) -> Union[str, None]:
         return None if node == "_" else node
 
-    return tree_traversal(ast, str_fun=replacer)
+    # TODO: This is the only case when we use str_fun to return None.
+    #       Hence the type ignore. Is there a better way?
+    return tree_traversal(ast, str_fun=replacer)  # type: ignore
 
 
-def apply_processing_stack(ast: Node, full_names: bool = False) -> Node:
+def apply_processing_stack(ast: tuple, full_names: bool = False) -> tuple:
     """Apply the processing stack to the ast"""
     stack = __processing_stack__[1:] if full_names else __processing_stack__
     return reduce(lambda x, y: y(x), [ast] + list(stack))  # type: ignore

@@ -1,7 +1,7 @@
 import re
 
 
-def read_file(filename):
+def read_file(filename: str) -> str:
     """Read a file and return the contents as a string"""
     with open(filename, "r") as f:
         text = f.read()

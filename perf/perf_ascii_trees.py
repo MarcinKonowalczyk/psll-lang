@@ -24,26 +24,26 @@ TEST_CONTENT = [
 ]
 
 
-def perf_pyramid_from_text():
+def perf_pyramid_from_text() -> perf.stats_result:
     f = lambda: [Pyramid.from_text(c) for c in TEST_CONTENT]
     T = perf.runtime(f, divisor=len(TEST_CONTENT))
     return perf.stats(T)
 
 
-def perf_tree_from_text():
+def perf_tree_from_text() -> perf.stats_result:
     f = lambda: [Tree.from_text(c) for c in TEST_CONTENT]
     T = perf.runtime(f, divisor=len(TEST_CONTENT))
     return perf.stats(T)
 
 
-def perf_add_side_by_side():
+def perf_add_side_by_side() -> perf.stats_result:
     """Test performance of adding pyramids side by side"""
     pyramids = []
     for c in product(TEST_CONTENT, repeat=2):
         p1, p2 = tuple(map(Pyramid.from_text, c))
         pyramids.append((p1, p2))
 
-    def f():
+    def f() -> None:
         for p1, p2 in pyramids:
             _ = p1 + p2
 

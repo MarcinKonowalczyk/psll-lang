@@ -292,6 +292,12 @@ pip install -Uq pre-commit
 pre-commit run --all-files
 ```
 
+Run black with preview mode:
+
+```
+black --preview .
+```
+
 ### ToDo's
 
 This is not a real-purpose language. In this section the 'optimisation' refers to obtaining nicer-looking and more compact pyramids, *not* not efficient code.

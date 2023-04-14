@@ -13,11 +13,11 @@ from . import PsllSyntaxError
 
 def context_split(
     string: str,
-    delimiter=",",
-    contexts=(),
-    escape_char="\\",
-    remove_empty=False,
-):
+    delimiter: str = ",",
+    contexts: tuple[str, ...] = (),
+    escape_char: str = "\\",
+    remove_empty: bool = False,
+) -> tuple:
     """Split string at delimiter, except for in the middle of the specified contexts"""
 
     state = [0 for _ in contexts]  # States of each context
@@ -76,7 +76,7 @@ def context_split(
 # =============================================================
 
 
-def split(string):
+def split(string: str) -> tuple:
     """Context-sensitive split for the lexer"""
     return context_split(
         string,
@@ -87,11 +87,11 @@ def split(string):
     )
 
 
-def in_context(text, context):
+def in_context(text: str, context: str) -> bool:
     """Check if text is in the specified context"""
     return len(text) >= 2 and text[0] == context[0] and text[-1] == context[1]
 
 
-def lex(text):
+def lex(text: str) -> tuple:
     """Compose a basic abstract syntax tree from the reduced source"""
     return tuple((lex(s[1:-1]) if in_context(s, "()") else s) for s in split(text))
