@@ -311,10 +311,10 @@ def expand_array_literals(ast):
 #
 # =========================================================================================
 
+
 # TESTED
 @in_processing_stack
 def expand_string_literals(ast):
-
     string_split = partial(
         lexer.context_split, delimiter="", contexts=('""',), remove_empty=True
     )
@@ -401,6 +401,7 @@ def expand_right_associative(ast):
 #  ##       #####   ####     ##              ##      ##   ##   #####    ####
 #
 # =============================================================================================================
+
 
 # TESTED
 @in_processing_stack

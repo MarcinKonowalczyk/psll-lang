@@ -606,6 +606,7 @@ class BracketExpansion(unittest.TestCase, MetaTests):
 #
 # =======================================================================
 
+
 # @unittest.skip("blah")
 class BuildTree(unittest.TestCase, MetaTests):
     def test_simple(self):

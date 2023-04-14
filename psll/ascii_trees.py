@@ -176,6 +176,7 @@ class AbstractTree(ABC):
 #
 # ==============================================================================================
 
+
 # @final
 class Pyramid(AbstractTree):
     """Single pyramid"""
@@ -224,6 +225,7 @@ class Pyramid(AbstractTree):
 #    ##    ##   ##  #####  #####
 #
 # =================================================================
+
 
 # @final
 class Tree(AbstractTree):
