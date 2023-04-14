@@ -1,0 +1,22 @@
+repos:
+  - repo: https://github.com/psf/black
+    rev: 23.3.0
+    hooks:
+      - id: black
+        entry: black
+        args: ["--check"]
+        require_serial: true
+
+  - repo: https://github.com/pycqa/flake8
+    rev: 6.0.0
+    hooks:
+      - id: flake8
+
+  - repo: https://github.com/pre-commit/mirrors-mypy
+    rev: v1.2.0
+    hooks:
+      - id: mypy
+        additional_dependencies: [more-itertools>=8.5.0]
+        # Using bash makes this less portable, but also makes it use the correct
+        # config file. Is there a better way to do this?
+        entry: bash -c 'mypy --config-file ./mypy.ini .'

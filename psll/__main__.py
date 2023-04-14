@@ -2,7 +2,7 @@ import argparse
 import os.path as op
 
 
-def valid_input_file(filename):
+def valid_input_file(filename: str) -> str:
     if not op.exists(filename):
         raise argparse.ArgumentTypeError(f"The file {filename} does not exist!")
     if op.splitext(filename)[1] != ".psll":
@@ -12,7 +12,7 @@ def valid_input_file(filename):
     return filename
 
 
-def valid_output_file(args, ext=".pyra"):
+def valid_output_file(args: argparse.Namespace, ext: str = ".pyra") -> None:
     filename = args.output
     if not filename:
         return  # Return if no -o option
@@ -120,7 +120,7 @@ from . import (  # noqa: E402
 )
 
 
-def main(args):  # pragma: no cover
+def main(args: argparse.Namespace) -> None:  # pragma: no cover
     """Main function for the command-line operation"""
     if args.verbose:
         print("Input filename:", args.input)

@@ -1,7 +1,8 @@
-from functools import reduce
+from typing import overload, Union
+from functools import lru_cache, singledispatch, reduce
 import operator
-from functools import lru_cache as cached
-from .ascii_trees import Pyramid
+
+from .ascii_trees import Pyramid, AbstractTree
 
 # ===================================================================================
 #
@@ -13,34 +14,52 @@ from .ascii_trees import Pyramid
 #
 # ===================================================================================
 
+# mypy x singledispatch
+# https://github.com/python/mypy/issues/8356#issuecomment-884548381
 
-@cached(maxsize=10000)
-def build_tree(ast):
-    """Build the call tree from the leaves to the root"""
 
-    if isinstance(ast, str):
-        return Pyramid.from_text(ast)
-    elif ast is None:
-        return None
-    elif isinstance(ast, tuple):
-        if len(ast) != 3:
-            raise RuntimeError(
-                f"Invalid structure of the abstract syntax tree. ({ast})"
-            )
-        if not isinstance(ast[0], str):
-            raise RuntimeError(
-                "Invalid abstract syntax tree. The first element of each node must be"
-                f" a string, not a {type(ast[0])}"
-            )
-        return build_tree(ast[0]) + (build_tree(ast[1]), build_tree(ast[2]))
-    else:
-        raise TypeError(
-            "Abstract syntax tree must be represented by a list (or just a string) not"
-            f" a {type(ast)}"
+@singledispatch
+def _build_tree(ast: Union[str, tuple, None]) -> Union[AbstractTree, None]:
+    raise TypeError(
+        "Abstract syntax tree must be represented by a list (or just a string) not a"
+        f" {type(ast)}"
+    )
+
+
+@overload
+@_build_tree.register
+def build_tree(ast: str) -> AbstractTree:
+    return Pyramid.from_text(ast)
+
+
+@overload
+@_build_tree.register
+def build_tree(ast: None) -> None:
+    return None
+
+
+@overload
+@_build_tree.register
+@lru_cache(maxsize=1024)
+def build_tree(ast: tuple) -> AbstractTree:
+    if len(ast) != 3:
+        raise RuntimeError(f"Invalid structure of the abstract syntax tree. ({ast})")
+
+    one, two, three = ast
+    if not isinstance(one, str):
+        raise RuntimeError(
+            "Invalid abstract syntax tree. The first element of each node must be"
+            f" a string, not a {type(one)}"
         )
 
+    return build_tree(one) + (build_tree(two), build_tree(three))
 
-def build(ast) -> str:
+
+def build_tree(ast: Union[str, tuple, None]) -> Union[AbstractTree, None]:
+    return _build_tree(ast)
+
+
+def build(ast: tuple) -> str:
     """Build the program from the abstract syntax tree"""
     program = str(reduce(operator.add, (build_tree(a) for a in ast)))
     # Remove excessive whitespace

@@ -5,6 +5,9 @@ max-line-length = 88
 extend-ignore =
     E203,
 
-# Other ignores
-    E501, # Ignore line length compleatly
-    E731 # Ignore assigning lambda expressions
+    ; Other ignores
+
+    ; Ignore line length compleatly
+    E501,
+    ; Ignore assigning lambda expressions
+    E731

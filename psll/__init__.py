@@ -1,9 +1,9 @@
-__version__ = "0.1.2"
+__version__ = "0.1.3"
 
 import sys
 
-if sys.version_info < (3, 6):
-    raise RuntimeError("Upgrade to python 3.6, or newer.")  # pragma: no cover
+if sys.version_info < (3, 9):
+    raise RuntimeError("Upgrade to python 3.9, or newer.")  # pragma: no cover
 
 
 class PsllSyntaxError(SyntaxError):

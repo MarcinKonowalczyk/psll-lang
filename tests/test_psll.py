@@ -606,6 +606,7 @@ class BracketExpansion(unittest.TestCase, MetaTests):
 #
 # =======================================================================
 
+
 # @unittest.skip("blah")
 class BuildTree(unittest.TestCase, MetaTests):
     def test_simple(self):
@@ -619,8 +620,10 @@ class BuildTree(unittest.TestCase, MetaTests):
             "  ^  \n / \\ \n --- ",
             "   ^   \n  / \\  \n /hi \\ \n ----- ",
             "     ^   \n    / \\  \n   /out\\ \n  ^----- \n /a\\     \n ---     ",
-            "     ^     \n    / \\    \n   /set\\   \n  ^-----^  \n /a\\   /1\\ \n --- "
-            "  --- ",
+            (
+                "     ^     \n    / \\    \n   /set\\   \n  ^-----^  \n /a\\   /1\\ \n"
+                " ---   --- "
+            ),
         ]
         fun = lambda tree: str(psll.build.build_tree(tree))
         self.paired_test(trees, targets, fun)
@@ -638,16 +641,22 @@ class BuildTree(unittest.TestCase, MetaTests):
         trees = [psll.macros.underscore_keyword(t) for t in trees]
         targets = [
             "     ^  \n    / \\ \n   ^--- \n  / \\   \n /sup\\  \n -----  ",
-            "     ^       \n    / \\      \n   /set\\     \n  ^-----^    \n /a\\   /+\\"
-            "   \n ---  ^---^  \n     /1\\ /1\\ \n     --- --- ",
-            "         ^     \n        / \\    \n       /out\\   \n      ^-----^  \n    "
-            " / \\   /b\\ \n    /chr\\  --- \n   ^-----      \n  / \\          \n /32"
-            " \\         \n -----         ",
-            "           ^           \n          / \\          \n         /   \\        "
-            " \n        /loop \\        \n       ^-------^       \n      /!\\     / \\ "
-            "     \n     ^---    /set\\     \n    / \\     ^-----^    \n   /<=>\\  "
-            " /a\\   /+\\   \n  ^-----^  ---  ^---^  \n /n\\   /N\\     /a\\ /1\\ \n"
-            " ---   ---     --- --- ",
+            (
+                "     ^       \n    / \\      \n   /set\\     \n  ^-----^    \n /a\\  "
+                " /+\\   \n ---  ^---^  \n     /1\\ /1\\ \n     --- --- "
+            ),
+            (
+                "         ^     \n        / \\    \n       /out\\   \n      ^-----^  \n"
+                "     / \\   /b\\ \n    /chr\\  --- \n   ^-----      \n  / \\         "
+                " \n /32 \\         \n -----         "
+            ),
+            (
+                "           ^           \n          / \\          \n         /   \\    "
+                "     \n        /loop \\        \n       ^-------^       \n      /!\\  "
+                "   / \\      \n     ^---    /set\\     \n    / \\     ^-----^    \n  "
+                " /<=>\\   /a\\   /+\\   \n  ^-----^  ---  ^---^  \n /n\\   /N\\    "
+                " /a\\ /1\\ \n ---   ---     --- --- "
+            ),
         ]
         fun = lambda tree: str(psll.build.build_tree(tree))
         self.paired_test(trees, targets, fun)

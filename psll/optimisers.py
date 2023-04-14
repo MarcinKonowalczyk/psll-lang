@@ -1,8 +1,12 @@
 """
 Optimisers work on the abstract syntax tree to improve byte count of the compiled code.
 """
+from __future__ import annotations
 
-from typing import Optional
+from typing import Optional, Generator, Callable, TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from typing_extensions import _T
 
 from itertools import chain
 from more_itertools import windowed_complete
@@ -11,10 +15,12 @@ import operator
 from . import build
 
 
-def greedy_optimisation(ast, verbose: bool = True, max_iter: Optional[int] = None):
+def greedy_optimisation(
+    ast: tuple, verbose: bool = True, max_iter: Optional[int] = None
+) -> tuple:
     """Greedily insert empty trees into the abstract syntax tree"""
 
-    def candidates(ast):
+    def candidates(ast: tuple) -> Generator[tuple, None, None]:
         for b, m, e in windowed_complete(ast, 2):  # Try all the pairs
             yield (*b, ("", m[0], m[1]), *e)
         for b, m, e in windowed_complete(ast, 1):  # Finally try all the single pyramids
@@ -42,7 +48,8 @@ def greedy_optimisation(ast, verbose: bool = True, max_iter: Optional[int] = Non
     return ast
 
 
-def repeat(func, n, arg):
+def repeat(func: Callable[[_T], _T], n: int, arg: _T) -> _T:
+    """Apply a function ``n`` times to an argument"""
     if n < 0:
         raise ValueError
     if n == 0:
@@ -53,13 +60,18 @@ def repeat(func, n, arg):
     return out
 
 
-def considerate_optimisation(ast, verbose=True, max_iter=None, max_depth=10):
+def considerate_optimisation(
+    ast: tuple,
+    verbose: bool = True,
+    max_iter: Optional[int] = None,
+    max_depth: int = 10,
+) -> tuple:
     """Consider all the possible places to insert a tree up to ``max_depth``"""
 
     wrap_left = lambda node: ("", node, None)  # Wrap a node
     wrap_right = lambda node: ("", None, node)  # Wrap a node
 
-    def candidates(ast):
+    def candidates(ast: tuple) -> Generator[tuple, None, None]:
         for b, m, e in chain(windowed_complete(ast, 1), windowed_complete(ast, 2)):
             m = ("", m[0], m[1]) if len(m) == 2 else m[0]
             for d in range(1, max_depth):
