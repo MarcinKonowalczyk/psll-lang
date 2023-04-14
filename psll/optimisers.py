@@ -1,6 +1,7 @@
 """
 Optimisers work on the abstract syntax tree to improve byte count of the compiled code.
 """
+from __future__ import annotations
 
 from typing import Optional, Generator, Callable, TYPE_CHECKING
 

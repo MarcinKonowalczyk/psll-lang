@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from typing import (
     Union,
     Callable,
@@ -12,6 +14,7 @@ from typing import (
 
 if TYPE_CHECKING:
     from typing_extensions import _T, TypeAlias
+
 from more_itertools import windowed
 
 from functools import partial, reduce, singledispatch
