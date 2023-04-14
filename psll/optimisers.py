@@ -2,8 +2,10 @@
 Optimisers work on the abstract syntax tree to improve byte count of the compiled code.
 """
 
-from typing import Optional, Generator, Callable
-from typing_extensions import _T
+from typing import Optional, Generator, Callable, TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from typing_extensions import _T
 
 from itertools import chain
 from more_itertools import windowed_complete

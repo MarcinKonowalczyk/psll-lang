@@ -7,8 +7,11 @@ from typing import (
     Iterable,
     TypeVar,
     overload,
+    TYPE_CHECKING,
 )
-from typing_extensions import _T, TypeAlias
+
+if TYPE_CHECKING:
+    from typing_extensions import _T, TypeAlias
 from more_itertools import windowed
 
 from functools import partial, reduce, singledispatch

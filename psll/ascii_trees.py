@@ -9,9 +9,11 @@ from typing import (
     TypeVar,
     Type,
     final,
+    TYPE_CHECKING,
 )
 
-from typing_extensions import TypeAlias
+if TYPE_CHECKING:
+    from typing_extensions import TypeAlias
 
 
 # from typing import final
