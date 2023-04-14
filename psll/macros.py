@@ -18,10 +18,20 @@ from . import PsllSyntaxError
 from . import lexer
 
 
-def in_pairs(iterable, in_tuple=False):
-    """Pair up elements in the array. (s1,s2,s3,s4,s5) -> ((s1,s2),(s3,s4),s5)"""
-    for p in windowed(iterable, 2, step=2):
-        yield p if p[1] else ((p[0],) if in_tuple else p[0])
+def in_pairs(
+    iterable: Iterable[_T],
+    in_tuple: bool = False,
+) -> Generator[Union[tuple[_T, _T], tuple[_T], _T], None, None]:
+    """Pair up elements in the array. (s1,s2,s3,s4,s5) -> ((s1,s2),(s3,s4),s5).
+    If the iterable has an odd number of elements, `in_tuple` determines if the
+    last element is a tuple or not.
+    """
+    for one, two in windowed(iterable, 2, step=2):
+        assert one is not None, "The iterable must not contain None"
+        if two is not None:
+            yield (one, two)
+        else:
+            yield (one,) if in_tuple else one
 
 
 # fmt: off
