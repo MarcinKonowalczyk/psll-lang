@@ -11,7 +11,7 @@ from typing import (
 from typing_extensions import _T, TypeAlias
 from more_itertools import windowed
 
-from functools import partial, reduce
+from functools import partial, reduce, singledispatch
 from string import ascii_letters
 
 from . import PsllSyntaxError
@@ -51,53 +51,106 @@ PS_KEYWORDS = {"+", "*", "-", "/", "^", "=", "<=>", "out", "chr", "arg", "#",
 #
 # ==================================================================================================================================================
 
-# _Node = Union[None, str, Tuple]
-Node = Union[str, Tuple, None]
+# _Node = Union[None, str, tuple]
+Node: TypeAlias = Union[str, tuple, None]
+PreFun: TypeAlias = Callable[[tuple], tuple]
+StrFun: TypeAlias = Callable[[str], Union[tuple, str]]
+PostFun: TypeAlias = Callable[[tuple], Node]
+FinalFun: TypeAlias = Callable[[tuple], tuple]
+
+# mypy x singledispatch
+# https://github.com/python/mypy/issues/8356#issuecomment-884548381
+
+
+@singledispatch
+def _tree_traversal(
+    ast: Node,
+    *,
+    pre_fun: Optional[PreFun] = None,
+    str_fun: Optional[StrFun] = None,
+    post_fun: Optional[PostFun] = None,
+    final_fun: Optional[FinalFun] = None,
+) -> Node:
+    raise TypeError(
+        "The abstract syntax tree can contain",
+        f"only strings or other, smaller, trees, not {type(ast)}",
+    )
+
+
+@overload
+@_tree_traversal.register
+def tree_traversal(
+    ast: str,
+    *,
+    pre_fun: Optional[PreFun] = None,
+    str_fun: Optional[StrFun] = None,
+    post_fun: Optional[PostFun] = None,
+    final_fun: Optional[FinalFun] = None,
+) -> Union[tuple, str]:
+    return str_fun(ast) if str_fun else ast
+
+
+@overload
+@_tree_traversal.register
+def tree_traversal(
+    ast: None,
+    *,
+    pre_fun: Optional[PreFun] = None,
+    str_fun: Optional[StrFun] = None,
+    post_fun: Optional[PostFun] = None,
+    final_fun: Optional[FinalFun] = None,
+) -> None:
+    return ast
+
+
+@overload
+@_tree_traversal.register
+def tree_traversal(
+    ast: tuple,
+    *,
+    pre_fun: Optional[PreFun] = None,
+    str_fun: Optional[StrFun] = None,
+    post_fun: Optional[PostFun] = None,
+    final_fun: Optional[FinalFun] = None,
+) -> tuple:
+    ast2: list[Node] = []  # Since, ast is immutable, build a new ast
+    for node in ast:
+        if node is None:
+            ast2.append(node)
+        elif isinstance(node, str):
+            ast2.append(str_fun(node) if str_fun else node)
+        elif isinstance(node, tuple):
+            node = pre_fun(node) if pre_fun else node
+            node = tree_traversal(
+                node,
+                pre_fun=pre_fun,
+                str_fun=str_fun,
+                post_fun=post_fun,
+                final_fun=final_fun,
+            )  # ! Make sure order is correct
+            node = cast(tuple, node)
+            node = post_fun(node) if post_fun else node
+            ast2.append(node)
+        else:
+            raise TypeError(
+                "The abstract syntax tree can contain",
+                f"only strings or other, smaller, trees, not {type(node)}",
+            )
+    return final_fun(tuple(ast2)) if final_fun else tuple(ast2)
 
 
 def tree_traversal(
     ast: Node,
     *,
-    pre_fun: Optional[Callable[[Tuple], Tuple]] = None,
-    str_fun: Optional[Callable[[str], Union[Tuple, str]]] = None,
-    post_fun: Optional[Callable[[Tuple], Node]] = None,
-    final_fun: Optional[Callable[[Tuple], Tuple]] = None,
+    pre_fun: Optional[PreFun] = None,
+    str_fun: Optional[StrFun] = None,
+    post_fun: Optional[PostFun] = None,
+    final_fun: Optional[FinalFun] = None,
 ) -> Node:
     """(Depth-first) walk through the abstract syntax tree and application of appropriate functions"""
-    if isinstance(ast, str):
-        return str_fun(ast) if str_fun else ast
-    elif ast is None:
-        return ast
-    elif isinstance(ast, tuple):
-        ast2: List[Node] = []  # Since, ast is immutable, build a new ast
-        for node in ast:
-            if node is None:
-                ast2.append(node)
-            elif isinstance(node, str):
-                ast2.append(str_fun(node) if str_fun else node)
-            elif isinstance(node, tuple):
-                node = pre_fun(node) if pre_fun else node
-                node = tree_traversal(
-                    node,
-                    pre_fun=pre_fun,
-                    str_fun=str_fun,
-                    post_fun=post_fun,
-                    final_fun=final_fun,
-                )  # ! Make sure order is correct
-                node = cast(Tuple, node)
-                node = post_fun(node) if post_fun else node
-                ast2.append(node)
-            else:
-                raise TypeError(
-                    "The abstract syntax tree can contain",
-                    f"only strings or other, smaller, trees, not {type(node)}",
-                )
-        return final_fun(tuple(ast2)) if final_fun else tuple(ast2)
-    else:
-        raise TypeError(
-            "The abstract syntax tree can contain",
-            f"only strings or other, smaller, trees, not {type(ast)}",
-        )
+    return _tree_traversal(
+        ast, pre_fun=pre_fun, str_fun=str_fun, post_fun=post_fun, final_fun=final_fun
+    )
 
 
 __processing_stack__ = []  # Pre processing functions in order they ought to be applied
