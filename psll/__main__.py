@@ -32,74 +32,80 @@ def valid_output_file(args: argparse.Namespace, ext: str = ".pyra") -> None:
         )
 
 
-parser = argparse.ArgumentParser(
-    description="Compile lisp-like syntax to Pyramid Scheme"
-)
-parser.add_argument(
-    "input",
-    type=valid_input_file,
-    help=(
-        "Input file written in the pyramid scheme (lisp (like)) syntax, with the"
-        " .psll expension."
-    ),
-)
-parser.add_argument(
-    "-o",
-    dest="output",
-    required=False,
-    metavar="output",
-    nargs="?",
-    default=None,
-    const=" ",
-    help=(
-        'Output pyramid scheme. If "output" is supplied, the pyramid scheme is'
-        ' saved to that filename. If no "output" is supplied (aka just the -o'
-        " option) the pyramid scheme is saved to the filename matching the input"
-        " filename, with the .pyra extension."
-    ),
-)
-parser.add_argument(
-    "-v", "--verbose", action="store_true", help="Run in the verbose mode."
-)
-parser.add_argument("-f", "--force", action="store_true", help="Force file overwrite.")
+def arg_parser() -> argparse.Namespace:
+    parser = argparse.ArgumentParser(
+        description="Compile lisp-like syntax to Pyramid Scheme"
+    )
+    parser.add_argument(
+        "input",
+        type=valid_input_file,
+        help=(
+            "Input file written in the pyramid scheme (lisp (like)) syntax, with the"
+            " .psll expension."
+        ),
+    )
+    parser.add_argument(
+        "-o",
+        dest="output",
+        required=False,
+        metavar="output",
+        nargs="?",
+        default=None,
+        const=" ",
+        help=(
+            'Output pyramid scheme. If "output" is supplied, the pyramid scheme is'
+            ' saved to that filename. If no "output" is supplied (aka just the -o'
+            " option) the pyramid scheme is saved to the filename matching the input"
+            " filename, with the .pyra extension."
+        ),
+    )
+    parser.add_argument(
+        "-v", "--verbose", action="store_true", help="Run in the verbose mode."
+    )
+    parser.add_argument(
+        "-f", "--force", action="store_true", help="Force file overwrite."
+    )
 
-parser.add_argument(
-    "--full-names",
-    action="store_true",
-    help=(
-        "Don't shorten variable names when compiling the pyramid scheme. This will"
-        " result in longer, but potentially more readable source code. Usefull for"
-        " either compiler or pyramid scheme debugging."
-    ),
-)
+    parser.add_argument(
+        "--full-names",
+        action="store_true",
+        help=(
+            "Don't shorten variable names when compiling the pyramid scheme. This will"
+            " result in longer, but potentially more readable source code. Usefull for"
+            " either compiler or pyramid scheme debugging."
+        ),
+    )
 
-parser.add_argument(
-    "-go",
-    "--greedy-optimisation",
-    action="store_true",
-    help=(
-        "Greedily insert an empty pyramid the very first place which minimised the"
-        " size is beneficial. This tends to result in tall source code."
-    ),
-)
-parser.add_argument(
-    "-co",
-    "--considerate-optimisation",
-    action="store_true",
-    help=(
-        "Consider all the possible places to insert a pyramid, up to certain depth."
-        " Choose the most beneficial. This tends to result in wide source code."
-    ),
-)
+    parser.add_argument(
+        "-go",
+        "--greedy-optimisation",
+        action="store_true",
+        help=(
+            "Greedily insert an empty pyramid the very first place which minimised the"
+            " size is beneficial. This tends to result in tall source code."
+        ),
+    )
+    parser.add_argument(
+        "-co",
+        "--considerate-optimisation",
+        action="store_true",
+        help=(
+            "Consider all the possible places to insert a pyramid, up to certain depth."
+            " Choose the most beneficial. This tends to result in wide source code."
+        ),
+    )
 
-# Compiler options
-# parser.add_argument('-nt','--null-trees', action='store_true',
-#     help='Use null (height 0) trees.')
-# parser.add_argument('--dot-spaces', action='store_true',
-#     help='Render spaces as dots')
+    # Compiler options
+    # parser.add_argument('-nt','--null-trees', action='store_true',
+    #     help='Use null (height 0) trees.')
+    # parser.add_argument('--dot-spaces', action='store_true',
+    #     help='Render spaces as dots')
 
-args = parser.parse_args()
-valid_output_file(args)
+    args = parser.parse_args()
+    valid_output_file(args)
+
+    return args
+
 
 # ======================================================================
 #
@@ -155,4 +161,11 @@ def main(args: argparse.Namespace) -> None:  # pragma: no cover
             f.write(program)
 
 
-main(args)
+# Called as a script
+def argparse_and_main() -> None:  # pragma: no cover
+    main(arg_parser())
+
+
+# Called as a module
+if __name__ == "__main__":  # pragma: no cover
+    argparse_and_main()

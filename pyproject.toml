@@ -1,0 +1,41 @@
+[build-system]
+requires = ["setuptools", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "psll"
+version = "0.1.4.dev0"
+description = "Read the latest Real Python tutorials"
+readme = "README.md"
+authors = [{ name = "Marcin Konowalczyk", email = "marcin.konow@lczyk.xyz" }]
+license = { file = "LICENSE" }
+classifiers = [
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Other",
+    "Development Status :: 3 - Alpha",
+    "Environment :: Console",
+
+]
+keywords = ["compiler", "macros", "code-golf", "pyramid-scheme", "programming-language"]
+dependencies = [
+    "more-itertools>=8.5.0",
+]
+requires-python = ">=3.9"
+
+[project.optional-dependencies]
+dev = [
+    "black>=23.3.0",
+    "flake8>=6.0.0",
+    "mypy>=1.2.0",
+]
+
+[project.urls]
+Homepage = "https://github.com/MarcinKonowalczyk/psll-lang"
+
+[project.scripts]
+psll = "psll.__main__:argparse_and_main"
+
+[tool.setuptools]
+packages = ["psll"]
