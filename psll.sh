@@ -14,7 +14,7 @@ PSLL_FILE="$PWD/${1%.*}.psll"
 PYRA_FILE="$PWD/${1%.*}.pyra"
 
 echo "Compiling psll to pyramid scheme"
-python -m psll $PSLL_FILE -o $PYRA_FILE -f --full-names #-go #-co #-v
+psll compile $PSLL_FILE -o $PYRA_FILE -f --full-names #-go #-co #-v
 RESULT=$?
 
 if [ "$RESULT" -ne 0 ]; then
