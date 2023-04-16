@@ -12,31 +12,19 @@ def valid_input_file(filename: str) -> str:
     return filename
 
 
-def valid_output_file(args: argparse.Namespace, ext: str = ".pyra") -> None:
-    filename = args.output
-    if not filename:
-        return  # Return if no -o option
-    # Make filename based on the input filename
-    if filename == " ":
-        filename = op.splitext(args.input)[0] + ext
-        args.output = filename
-    # Check whether to overwrite
-    if op.exists(filename) and not args.force:
-        answer = input(f"File {filename} already exists. Overwrite? [y/N]")
-        if answer.lower() != "y":
-            args.output = None
-    # Check extension
-    if op.splitext(filename)[1] != ext:
-        raise argparse.ArgumentTypeError(
-            "The output file does not have an .pyra extension!"
-        )
-
-
 def arg_parser() -> argparse.Namespace:
     parser = argparse.ArgumentParser(
-        description="Compile lisp-like syntax to Pyramid Scheme"
+        description="Compile lisp-like syntax to Pyramid Scheme",
     )
-    parser.add_argument(
+
+    subparsers = parser.add_subparsers(required=True, dest="subcommand")
+
+    compile_parser = subparsers.add_parser(
+        "compile",
+        help="compile a psll program to a pyramid scheme program",
+    )
+
+    compile_parser.add_argument(
         "input",
         type=valid_input_file,
         help=(
@@ -44,13 +32,13 @@ def arg_parser() -> argparse.Namespace:
             " .psll expension."
         ),
     )
-    parser.add_argument(
+    compile_parser.add_argument(
         "-o",
         dest="output",
         required=False,
         metavar="output",
         nargs="?",
-        default=None,
+        default="",
         const=" ",
         help=(
             'Output pyramid scheme. If "output" is supplied, the pyramid scheme is'
@@ -59,14 +47,14 @@ def arg_parser() -> argparse.Namespace:
             " filename, with the .pyra extension."
         ),
     )
-    parser.add_argument(
+    compile_parser.add_argument(
         "-v", "--verbose", action="store_true", help="Run in the verbose mode."
     )
-    parser.add_argument(
+    compile_parser.add_argument(
         "-f", "--force", action="store_true", help="Force file overwrite."
     )
 
-    parser.add_argument(
+    compile_parser.add_argument(
         "--full-names",
         action="store_true",
         help=(
@@ -76,7 +64,7 @@ def arg_parser() -> argparse.Namespace:
         ),
     )
 
-    parser.add_argument(
+    compile_parser.add_argument(
         "-go",
         "--greedy-optimisation",
         action="store_true",
@@ -85,7 +73,7 @@ def arg_parser() -> argparse.Namespace:
             " size is beneficial. This tends to result in tall source code."
         ),
     )
-    parser.add_argument(
+    compile_parser.add_argument(
         "-co",
         "--considerate-optimisation",
         action="store_true",
@@ -96,13 +84,48 @@ def arg_parser() -> argparse.Namespace:
     )
 
     # Compiler options
-    # parser.add_argument('-nt','--null-trees', action='store_true',
+    # compile_parser.add_argument('-nt','--null-trees', action='store_true',
     #     help='Use null (height 0) trees.')
-    # parser.add_argument('--dot-spaces', action='store_true',
+    # compile_parser.add_argument('--dot-spaces', action='store_true',
     #     help='Render spaces as dots')
 
+    subparsers.add_parser(
+        "run",
+        help="run a pyramid scheme program",
+    )
+
+    subparsers.add_parser(
+        "compile-and-run",
+        help="compile and run a psll program",
+    )
+
     args = parser.parse_args()
-    valid_output_file(args)
+
+    if args.subcommand == "compile":
+        if args.output == "":
+            pass
+        elif args.output == " ":
+            args.output = op.splitext(args.input)[0] + ".pyra"
+        if op.exists(args.output) and not args.force:
+            answer = input(f"File {args.output} already exists. Overwrite? [y/N]")
+            if answer.lower() != "y":
+                args.output = None
+        if op.splitext(args.output)[1] != ".pyra":
+            raise argparse.ArgumentTypeError(
+                "The output file does not have an .pyra extension!"
+            )
+    elif args.subcommand == "run":
+        print(
+            "Running pyramid scheme programs from this script is not yet implemented."
+        )
+        exit(1)
+    elif args.subcommand == "compile-and-run":
+        print(
+            "Running pyramid scheme programs from this script is not yet implemented."
+        )
+        exit(1)
+    else:
+        raise RuntimeError("This should never happen!")
 
     return args
 
@@ -126,7 +149,7 @@ from . import (  # noqa: E402
 )
 
 
-def main(args: argparse.Namespace) -> None:  # pragma: no cover
+def subcommand_compile(args: argparse.Namespace) -> None:  # pragma: no cover
     """Main function for the command-line operation"""
     if args.verbose:
         print("Input filename:", args.input)
@@ -163,7 +186,9 @@ def main(args: argparse.Namespace) -> None:  # pragma: no cover
 
 # Called as a script
 def argparse_and_main() -> None:  # pragma: no cover
-    main(arg_parser())
+    args = arg_parser()
+    if args.subcommand == "compile":
+        subcommand_compile(args)
 
 
 # Called as a module
