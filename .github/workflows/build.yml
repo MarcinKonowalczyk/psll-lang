@@ -45,7 +45,7 @@ jobs:
       run: black --preview --check --verbose .
     
     - name: Check with mypy
-      run: mypy .
+      run: mypy --config-file ./mypy.ini .
 
     - name: Run tests
       run: bash test.sh -e

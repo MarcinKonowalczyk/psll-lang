@@ -15,4 +15,4 @@ before_script:
 script:
   - bash test.sh -e -c 
   - black --preview --check --verbose .
-  - mypy .
+  - mypy --config-file ./mypy.ini .
