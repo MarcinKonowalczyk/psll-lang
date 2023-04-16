@@ -37,15 +37,13 @@ jobs:
         pip install --upgrade coverage pytest black mypy
 
     - name: Install psll
-      run: |
-        pip install .
-
+      run: pip install .
 
     - name: Check with black
       run: black --preview --check --verbose .
     
     - name: Check with mypy
-      run: mypy --config-file ./mypy.ini .
+      run: mypy --config-file ./mypy.ini psll
 
     - name: Run tests
       run: bash test.sh -e
