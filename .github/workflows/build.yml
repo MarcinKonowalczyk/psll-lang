@@ -49,19 +49,17 @@ jobs:
       run: bash test.sh -e
       if: github.event_name == 'pull_request'
 
+    # ON COMMIT ONLY:
+
     - name: Run tests and coverage
       run: bash test.sh -e -c 
+      if: github.event_name != 'pull_request'
 
-    - name: Coveralls GitHub Action
-      uses: coverallsapp/github-action@v2
-
-    # - name: Push to coveralls
-    #   run: |
-    #     pip install --upgrade coveralls
-    #     coveralls --service=github
-    #   if: github.event_name != 'pull_request'
-
-    # ON COMMIT ONLY:
+    - name: Push to coveralls
+      run: |
+        pip install --upgrade coveralls
+        coveralls --service=github
+      if: github.event_name != 'pull_request'
 
     - name: Run performance check
       run: python ./perf/perf_ascii_trees.py result.perf && cat result.perf
