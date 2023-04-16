@@ -40,11 +40,6 @@ jobs:
       run: |
         pip install .
 
-    - name: Run only tests
-      run: bash test.sh -e
-
-    - name: Run tests and coverage
-      run: bash test.sh -e -c 
 
     - name: Check with black
       run: black --preview --check --verbose .
@@ -52,7 +47,14 @@ jobs:
     - name: Check with mypy
       run: mypy .
 
+    - name: Run tests
+      run: bash test.sh -e
+      if: github.event_name == 'pull_request'
+
     # ON COMMIT ONLY:
+
+    - name: Run tests and coverage
+      run: bash test.sh -e -c 
 
     - name: Push to coveralls
       run: |
