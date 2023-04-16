@@ -1,15 +1,11 @@
 language: python
 
 python:
-  # - "3.5" # Doesn't work because of f-strings
   - "3.9.16"
-  # No need to test for higher versions
-  # - "3.7"
-  # - "3.8"
 
 install:
   - pip install --upgrade pip wheel setuptools
-  - pip install --upgrade pytest coverage black coveralls
+  - pip install --upgrade coverage coveralls pytest black mypy
   - pip install .
 
 before_script:
@@ -18,8 +14,5 @@ before_script:
 
 script:
   - bash test.sh -e -c 
-  - black --check --verbose .
-
-# Now done by github workflow
-# after_success:
-#   - coveralls
+  - black --preview --check --verbose .
+  - mypy .

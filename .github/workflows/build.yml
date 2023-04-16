@@ -34,7 +34,7 @@ jobs:
     - name: Install test dependencies
       run: |
         pip install --upgrade pip wheel setuptools
-        pip install --upgrade pytest coverage black coveralls
+        pip install --upgrade coverage pytest black mypy
 
     - name: Install psll
       run: |
@@ -47,10 +47,18 @@ jobs:
       run: bash test.sh -e -c 
 
     - name: Check with black
-      run: black --check --verbose .
+      run: black --preview --check --verbose .
+    
+    - name: Check with mypy
+      run: mypy .
+
+    # ON COMMIT ONLY:
 
     - name: Push to coveralls
-      run:  coveralls --service=github
+      run: |
+        pip install --upgrade coveralls
+        coveralls --service=github
+      if: github.event_name != 'pull_request'
 
     - name: Run performance check
       run: python ./perf/perf_ascii_trees.py result.perf && cat result.perf
