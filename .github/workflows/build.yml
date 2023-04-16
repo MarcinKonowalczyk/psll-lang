@@ -53,6 +53,7 @@ jobs:
 
     - name: Run tests and coverage
       run: bash test.sh -e -c 
+      if: github.event_name != 'pull_request'
 
     - name: Push to coveralls
       run: |
