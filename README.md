@@ -20,24 +20,32 @@ Macro-driven metalanguage which compiles to [Pyramid Scheme](https://github.com/
 
 ## 🔧 Usage
 
-Run the psll module as a script:
+Download and install psll:
 
-```
-python -m psll
-```
-
-or use the `psll.sh` bash script which you might want to edit to make it point to the correct files. It compiles and runs a program.
-
-Read the help:
-
-```
-python -m psll --help
+```sh
+cd ~
+git clone https://github.com/MarcinKonowalczyk/psll-lang.git
+cd psll-lang
+pip install .
 ```
 
-Verbose output and save to the file:
+Then `psll` command should be available in your command line. Run `psll --help` to lean more.
 
+You can also skip the installation and run the python module as a script with `python -m psll ...` without any installation. 
+
+Only the `compile` command is implemented at the moment, so you'll have to run the resulting pyramid scheme by yourself with, for example, `ruby ./Pyramid-Scheme/pyra.rb ...`.
+
+For example, to compile and run the bubble-sort example:
+
+```sh
+psll compile ./examples/bubble_sort.psll -o -v && \
+ruby ./Pyramid-Scheme/pyra.rb ./examples/bubble_sort.pyra
 ```
-python -m psll ./examples/bubble_sort.psll -o -v
+
+To make compiling and running psll programs easier, a bash script `psll.sh` is also provided:
+
+```sh
+./psll.sh ./examples/bubble_sort.psll
 ```
 
 
@@ -47,7 +55,7 @@ The following is an example lisp-like pyramid scheme which counts the number of 
 
 For the purposed of the markdown README, C# highlighting seems to look fine. There is a vscode extension in the `psll-lang` folder which provides syntax highlighting for both psll and Pyramid Scheme.
 
-```c#
+```cs
 // Make nil by asking for the 999'th input argument
 (set nil (arg 999))
 
@@ -64,14 +72,14 @@ For the purposed of the markdown README, C# highlighting seems to look fine. The
 
 It can be compiled and run as follows:
 
-```
+```sh
 python -m psll ./examples/nargin_counter.psll -o -f
 ruby ./Pyramid-Scheme/pyra.rb ./exmaples/nargin_counter.pyra 4 3 5 2 4
 ```
 
 or with the `psll.sh` bash script:
 
-```
+```sh
 ./psll.sh ./examples/nargin_counter.psll 4 3 5 2 4
 ```
 
@@ -160,6 +168,7 @@ Psll implements `def` as a special keyword. The syntax for `def` is: `(def x (..
 ```
 
 Once defined, it is possible to redefine `def`'s in terms of themselves:
+
 ```cs
 (def incr ( // Redefine 'incr' as itself + printing
     (incr)
@@ -170,6 +179,7 @@ Once defined, it is possible to redefine `def`'s in terms of themselves:
 ```
 
 Defs are active **within the scope in which they are declared**. Hence:
+
 ```cs
 (def f (incr)) // 'f' is an alias for 'incr'
 (f) // This now behaves as 'incr'
