@@ -49,7 +49,7 @@ jobs:
       run: bash test.sh -e
       if: github.event_name == 'pull_request'
 
-    # ON COMMIT ONLY:
+    # ON COMMIT ONLY (as opposed to a PT)
 
     - name: Run tests and coverage
       run: bash test.sh -e -c 
