@@ -140,7 +140,11 @@ def _(subparsers: argparse._SubParsersAction) -> None:
         ),
     )
     compile_parser.add_argument(
-        "-v", "--verbose", action="store_true", help="Run in the verbose mode."
+        "-v",
+        "--verbose",
+        action="count",
+        default=0,
+        help="Run in the verbose mode. Can be specified multiple times.",
     )
     compile_parser.add_argument(
         "-f", "--force", action="store_true", help="Force file overwrite."
@@ -225,7 +229,11 @@ def _(subparsers: argparse._SubParsersAction) -> None:
     run_parser.add_argument("input", help="Input pyramid scheme file.")
 
     run_parser.add_argument(
-        "-v", "--verbose", action="store_true", help="Run in the verbose mode."
+        "-v",
+        "--verbose",
+        action="count",
+        default=0,
+        help="Run in the verbose mode. Can be specified multiple times.",
     )
 
 
@@ -315,18 +323,24 @@ from . import (  # noqa: E402
 @register_subcommand(Subcommand.COMPILE)
 def subcommand_compile(args: argparse.Namespace) -> None:  # pragma: no cover
     """Main function for the command-line operation"""
+
     if args.verbose:
         print("Input filename:", args.input)
+
     if args.output and args.verbose:
         print("Output filename:", args.output)
 
     text = preprocessor.read_file(args.input)
+
+    # Count lines and characters in the original source
+    psll_lines, psll_chars = len(text.splitlines()), len(text)
 
     text = preprocessor.preprocess(text)
     if args.verbose:
         print("Reduced source:", text)
 
     ast = lexer.lex(text)
+
     # print(ast, end="\n\n")
     # names = find_variable_names(ast)
     # print('variables:',variables)
@@ -340,12 +354,21 @@ def subcommand_compile(args: argparse.Namespace) -> None:  # pragma: no cover
         ast = optimisers.greedy_optimisation(ast, max_iter=None)
 
     program = build.build(ast)
-    if args.verbose:
+
+    # Count lines and characters in the generated pyramid scheme program
+    pyra_lines, pyra_chars = len(program.splitlines()), len(program)
+
+    # Print the generated pyramid scheme program only in -vv mode
+    if args.verbose > 1:
         print("Pyramid scheme:", program, sep="\n")
 
     if args.output:
         with open(args.output, "w") as f:
             f.write(program)
+
+    if args.verbose:
+        print("psll file:", psll_lines, "lines,", psll_chars, "characters")
+        print("pyra file:", pyra_lines, "lines,", pyra_chars, "characters")
 
 
 # https://github.com/ConorOBrien-Foxx/Pyramid-Scheme/blob/fd183d296f08e0cba8bf55da907697eaf412f6a7/pyra.rb
