@@ -1,10 +1,19 @@
 import argparse
+import os
 import os.path as op
+import shutil
+import subprocess
 
+import sys
+import hashlib
 
 from typing import Callable, TypeVar
 from enum import Enum
 
+from functools import partial
+
+ArgumentError = partial(argparse.ArgumentError, None)
+sys.tracebacklimit = 0
 
 ADD_SUBCOMMAND: dict["Subcommand", Callable] = {}
 VALIDATE_OPTIONS: dict["Subcommand", Callable] = {}
@@ -114,6 +123,7 @@ def _(subparsers: argparse._SubParsersAction) -> None:
             " .psll expension."
         ),
     )
+
     compile_parser.add_argument(
         "-o",
         dest="output",
@@ -170,31 +180,27 @@ def _(subparsers: argparse._SubParsersAction) -> None:
 def _(args: argparse.Namespace) -> None:
     """Validate options for the compile subcommand"""
 
-    def valid_input_file(filename: str) -> str:
-        if not op.exists(filename):
-            raise argparse.ArgumentTypeError(f"The file {filename} does not exist!")
-        if op.splitext(filename)[1] != ".psll":
-            raise argparse.ArgumentTypeError(
-                "The input file does not have an .psll extension!"
-            )
-        return filename
+    if not op.exists(args.input):
+        raise ArgumentError("Input file does not exist")
 
-    valid_input_file(args.input)
+    input_root, input_ext = op.splitext(args.input)
+    if input_ext != ".psll":
+        raise ArgumentError("Input file does not have .psll extension")
 
     if args.output == "":
         pass
     elif args.output == " ":
-        args.output = op.splitext(args.input)[0] + ".pyra"
+        args.output = input_root + ".pyra"
 
     if op.exists(args.output) and not args.force:
         answer = input(f"File {args.output} already exists. Overwrite? [y/N]")
         if answer.lower() != "y":
             args.output = None
 
-    if args.output is not None and op.splitext(args.output)[1] != ".pyra":
-        raise argparse.ArgumentTypeError(
-            "The output file does not have an .pyra extension!"
-        )
+    if args.output is not None:
+        output_root, output_ext = op.splitext(args.output)
+        if output_ext != ".pyra":
+            raise ArgumentError("Output file does not have .pyra extension")
 
 
 # ======================================================================
@@ -211,16 +217,28 @@ def _(args: argparse.Namespace) -> None:
 @register_add_subcommand(Subcommand.RUN)
 def _(subparsers: argparse._SubParsersAction) -> None:
     """Run a pyramid scheme program"""
-    subparsers.add_parser(
+    run_parser = subparsers.add_parser(
         "run",
         help="run a pyramid scheme program",
+    )
+
+    run_parser.add_argument("input", help="Input pyramid scheme file.")
+
+    run_parser.add_argument(
+        "-v", "--verbose", action="store_true", help="Run in the verbose mode."
     )
 
 
 @register_validate_options(Subcommand.RUN)
 def _(args: argparse.Namespace) -> None:
     """Validate options for the run subcommand"""
-    raise NotImplementedError
+
+    if not op.exists(args.input):
+        raise ArgumentError("Input file does not exist")
+
+    input_root, input_ext = op.splitext(args.input)
+    if input_ext != ".pyra":
+        raise ArgumentError("Input file does not have .pyra extension")
 
 
 # ==================================================================================================================================================================
@@ -259,14 +277,17 @@ def parse_args() -> argparse.Namespace:
         dest="subcommand",
     )
 
+    # Add subcommands
     for subcommand in Subcommand:
         subcommand.add_subcommand(subparsers)
 
+    # Parse arguments
     args = parser.parse_args()
 
-    # Parser subcommand as Subcommand enum
+    # Parse subcommand as Subcommand enum
     args.subcommand = Subcommand(args.subcommand)
 
+    # Dispatch to subcommand-specific validation
     args.subcommand.validate_options(args)
 
     return args
@@ -327,10 +348,79 @@ def subcommand_compile(args: argparse.Namespace) -> None:  # pragma: no cover
             f.write(program)
 
 
+# https://github.com/ConorOBrien-Foxx/Pyramid-Scheme/blob/fd183d296f08e0cba8bf55da907697eaf412f6a7/pyra.rb
+EXPECTED_HASH = "a2b8175e8807cf5acce35c73252994dd"
+
+
 @register_subcommand(Subcommand.RUN)
 def subcommand_run(args: argparse.Namespace) -> None:  # pragma: no cover
     """Main function for the command-line operation"""
-    raise NotImplementedError("Running pyramid scheme programs is not yet implemented.")
+
+    # rind ruby
+    ruby = shutil.which("ruby")
+    if ruby is None:
+        raise RuntimeError(
+            "Could not find ruby executable. Make sure ruby is installed."
+        )
+
+    if args.verbose:
+        print("Ruby executable:", ruby)
+
+    # get ruby version
+    ruby_version = subprocess.check_output([ruby, "--version"]).decode("utf-8").strip()
+    if args.verbose:
+        print("Ruby version:", ruby_version)
+
+    # find pyramid scheme executable
+    candidates: list[str] = []
+
+    # Check rhe current working directory for pyra.rb
+    cwd_fullpath = op.abspath(os.getcwd())
+    candidates.append(op.join(cwd_fullpath, "pyra.rb"))
+    candidates.append(op.join(cwd_fullpath, "Pyramid-Scheme", "pyra.rb"))
+
+    # Check the directory of this file for pyra.rb This is where it might get dropped
+    # byt the installer
+    this_file_fullpath = op.abspath(__file__)
+    candidates.append(op.join(this_file_fullpath, "pyra.rb"))
+    candidates.append(op.join(this_file_fullpath, "Pyramid-Scheme", "pyra.rb"))
+
+    # Finally check the home directory
+    home_dir = op.expanduser("~")
+    if home_dir != "~":
+        # home_dir got expanded aka it is known
+        candidates.append(op.join(home_dir, "pyra.rb"))
+        candidates.append(op.join(home_dir, "Pyramid-Scheme", "pyra.rb"))
+
+    pyra_rb = None
+    for candidate in candidates:
+        if op.isfile(candidate):
+            with open(candidate, "r") as f:
+                file_hash = hashlib.md5(f.read().encode("utf-8")).hexdigest()
+            if file_hash == EXPECTED_HASH:
+                # This is the correct version of pyra.rb
+                pyra_rb = candidate
+                break
+            else:
+                if args.verbose:
+                    print(
+                        f"Found a pyra.rb file at {candidate} but it has the wrong hash"
+                        f" ({file_hash} != {EXPECTED_HASH}). Ignoring it."
+                    )
+
+    if pyra_rb is None:
+        raise RuntimeError(
+            "Could not find pyra.rb. Make sure pyramid scheme is installed."
+        )
+
+    if args.verbose:
+        print("pyra.rb:", pyra_rb)
+
+    # run pyramid scheme
+    if args.verbose:
+        print("Running pyramid scheme...")
+
+    subprocess.run([ruby, pyra_rb, args.input])
 
 
 @register_subcommand(Subcommand.COMPILE_AND_RUN)
