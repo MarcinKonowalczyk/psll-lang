@@ -3,21 +3,34 @@ import os
 import os.path as op
 import shutil
 import subprocess
+import tempfile
 
 import sys
 import hashlib
 
-from typing import Callable, TypeVar
+from typing import Callable, TypeVar, TYPE_CHECKING, Any
+
+if TYPE_CHECKING:
+    from typing_extensions import TypeAlias
+else:
+    TypeAlias = Any
+
 from enum import Enum
 
 from functools import partial
 
 ArgumentError = partial(argparse.ArgumentError, None)
-sys.tracebacklimit = 0
+# sys.tracebacklimit = 0
 
-ADD_SUBCOMMAND: dict["Subcommand", Callable] = {}
-VALIDATE_OPTIONS: dict["Subcommand", Callable] = {}
-RUN_SUBCOMMAND: dict["Subcommand", Callable] = {}
+Add_Sig: TypeAlias = Callable[[argparse._SubParsersAction], None]
+Validate_Sig: TypeAlias = Callable[
+    [argparse.Namespace, list[str]], tuple[argparse.Namespace, list[str]]
+]
+Run_Sig: TypeAlias = Callable[[argparse.Namespace, list[str]], None]
+
+ADD_SUBCOMMAND: dict["Subcommand", Add_Sig] = {}
+VALIDATE_OPTIONS: dict["Subcommand", Validate_Sig] = {}
+RUN_SUBCOMMAND: dict["Subcommand", Run_Sig] = {}
 
 
 class Subcommand(Enum):
@@ -25,19 +38,22 @@ class Subcommand(Enum):
 
     COMPILE = "compile"
     RUN = "run"
-    COMPILE_AND_RUN = "compile_and_run"
+    COMPILE_AND_RUN = "compile-and-run"
+    DOWNLOAD_PYRA = "download-pyra"
 
     def add_subcommand(self, subparsers: argparse._SubParsersAction) -> None:
         """Add the subcommand to the subparsers"""
         ADD_SUBCOMMAND[self](subparsers)
 
-    def validate_options(self, args: argparse.Namespace) -> None:
+    def validate_options(
+        self, args: argparse.Namespace, extra: list[str]
+    ) -> tuple[argparse.Namespace, list[str]]:
         """Validate the options for this subcommand"""
-        VALIDATE_OPTIONS[self](args)
+        return VALIDATE_OPTIONS[self](args, extra)
 
-    def run(self, args: argparse.Namespace) -> None:
+    def run(self, args: argparse.Namespace, extra: list[str]) -> None:
         """Run the subcommand"""
-        RUN_SUBCOMMAND[self](args)
+        RUN_SUBCOMMAND[self](args, extra)
 
 
 _T_Callable = TypeVar("_T_Callable", bound=Callable)
@@ -100,12 +116,6 @@ def check_all_subcommands_registered() -> None:
 #
 # ==================================================================================================
 
-# Compiler options
-# compile_parser.add_argument('-nt','--null-trees', action='store_true',
-#     help='Use null (height 0) trees.')
-# compile_parser.add_argument('--dot-spaces', action='store_true',
-#     help='Render spaces as dots')
-
 
 @register_add_subcommand(Subcommand.COMPILE)
 def _(subparsers: argparse._SubParsersAction) -> None:
@@ -139,6 +149,7 @@ def _(subparsers: argparse._SubParsersAction) -> None:
             " filename, with the .pyra extension."
         ),
     )
+
     compile_parser.add_argument(
         "-v",
         "--verbose",
@@ -146,6 +157,7 @@ def _(subparsers: argparse._SubParsersAction) -> None:
         default=0,
         help="Run in the verbose mode. Can be specified multiple times.",
     )
+
     compile_parser.add_argument(
         "-f", "--force", action="store_true", help="Force file overwrite."
     )
@@ -180,12 +192,26 @@ def _(subparsers: argparse._SubParsersAction) -> None:
     )
 
 
+# Compiler options
+# compile_parser.add_argument('-nt','--null-trees', action='store_true',
+#     help='Use null (height 0) trees.')
+# compile_parser.add_argument('--dot-spaces', action='store_true',
+#     help='Render spaces as dots')
+
+
 @register_validate_options(Subcommand.COMPILE)
-def _(args: argparse.Namespace) -> None:
+def _(
+    args: argparse.Namespace, extra: list[str]
+) -> tuple[argparse.Namespace, list[str]]:
     """Validate options for the compile subcommand"""
+
+    if len(extra) != 0:
+        raise ArgumentError(f"Unknown arguments: {extra}")
 
     if not op.exists(args.input):
         raise ArgumentError("Input file does not exist")
+
+    args.input = op.abspath(args.input)
 
     input_root, input_ext = op.splitext(args.input)
     if input_ext != ".psll":
@@ -197,14 +223,18 @@ def _(args: argparse.Namespace) -> None:
         args.output = input_root + ".pyra"
 
     if op.exists(args.output) and not args.force:
+        args.output = op.abspath(args.output)
         answer = input(f"File {args.output} already exists. Overwrite? [y/N]")
         if answer.lower() != "y":
-            args.output = None
+            # Silently exit, but with error code so that it can be used in scripts
+            sys.exit(1)
 
     if args.output is not None:
         output_root, output_ext = op.splitext(args.output)
         if output_ext != ".pyra":
             raise ArgumentError("Output file does not have .pyra extension")
+
+    return args, extra
 
 
 # ======================================================================
@@ -238,7 +268,9 @@ def _(subparsers: argparse._SubParsersAction) -> None:
 
 
 @register_validate_options(Subcommand.RUN)
-def _(args: argparse.Namespace) -> None:
+def _(
+    args: argparse.Namespace, extra: list[str]
+) -> tuple[argparse.Namespace, list[str]]:
     """Validate options for the run subcommand"""
 
     if not op.exists(args.input):
@@ -247,6 +279,8 @@ def _(args: argparse.Namespace) -> None:
     input_root, input_ext = op.splitext(args.input)
     if input_ext != ".pyra":
         raise ArgumentError("Input file does not have .pyra extension")
+
+    return args, extra
 
 
 # ==================================================================================================================================================================
@@ -263,19 +297,80 @@ def _(args: argparse.Namespace) -> None:
 @register_add_subcommand(Subcommand.COMPILE_AND_RUN)
 def _(subparsers: argparse._SubParsersAction) -> None:
     """Compile and run a psll program"""
-    subparsers.add_parser(
+    compile_and_run_parser = subparsers.add_parser(
         "compile-and-run",
         help="compile and run a psll program",
     )
 
+    compile_and_run_parser.add_argument(
+        "input",
+        help=(
+            "Input file written in the pyramid scheme (lisp (like)) syntax, with the"
+            " .psll extension."
+        ),
+    )
+
+    compile_and_run_parser.add_argument(
+        "-v",
+        "--verbose",
+        action="count",
+        default=0,
+        help="Run in the verbose mode. Can be specified multiple times.",
+    )
+
 
 @register_validate_options(Subcommand.COMPILE_AND_RUN)
-def _(args: argparse.Namespace) -> None:
+def _(
+    args: argparse.Namespace, extra: list[str]
+) -> tuple[argparse.Namespace, list[str]]:
     """Validate options for the compile-and-run subcommand"""
-    raise NotImplementedError
+    # No validation needed. Will be validated by the compile and run subcommands
+
+    if not op.exists(args.input):
+        raise ArgumentError("Input file does not exist")
+
+    args.input = op.abspath(args.input)
+
+    input_root, input_ext = op.splitext(args.input)
+    if input_ext != ".psll":
+        raise ArgumentError("Input file does not have .psll extension")
+
+    return args, extra
 
 
-def parse_args() -> argparse.Namespace:
+# ===============================================================================================================
+#
+#  #####    ####   ##    ##  ##   ##  ##      ####     ###    #####
+#  ##  ##  ##  ##  ##    ##  ###  ##  ##     ##  ##   ## ##   ##  ##
+#  ##  ##  ##  ##  ## ## ##  #### ##  ##     ##  ##  ##   ##  ##  ##
+#  ##  ##  ##  ##  ###  ###  ## ####  ##     ##  ##  #######  ##  ##
+#  #####    ####   ##    ##  ##  ###  ######  ####   ##   ##  #####
+#
+# ===============================================================================================================
+
+
+@register_add_subcommand(Subcommand.DOWNLOAD_PYRA)
+def _(subparsers: argparse._SubParsersAction) -> None:
+    """Compile and run a psll program"""
+    subparsers.add_parser(
+        "download-pyra",
+        help="download the pyramid scheme interpreter",
+    )
+
+
+@register_validate_options(Subcommand.DOWNLOAD_PYRA)
+def _(
+    args: argparse.Namespace, extra: list[str]
+) -> tuple[argparse.Namespace, list[str]]:
+    """Validate options for the download-pyra subcommand"""
+
+    if len(extra) != 0:
+        raise ArgumentError(f"Unknown arguments: {extra}")
+
+    return args, extra
+
+
+def parse_args() -> tuple[argparse.Namespace, list[str]]:
     parser = argparse.ArgumentParser(
         description="Compile lisp-like syntax to Pyramid Scheme",
     )
@@ -290,15 +385,13 @@ def parse_args() -> argparse.Namespace:
         subcommand.add_subcommand(subparsers)
 
     # Parse arguments
-    args = parser.parse_args()
+    args, extra = parser.parse_known_args()
 
     # Parse subcommand as Subcommand enum
     args.subcommand = Subcommand(args.subcommand)
 
     # Dispatch to subcommand-specific validation
-    args.subcommand.validate_options(args)
-
-    return args
+    return args.subcommand.validate_options(args, extra)
 
 
 # ======================================================================
@@ -321,13 +414,17 @@ from . import (  # noqa: E402
 
 
 @register_subcommand(Subcommand.COMPILE)
-def subcommand_compile(args: argparse.Namespace) -> None:  # pragma: no cover
+def _(args: argparse.Namespace, extra: list[str]) -> None:
     """Main function for the command-line operation"""
 
     if args.verbose:
+        just_filename = op.basename(args.input)
+        print(f"Compiling {just_filename} to pyramid scheme")
+
+    if args.verbose > 1:
         print("Input filename:", args.input)
 
-    if args.output and args.verbose:
+    if args.output and args.verbose > 1:
         print("Output filename:", args.output)
 
     text = preprocessor.read_file(args.input)
@@ -336,7 +433,7 @@ def subcommand_compile(args: argparse.Namespace) -> None:  # pragma: no cover
     psll_lines, psll_chars = len(text.splitlines()), len(text)
 
     text = preprocessor.preprocess(text)
-    if args.verbose:
+    if args.verbose > 2:
         print("Reduced source:", text)
 
     ast = lexer.lex(text)
@@ -359,7 +456,7 @@ def subcommand_compile(args: argparse.Namespace) -> None:  # pragma: no cover
     pyra_lines, pyra_chars = len(program.splitlines()), len(program)
 
     # Print the generated pyramid scheme program only in -vv mode
-    if args.verbose > 1:
+    if args.verbose > 2:
         print("Pyramid scheme:", program, sep="\n")
 
     if args.output:
@@ -376,7 +473,7 @@ EXPECTED_HASH = "a2b8175e8807cf5acce35c73252994dd"
 
 
 @register_subcommand(Subcommand.RUN)
-def subcommand_run(args: argparse.Namespace) -> None:  # pragma: no cover
+def _(args: argparse.Namespace, extra: list[str]) -> None:
     """Main function for the command-line operation"""
 
     # rind ruby
@@ -386,12 +483,12 @@ def subcommand_run(args: argparse.Namespace) -> None:  # pragma: no cover
             "Could not find ruby executable. Make sure ruby is installed."
         )
 
-    if args.verbose:
+    if args.verbose > 1:
         print("Ruby executable:", ruby)
 
     # get ruby version
     ruby_version = subprocess.check_output([ruby, "--version"]).decode("utf-8").strip()
-    if args.verbose:
+    if args.verbose > 1:
         print("Ruby version:", ruby_version)
 
     # find pyramid scheme executable
@@ -436,22 +533,45 @@ def subcommand_run(args: argparse.Namespace) -> None:  # pragma: no cover
             "Could not find pyra.rb. Make sure pyramid scheme is installed."
         )
 
-    if args.verbose:
+    if args.verbose > 1:
         print("pyra.rb:", pyra_rb)
 
     # run pyramid scheme
     if args.verbose:
-        print("Running pyramid scheme...")
+        print("Running pyramid scheme:")
 
-    subprocess.run([ruby, pyra_rb, args.input])
+    subprocess.run([ruby, pyra_rb, args.input, *extra])
 
 
 @register_subcommand(Subcommand.COMPILE_AND_RUN)
-def subcommand_compile_and_run(args: argparse.Namespace) -> None:  # pragma: no cover
+def _(args: argparse.Namespace, extra: list[str]) -> None:
     """Main function for the command-line operation"""
-    raise NotImplementedError(
-        "Compiling and running pyramid scheme programs is not yet implemented."
-    )
+
+    # Get a temporary directory
+    with tempfile.TemporaryDirectory() as tmpdir:
+        # Compile
+        temp_output = op.join(tmpdir, "out.pyra")
+
+        if args.verbose > 1:
+            print("Temporary output file:", temp_output)
+
+        args.output = temp_output
+
+        # We don't care about these options for the compile step
+        # This is just a convenience function to run the psll code
+        args.full_names = False
+        args.considerate_optimisation = False
+        args.greedy_optimisation = False
+        Subcommand.COMPILE.run(args, extra)
+
+        # Run
+        args.input = args.output
+        Subcommand.RUN.run(args, extra)
+
+
+@register_subcommand(Subcommand.DOWNLOAD_PYRA)
+def _(args: argparse.Namespace, extra: list[str]) -> None:
+    raise NotImplementedError("Downloading pyra.rb is not yet implemented.")
 
 
 check_all_subcommands_registered()
@@ -459,8 +579,8 @@ check_all_subcommands_registered()
 
 # Called as a script
 def argparse_and_main() -> None:  # pragma: no cover
-    args = parse_args()
-    args.subcommand.run(args)
+    args, extra = parse_args()
+    args.subcommand.run(args, extra)
 
 
 # Called as a module

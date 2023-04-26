@@ -94,7 +94,6 @@ More on the 'project management' front:
   - [ ] ? Move testing to makefile
     - [ ] Make sure it works with travis
   - [ ] Move to pytest
-- [ ] `psll.sh` is a mess, therefore (amongst others) `run.sh` is a mess
 - [ ] Add esolang wiki page. I think I deserve one now.
 - [ ] Add psll to tio...?
 - [ ] Add more thorough mypy checks
@@ -137,6 +136,7 @@ Bullet points get moved here from the above section when they get finished. (It'
 - [x] <s>?? Move the command line code from psll.py to a bash script</s> (<- not done in favour of abandoning the bash script alltogether)
 - [x] Configure flake8 and fight with it for a while
 - [x] ?? Same for mypy
+- [x] `psll.sh` is a mess, therefore (amongst others) `run.sh` is a mess
 
 
 ## Bugs

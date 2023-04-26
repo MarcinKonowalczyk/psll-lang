@@ -42,11 +42,18 @@ psll compile ./examples/bubble_sort.psll -o -v && \
 ruby ./Pyramid-Scheme/pyra.rb ./examples/bubble_sort.pyra
 ```
 
-To make compiling and running psll programs easier, a bash script `psll.sh` is also provided:
+You can also run the pyramid schem straight from `psll` cli. For that to work, make sure `ruby` is in the path.
 
 ```sh
-./psll.sh ./examples/bubble_sort.psll
+psll run ./examples/bubble_sort.pyra
 ```
+
+There is also a convenience command to compile a psll program in a temp directory and run it:
+
+```sh
+psll compile-and-run -v ./examples/bubble_sort.psll
+```
+Here it it specified with a `-v` option to also count the number of 
 
 
 ## 💡 Examples
@@ -77,10 +84,10 @@ python -m psll ./examples/nargin_counter.psll -o -f
 ruby ./Pyramid-Scheme/pyra.rb ./exmaples/nargin_counter.pyra 4 3 5 2 4
 ```
 
-or with the `psll.sh` bash script:
+or with the `compile-and-run`
 
 ```sh
-./psll.sh ./examples/nargin_counter.psll 4 3 5 2 4
+psll compile-and-run ./examples/nargin_counter.psll 4 3 5 2 4
 ```
 
 The output is `nargin: 5`
