@@ -33,3 +33,5 @@ _site
 .jekyll-metadata
 Gemfile.lock
 *.perf
+
+*.egg-info

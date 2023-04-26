@@ -27,28 +27,29 @@ RED='\033[0;31m'
 GREEN='\033[0;32m'
 NC='\033[0m' # No Color
 
-declare -a FILES_TO_TEST=("psll" "ascii_trees")
+if [ $c ]; then
+    echo "Running tests with coverage"
+    echo "---------------------------"
+    # Collect coverage for each file individually to not artificially increase coverage
+    declare -a FILES_TO_COVER=("ascii_trees" "lexer" "macros" "optimisers" "preprocessor")
+    coverage erase
+    for NAME in "${FILES_TO_COVER[@]}"; do
+        echo -e "${GREEN}Collecting coverage for $NAME.py${NC}"
+        coverage run --append --include="./psll/$NAME.py" -m pytest -k "not examples" --quiet;
 
-[ $c ] && rm -f .coverage # Clear any previous .coverage report files
+        # Exit if unittests of this file failed
+        if [ "$?" != "0" ]; then
+            echo -e "${RED}Something is wrong${NC}"
+            exit 1
+        fi
+    done
+else
+    echo "Running tests without coverage"
+    echo "------------------------------"
+    pytest -k "not examples"
+fi
 
-for NAME in "${FILES_TO_TEST[@]}"
-do
-    echo ""
-    echo "Testing $NAME.py"
-    if [ $c ]; then
-        coverage run --append --include="$NAME.py" -m unittest discover -p "test_$NAME.py" tests -v;
-    else
-        python -m unittest discover -p "test_$NAME.py" tests -v;
-    fi
-    
-    # Exit if unittests of this file failed
-    if [ "$?" != "0" ]; then
-        echo -e "${RED}Something is wrong${NC}"
-        exit 1
-    fi
-done
-
-[ $e ] && python -m unittest discover -p "test_examples.py" tests -v
+[ $e ] && pytest -k "examples" --quiet
 
 [ $c ] && echo "" && coverage report
 

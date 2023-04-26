@@ -10,25 +10,16 @@ jobs:
   build:
 
     runs-on: ubuntu-latest
-    
-    # strategy:
-    #   matrix:
-    #     python-version: [3.6]
-        
+
     env:
       GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
     steps:
     - name: Checkout repository
-      uses: actions/checkout@v2
+      uses: actions/checkout@v3
 
     - name: Checkout Pyramid-Scheme
       run: git submodule update --init # --recursive
-
-    # - name: ls
-    #   run: |
-    #     ls -lh
-    #     ls Pyramid-Scheme/ -lh
 
     - name: Set up Ruby
       uses: ruby/setup-ruby@v1
@@ -40,55 +31,53 @@ jobs:
       with:
         python-version: '3.9.16'
 
-    - name: Install dependencies
+    - name: Install test dependencies
       run: |
-        python -m pip install --upgrade pip wheel setuptools
-        if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+        pip install --upgrade pip wheel setuptools
+        pip install --upgrade coverage pytest black mypy
 
-    - name: Run only tests
-      # if: "matrix.python-version != '3.6'"
-      run: bash test.sh -e
-
-    - name: Run tests and coverage
-      # if: "matrix.python-version == '3.6'"
-      run: |
-        pip install -Uq coverage
-        bash test.sh -e -c 
+    - name: Install psll
+      run: pip install .
 
     - name: Check with black
-      # if: "matrix.python-version == '3.6'"
-      run: |
-        pip install -Uq black
-        black --version
-        black --check --verbose .
+      run: black --preview --check --verbose .
+    
+    - name: Check with mypy
+      run: mypy --config-file ./mypy.ini psll
+
+    - name: Run tests
+      run: bash test.sh -e
+      if: github.event_name == 'pull_request'
+
+    # ON COMMIT ONLY (as opposed to a PT)
+
+    - name: Run tests and coverage
+      run: bash test.sh -e -c 
+      if: github.event_name != 'pull_request'
 
     - name: Push to coveralls
-      # if: "matrix.python-version == '3.6'"
       run: |
-        pip install -Uq coveralls
+        pip install --upgrade coveralls
         coveralls --service=github
+      if: github.event_name != 'pull_request'
 
     - name: Run performance check
-      # if: "matrix.python-version == '3.6'"
-      run: |
-        python ./perf/perf_ascii_trees.py result.perf
-        cat result.perf
+      run: python ./perf/perf_ascii_trees.py result.perf && cat result.perf
 
     - name: Checkout psll-perf branch
-      # if: "matrix.python-version == '3.6'"
       uses: actions/checkout@v3
       with:
         ref: psll-perf
         path: temp-perf
+      if: github.event_name != 'pull_request'
 
     - name: Append performance data
-      # if: "matrix.python-version == '3.6'"
       run: |
         cd ./temp-perf
         cat ../result.perf | tail -n +2 | awk -v sha=$GITHUB_SHA '{ f = "./data/" $1 ".data"; $1 = sha; print >> f }'
+      if: github.event_name != 'pull_request'
 
     - name: Push to psll-perf
-      # if: "matrix.python-version == '3.6'"
       run: |
         cd ./temp-perf
         git status
@@ -96,3 +85,4 @@ jobs:
         git config user.email github-actions@github.com
         git commit -a -m "Automated report"
         git push
+      if: github.event_name != 'pull_request'
