@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "psll"
-version = "0.1.4.dev0"
+version = "0.1.4"
 description = "Read the latest Real Python tutorials"
 readme = "README.md"
 authors = [{ name = "Marcin Konowalczyk", email = "marcin.konow@lczyk.xyz" }]
