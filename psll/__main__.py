@@ -20,7 +20,7 @@ from enum import Enum
 from functools import partial
 
 ArgumentError = partial(argparse.ArgumentError, None)
-# sys.tracebacklimit = 0
+sys.tracebacklimit = 0
 
 Add_Sig: TypeAlias = Callable[[argparse._SubParsersAction], None]
 Validate_Sig: TypeAlias = Callable[
