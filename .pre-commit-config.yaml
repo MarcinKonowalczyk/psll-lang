@@ -4,7 +4,8 @@ repos:
     hooks:
       - id: black
         entry: black
-        args: ["--check"]
+        args: 
+          - --check
         require_serial: true
 
   - repo: https://github.com/pycqa/flake8
@@ -20,3 +21,11 @@ repos:
         # Using bash makes this less portable, but also makes it use the correct
         # config file. Is there a better way to do this?
         entry: bash -c 'mypy --config-file ./mypy.ini .'
+
+  - repo: https://github.com/streetsidesoftware/cspell-cli
+    rev: v6.31.0
+    hooks:
+     - id: cspell
+       language: node
+       # Same here
+       entry: bash -c 'cspell lint --cache --config ./cspell.json "**/*.py"'
