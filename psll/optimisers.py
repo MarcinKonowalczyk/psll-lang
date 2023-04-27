@@ -42,7 +42,7 @@ def greedy_optimisation(
                 if verbose:
                     print(f"{iter_count} | Old len: {N} | New len: {M}")
                 ast = candidate
-                break  # Greedilly accept the new ast
+                break  # Greedily accept the new ast
         else:
             break  # Break from the while loop
     return ast

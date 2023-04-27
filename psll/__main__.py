@@ -20,7 +20,7 @@ from enum import Enum
 from functools import partial
 
 ArgumentError = partial(argparse.ArgumentError, None)
-sys.tracebacklimit = 0
+sys.tracebacklimit = 0  # spell-checker: disable-line
 
 Add_Sig: TypeAlias = Callable[[argparse._SubParsersAction], None]
 Validate_Sig: TypeAlias = Callable[
@@ -130,7 +130,7 @@ def _(subparsers: argparse._SubParsersAction) -> None:
         "input",
         help=(
             "Input file written in the pyramid scheme (lisp (like)) syntax, with the"
-            " .psll expension."
+            " .psll expansion."
         ),
     )
 
@@ -167,7 +167,7 @@ def _(subparsers: argparse._SubParsersAction) -> None:
         action="store_true",
         help=(
             "Don't shorten variable names when compiling the pyramid scheme. This will"
-            " result in longer, but potentially more readable source code. Usefull for"
+            " result in longer, but potentially more readable source code. Useful for"
             " either compiler or pyramid scheme debugging."
         ),
     )

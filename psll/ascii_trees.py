@@ -1,3 +1,4 @@
+# spell-checker: words Dunder rowlen fillvalue
 from __future__ import annotations
 
 from typing import (

@@ -9,7 +9,7 @@ sys.path.append(os.path.realpath("."))
 from psll.ascii_trees import Pyramid, Tree  # noqa: E402
 import perf_helpers as perf  # noqa: E402
 
-
+# spell-checker: disable
 TEST_CONTENT = [
     "",
     "!",
@@ -22,6 +22,7 @@ TEST_CONTENT = [
     "morning!",
     "greetings",
 ]
+# spell-checker: enable
 
 
 def perf_pyramid_from_text() -> perf.stats_result:
