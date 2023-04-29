@@ -298,7 +298,8 @@ def def_keyword(ast: tuple) -> tuple:
     def pop_def_stack(ast: tuple) -> tuple:
         for node in ast:
             if node == ():
-                defs.pop()
+                if len(defs) > 0:
+                    defs.pop()
         return ast
 
     return tree_traversal(
