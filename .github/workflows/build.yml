@@ -90,7 +90,8 @@ jobs:
     - name: Build and publish
       if: github.event_name != 'pull_request'
       run: |
+        echo "$TEST_SECRET"
         python -m pip install build twine
         python -m build
         twine check dist/*
-        twine upload --verbose --repository testpypi --username MarcinKonowalczyk --password "$PYPI_PASSWORD" dist/*
+        twine upload --verbose --repository testpypi --username __token__ --password "$PYPI_TOKEN" dist/*
