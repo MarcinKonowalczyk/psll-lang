@@ -8,7 +8,7 @@ import tempfile
 import sys
 import hashlib
 
-from typing import Callable, TypeVar, TYPE_CHECKING, Any
+from typing import Callable, TypeVar, TYPE_CHECKING, Any, Optional
 
 if TYPE_CHECKING:
     from typing_extensions import TypeAlias
@@ -18,6 +18,8 @@ else:
 from enum import Enum
 
 from functools import partial
+
+from . import __version__
 
 ArgumentError = partial(argparse.ArgumentError, None)
 sys.tracebacklimit = 0  # spell-checker: disable-line
@@ -151,14 +153,6 @@ def _(subparsers: argparse._SubParsersAction) -> None:
     )
 
     compile_parser.add_argument(
-        "-v",
-        "--verbose",
-        action="count",
-        default=0,
-        help="Run in the verbose mode. Can be specified multiple times.",
-    )
-
-    compile_parser.add_argument(
         "-f", "--force", action="store_true", help="Force file overwrite."
     )
 
@@ -258,14 +252,6 @@ def _(subparsers: argparse._SubParsersAction) -> None:
 
     run_parser.add_argument("input", help="Input pyramid scheme file.")
 
-    run_parser.add_argument(
-        "-v",
-        "--verbose",
-        action="count",
-        default=0,
-        help="Run in the verbose mode. Can be specified multiple times.",
-    )
-
 
 @register_validate_options(Subcommand.RUN)
 def _(
@@ -310,14 +296,6 @@ def _(subparsers: argparse._SubParsersAction) -> None:
         ),
     )
 
-    compile_and_run_parser.add_argument(
-        "-v",
-        "--verbose",
-        action="count",
-        default=0,
-        help="Run in the verbose mode. Can be specified multiple times.",
-    )
-
 
 @register_validate_options(Subcommand.COMPILE_AND_RUN)
 def _(
@@ -352,9 +330,33 @@ def _(
 @register_add_subcommand(Subcommand.DOWNLOAD_PYRA)
 def _(subparsers: argparse._SubParsersAction) -> None:
     """Compile and run a psll program"""
-    subparsers.add_parser(
+    download_command = subparsers.add_parser(
         "download-pyra",
         help="download the pyramid scheme interpreter",
+    )
+
+    group = download_command.add_mutually_exclusive_group()
+
+    group.add_argument(
+        "--here",
+        action="store_true",
+        help="Download the interpreter in the current directory",
+        default=False,
+    )
+
+    group.add_argument(
+        "--home",
+        action="store_true",
+        help="Download the interpreter in the home directory",
+        default=False,
+    )
+
+    group.add_argument(
+        "-d",
+        "--directory",
+        help="Download the interpreter in the specified directory",
+        type=str,
+        default=None,
     )
 
 
@@ -373,6 +375,20 @@ def _(
 def parse_args() -> tuple[argparse.Namespace, list[str]]:
     parser = argparse.ArgumentParser(
         description="Compile lisp-like syntax to Pyramid Scheme",
+    )
+
+    parser.add_argument(
+        "-v",
+        "--verbose",
+        action="count",
+        default=0,
+        help="Run in the verbose mode. Can be specified multiple times.",
+    )
+
+    parser.add_argument(
+        "--version",
+        action="version",
+        version=f"psll {__version__}",
     )
 
     subparsers = parser.add_subparsers(
@@ -468,8 +484,58 @@ def _(args: argparse.Namespace, extra: list[str]) -> None:
         print("pyra file:", pyra_lines, "lines,", pyra_chars, "characters")
 
 
-# https://github.com/ConorOBrien-Foxx/Pyramid-Scheme/blob/fd183d296f08e0cba8bf55da907697eaf412f6a7/pyra.rb
+# PYRA_RB_URL = "https://raw.github.com/ConorOBrien-Foxx/Pyramid-Scheme/blob/fd183d296f08e0cba8bf55da907697eaf412f6a7/pyra.rb"
+PYRA_RB_URL = "https://raw.githubusercontent.com/ConorOBrien-Foxx/Pyramid-Scheme/fd183d296f08e0cba8bf55da907697eaf412f6a7/pyra.rb"
 EXPECTED_HASH = "a2b8175e8807cf5acce35c73252994dd"
+
+
+def find_pyra_rb(verbose: int) -> Optional[str]:
+    """Find the pyramid scheme interpreter"""
+    candidates: list[str] = []
+
+    # Check rhe current working directory for pyra.rb
+    cwd_fullpath = op.abspath(os.getcwd())
+    candidates.append(op.join(cwd_fullpath, "pyra.rb"))
+    candidates.append(op.join(cwd_fullpath, "Pyramid-Scheme", "pyra.rb"))
+
+    # Check the directory of this file for pyra.rb This is where it might get dropped
+    # byt the installer
+    this_file_fullpath = op.abspath(op.dirname(__file__))
+    candidates.append(op.join(this_file_fullpath, "pyra.rb"))
+    candidates.append(op.join(this_file_fullpath, "Pyramid-Scheme", "pyra.rb"))
+
+    # Finally check the home directory
+    home_dir = op.expanduser("~")
+    if home_dir != "~":
+        # home_dir got expanded aka it is known
+        candidates.append(op.join(home_dir, "pyra.rb"))
+        candidates.append(op.join(home_dir, "Pyramid-Scheme", "pyra.rb"))
+
+    if verbose > 1:
+        print(f"Looking for pyra.rb in {len(candidates)} locations:")
+
+    pyra_rb = None
+    for candidate in candidates:
+        if op.isfile(candidate):
+            with open(candidate, "r") as f:
+                file_hash = hashlib.md5(f.read().encode("utf-8")).hexdigest()
+            if file_hash == EXPECTED_HASH:
+                # This is the correct version of pyra.rb
+                pyra_rb = candidate
+                if verbose > 1:
+                    print(f" {candidate} is the correct version of pyra.rb")
+                break
+            else:
+                if verbose > 1:
+                    print(
+                        f" {candidate} has the wrong hash ({file_hash} !="
+                        f" {EXPECTED_HASH})"
+                    )
+        else:
+            if verbose > 1:
+                print(f" {candidate} does not exist")
+
+    return pyra_rb
 
 
 @register_subcommand(Subcommand.RUN)
@@ -491,42 +557,7 @@ def _(args: argparse.Namespace, extra: list[str]) -> None:
     if args.verbose > 1:
         print("Ruby version:", ruby_version)
 
-    # find pyramid scheme executable
-    candidates: list[str] = []
-
-    # Check rhe current working directory for pyra.rb
-    cwd_fullpath = op.abspath(os.getcwd())
-    candidates.append(op.join(cwd_fullpath, "pyra.rb"))
-    candidates.append(op.join(cwd_fullpath, "Pyramid-Scheme", "pyra.rb"))
-
-    # Check the directory of this file for pyra.rb This is where it might get dropped
-    # byt the installer
-    this_file_fullpath = op.abspath(__file__)
-    candidates.append(op.join(this_file_fullpath, "pyra.rb"))
-    candidates.append(op.join(this_file_fullpath, "Pyramid-Scheme", "pyra.rb"))
-
-    # Finally check the home directory
-    home_dir = op.expanduser("~")
-    if home_dir != "~":
-        # home_dir got expanded aka it is known
-        candidates.append(op.join(home_dir, "pyra.rb"))
-        candidates.append(op.join(home_dir, "Pyramid-Scheme", "pyra.rb"))
-
-    pyra_rb = None
-    for candidate in candidates:
-        if op.isfile(candidate):
-            with open(candidate, "r") as f:
-                file_hash = hashlib.md5(f.read().encode("utf-8")).hexdigest()
-            if file_hash == EXPECTED_HASH:
-                # This is the correct version of pyra.rb
-                pyra_rb = candidate
-                break
-            else:
-                if args.verbose:
-                    print(
-                        f"Found a pyra.rb file at {candidate} but it has the wrong hash"
-                        f" ({file_hash} != {EXPECTED_HASH}). Ignoring it."
-                    )
+    pyra_rb = find_pyra_rb(args.verbose)
 
     if pyra_rb is None:
         raise RuntimeError(
@@ -549,7 +580,6 @@ def _(args: argparse.Namespace, extra: list[str]) -> None:
 
     # Get a temporary directory
     with tempfile.TemporaryDirectory() as tmpdir:
-        # Compile
         temp_output = op.join(tmpdir, "out.pyra")
 
         if args.verbose > 1:
@@ -571,7 +601,93 @@ def _(args: argparse.Namespace, extra: list[str]) -> None:
 
 @register_subcommand(Subcommand.DOWNLOAD_PYRA)
 def _(args: argparse.Namespace, extra: list[str]) -> None:
-    raise NotImplementedError("Downloading pyra.rb is not yet implemented.")
+    pyra_rb = find_pyra_rb(args.verbose)
+
+    if pyra_rb is not None:
+        ans = input(f"Pyramid scheme found at {pyra_rb}. Re-download? [y/N] ")
+        if ans.lower() != "y":
+            return
+
+    if args.verbose:
+        print("Downloading pyramid scheme...")
+
+    write_dir = None
+
+    # Process priority options
+    if args.here:
+        write_dir = op.abspath(os.getcwd())
+        if not os.access(write_dir, os.W_OK):
+            raise RuntimeError(
+                f"No write access to the current working directory ({write_dir})"
+            )
+
+    elif args.home:
+        home_dir = op.expanduser("~")
+        if home_dir != "~":
+            # home_dir got expanded aka it is known
+            if os.access(home_dir, os.W_OK):
+                write_dir = home_dir
+            else:
+                if args.verbose > 1:
+                    print(f"No write access to home directory ({home_dir})")
+        else:
+            if args.verbose > 1:
+                print("Cannot determine home directory")
+
+    elif args.directory:
+        if os.access(args.directory, os.W_OK):
+            write_dir = args.directory
+        else:
+            if args.verbose > 1:
+                print(f"No write access to specified directory ({args.directory})")
+
+    if write_dir is None:
+        # If there are no priority options
+
+        this_file_dir = op.dirname(op.abspath(__file__))
+        if os.access(this_file_dir, os.W_OK):
+            write_dir = this_file_dir
+
+    if write_dir is None:
+        home_dir = op.expanduser("~")
+        if home_dir != "~":
+            # home_dir got expanded aka it is known
+            if os.access(home_dir, os.W_OK):
+                write_dir = home_dir
+            else:
+                if args.verbose > 1:
+                    print(f"No write access to home directory ({home_dir})")
+
+    if write_dir is None:
+        raise RuntimeError("Could not find a suitable directory to write to")
+    else:
+        if args.verbose > 1:
+            print("Found a suitable directory to write to:", write_dir)
+
+    import urllib.request
+
+    with tempfile.TemporaryDirectory() as tmpdir:
+        with urllib.request.urlopen(PYRA_RB_URL) as response:
+            pyra_rb = response.read().decode("utf-8")
+
+        if pyra_rb is None:
+            raise RuntimeError("Could not download pyra.rb")
+
+        downloaded_hash = hashlib.md5(pyra_rb.encode("utf-8")).hexdigest()
+
+        if downloaded_hash != EXPECTED_HASH:
+            raise RuntimeError(
+                f"Downloaded pyra.rb has the wrong hash ({downloaded_hash} !="
+                f" {EXPECTED_HASH})."
+            )
+
+        with open(op.join(tmpdir, "pyra.rb"), "w") as f:
+            f.write(pyra_rb)
+
+        if args.verbose > 1:
+            print("Downloaded pyra.rb to", op.join(tmpdir, "pyra.rb"))
+
+        shutil.copy(op.join(tmpdir, "pyra.rb"), op.join(write_dir, "pyra.rb"))
 
 
 check_all_subcommands_registered()

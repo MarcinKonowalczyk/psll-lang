@@ -38,7 +38,7 @@ Only the `compile` command is implemented at the moment, so you'll have to run t
 For example, to compile and run the bubble-sort example:
 
 ```sh
-psll compile ./examples/bubble_sort.psll -o -v && \
+psll -v compile ./examples/bubble_sort.psll -o && \
 ruby ./Pyramid-Scheme/pyra.rb ./examples/bubble_sort.pyra
 ```
 
@@ -51,7 +51,7 @@ psll run ./examples/bubble_sort.pyra
 There is also a convenience command to compile a psll program in a temp directory and run it:
 
 ```sh
-psll compile-and-run -v ./examples/bubble_sort.psll
+psll -v compile-and-run ./examples/bubble_sort.psll
 ```
 Here it it specified with a `-v` option to also count the number of 
 
