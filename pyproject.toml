@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "psll"
-version = "0.1.4"
+dynamic = ["version"]
 description = "Read the latest Real Python tutorials"
 readme = "README.md"
 authors = [{ name = "Marcin Konowalczyk", email = "marcin.konow@lczyk.xyz" }]
@@ -29,6 +29,7 @@ dev = [
     "black>=23.3.0",
     "flake8>=6.0.0",
     "mypy>=1.2.0",
+    "types-setuptools",
 ]
 
 [project.urls]

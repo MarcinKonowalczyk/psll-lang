@@ -1,0 +1,12 @@
+{
+    "caseSensitive": true,
+    // "failFast": true,
+    "language": "en-GB",
+    "words": [
+        "psll",
+        "pyra",
+        "ncalls",
+        "lexer",
+        "ketbra"
+    ]
+}

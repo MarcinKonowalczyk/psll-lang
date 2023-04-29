@@ -35,6 +35,7 @@ def depth(tree):
 random_string = lambda N: "".join(random.choice(ascii_letters) for _ in range(N))
 
 
+# spell-checker: words prob
 def random_tree(max_depth=10, str_prob=0.6):
     """Make up a random tree"""
     ast = [random_string(random.randrange(4))]
@@ -93,7 +94,7 @@ class MetaTests:
 # ==========================================================================================================
 
 
-class Readfile(unittest.TestCase, MetaTests):
+class ReadFile(unittest.TestCase, MetaTests):
     @staticmethod
     def read_file(content):
         """read_file + preprocess"""
@@ -115,7 +116,7 @@ class Readfile(unittest.TestCase, MetaTests):
             "(set 1)",
             "(set hi 1)",
             "(1 2 3 4)",
-            "(hi) (salut)",
+            "(hi) (salut)",  # spell-checker: disable-line
         ]
         self.paired_test(contents, contents, self.read_file)
 
@@ -142,7 +143,7 @@ class Readfile(unittest.TestCase, MetaTests):
 
     @unittest.skip("Needs work")
     def test_leading_and_trailing_spaces(self):
-        """> No leading or trailing whitepace"""
+        """> No leading or trailing whitespace"""
         contents = ["(   hi)", "(hi   )", "(hi   1)", "(   hi 1)", "(hi 1   )"]
         targets = ["(hi)", "(hi)", "(hi 1)", "(hi 1)", "(hi 1)"]
         self.paired_test(contents, targets, self.read_file)

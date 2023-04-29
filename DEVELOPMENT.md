@@ -76,8 +76,9 @@ This is not a real-purpose language. In this section the 'optimisation' refers t
 More on the 'project management' front:
 
 - [ ] ?? Easier to use installation. Maybe a makefile which makes a symlink in the correct place...
-  - [ ] ?? `pip install psll` ...
+  - [x] ?? `pip install psll` ...
   - [ ] ??? brew tap. I mean, why not. Its not polluting the core with needless software if its just a tap...
+  - [ ] finish the `download-pyra` option in psll cli
 - [x] Make sure migration to travis.com (from travis.org) went fine (whenever that happens)
   - [ ] ?? deprecate travis?? github actions seem to work better for small projects like this
 - [ ] Better testing
@@ -94,6 +95,7 @@ More on the 'project management' front:
   - [ ] ? Move testing to makefile
     - [ ] Make sure it works with travis
   - [ ] Move to pytest
+  - [ ] Test cli
 - [ ] Add esolang wiki page. I think I deserve one now.
 - [ ] Add psll to tio...?
 - [ ] Add more thorough mypy checks

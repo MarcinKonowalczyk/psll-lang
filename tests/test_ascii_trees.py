@@ -31,6 +31,7 @@ def capture_output():
 
 random_string = lambda N: "".join(choice(ascii_letters) for _ in range(N))
 
+# spell-checker: disable
 TEST_CONTENT = [
     "",
     "!",
@@ -43,6 +44,7 @@ TEST_CONTENT = [
     "morning!",
     "greetings",
 ]
+
 TEST_PYRAMIDS = [
     " ^ \n - ",
     "  ^  \n /!\\ \n --- ",
@@ -55,6 +57,7 @@ TEST_PYRAMIDS = [
     "    ^    \n   /m\\   \n  /orn\\  \n /ing! \\ \n ------- ",
     "    ^    \n   /g\\   \n  /ree\\  \n /tings\\ \n ------- ",
 ]
+# spell-checker: enable
 
 
 class PyramidTests(unittest.TestCase):

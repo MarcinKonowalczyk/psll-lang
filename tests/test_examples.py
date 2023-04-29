@@ -14,6 +14,7 @@ pyra_exists = exists(pyra_path)
 print("pyra.rb path:", pyra_path)
 print("exists:", pyra_exists)
 
+# spell-checker: disable-next-line
 ruby_path = os.popen("which ruby").read().replace("\n", "")
 ruby_exists = exists(ruby_path)
 print("ruby path:", ruby_path)
@@ -85,6 +86,7 @@ class MetaTests:
                     pass
 
 
+# spell-checker: words nargin
 @skipUnlessExampleExists(examples + "nargin_counter.psll")
 class TestNarginCounter(unittest.TestCase, MetaTests):
     pass
@@ -115,6 +117,7 @@ class TestOperatorChains(unittest.TestCase, MetaTests):
     pass
 
 
+# spell-checker: words PRNG
 @skipUnlessExampleExists(examples + "linear_congruential_generator.psll")
 class TestPRNG(unittest.TestCase, MetaTests):
     pass

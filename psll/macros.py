@@ -1,3 +1,4 @@
+# spell-checker: words replacer, lengther
 from __future__ import annotations
 
 from typing import (

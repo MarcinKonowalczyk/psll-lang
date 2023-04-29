@@ -35,3 +35,6 @@ Gemfile.lock
 *.perf
 
 *.egg-info
+.cspellcache
+dist
+psll/pyra.rb
