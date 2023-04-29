@@ -20,7 +20,7 @@ if TYPE_CHECKING:
 # from typing import final
 from abc import ABC, abstractmethod
 
-from itertools import zip_longest, product, islice
+from itertools import zip_longest, islice
 from more_itertools import pairwise
 
 # ========================================================================================================================================
@@ -483,13 +483,14 @@ class Tree(AbstractTree):
 #
 # ======================================================================
 
-if __name__ == "__main__":
-    p0 = Pyramid.from_text("")
-    p1 = Pyramid.from_text("set")
-    text = "Greetings traveller! Where goes thee this fine morning?" * 3
-    p2 = Pyramid.from_text(text, remove_spaces=False)
-    p3 = (p1 + p1 + p1) + p2
+# if __name__ == "__main__":
+#     from itertools import product
+#     p0 = Pyramid.from_text("")
+#     p1 = Pyramid.from_text("set")
+#     text = "Greetings traveller! Where goes thee this fine morning?" * 3
+#     p2 = Pyramid.from_text(text, remove_spaces=False)
+#     p3 = (p1 + p1 + p1) + p2
 
-    for i, j, k in product((p0, p1, p2), repeat=3):
-        print()
-        print(i + (j, k))
+#     for i, j, k in product((p0, p1, p2), repeat=3):
+#         print()
+#         print(i + (j, k))
