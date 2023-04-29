@@ -223,7 +223,7 @@ def _(
             # Silently exit, but with error code so that it can be used in scripts
             sys.exit(1)
 
-    if args.output is not None:
+    if args.output is not None and args.output != "":
         output_root, output_ext = op.splitext(args.output)
         if output_ext != ".pyra":
             raise ArgumentError("Output file does not have .pyra extension")
