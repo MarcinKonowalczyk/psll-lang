@@ -1,3 +1,5 @@
+__version__ = "0.1.5"
+
 import sys
 
 if sys.version_info < (3, 9):
