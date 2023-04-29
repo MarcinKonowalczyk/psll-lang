@@ -27,5 +27,6 @@ jobs:
         python -m build
         twine check dist/*
     
+    # --repository testpypi
     - name: Publish
-      run: twine upload --verbose --repository testpypi --username __token__ --password "$PYPI_TOKEN" dist/*
+      run: twine upload --verbose --username __token__ --password "$PYPI_TOKEN" dist/*
