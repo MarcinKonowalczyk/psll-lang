@@ -59,7 +59,7 @@ jobs:
       if: github.event_name != 'pull_request'
       run: |
         pip install --upgrade coveralls
-        coveralls --service=github
+        coveralls debug --service=github
 
     - name: Run performance check
       run: python ./perf/perf_ascii_trees.py result.perf && cat result.perf
