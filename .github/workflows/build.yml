@@ -88,6 +88,9 @@ jobs:
         git push
     
     - name: Build and publish
+      env:
+        TEST_SECRET: ${{ secrets.TEST_SECRET }}
+        PYPI_TOKEN: ${{ secrets.PYPI_TOKEN }}
       if: github.event_name != 'pull_request'
       run: |
         echo "$TEST_SECRET"
