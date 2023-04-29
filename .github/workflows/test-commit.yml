@@ -1,9 +1,7 @@
-name: build
+name: test-commit
 
 on:
   push:
-    branches: [ master ]
-  pull_request:
     branches: [ master ]
 
 jobs:
@@ -45,40 +43,31 @@ jobs:
     - name: Check with mypy
       run: mypy --config-file ./mypy.ini psll
 
-    - name: Run tests
-      if: github.event_name == 'pull_request'
-      run: bash test.sh -e
-
-    # ON COMMIT ONLY (as opposed to a PR)
-
     - name: Run tests and coverage
-      if: github.event_name != 'pull_request'
       run: bash test.sh -e -c 
 
     - name: Push to coveralls
-      if: github.event_name != 'pull_request'
       run: |
         pip install --upgrade coveralls
         coveralls debug --service=github
+
+    # Performance check
 
     - name: Run performance check
       run: python ./perf/perf_ascii_trees.py result.perf && cat result.perf
 
     - name: Checkout psll-perf branch
-      if: github.event_name != 'pull_request'
       uses: actions/checkout@v3
       with:
         ref: psll-perf
         path: temp-perf
 
     - name: Append performance data
-      if: github.event_name != 'pull_request'
       run: |
         cd ./temp-perf
         cat ../result.perf | tail -n +2 | awk -v sha=$GITHUB_SHA '{ f = "./data/" $1 ".data"; $1 = sha; print >> f }'
 
     - name: Push to psll-perf
-      if: github.event_name != 'pull_request'
       run: |
         cd ./temp-perf
         git status
@@ -86,15 +75,3 @@ jobs:
         git config user.email github-actions@github.com
         git commit -a -m "Automated report"
         git push
-    
-    - name: Build and publish
-      env:
-        TEST_SECRET: ${{ secrets.TEST_SECRET }}
-        PYPI_TOKEN: ${{ secrets.PYPI_TOKEN }}
-      if: github.event_name != 'pull_request'
-      run: |
-        echo "$TEST_SECRET"
-        python -m pip install build twine
-        python -m build
-        twine check dist/*
-        twine upload --verbose --repository testpypi --username __token__ --password "$PYPI_TOKEN" dist/*
