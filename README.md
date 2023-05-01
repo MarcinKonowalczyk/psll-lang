@@ -20,7 +20,13 @@ Macro-driven metalanguage which compiles to [Pyramid Scheme](https://github.com/
 
 ## 🔧 Usage
 
-Download and install psll:
+psll can be installed from pypi:
+
+```sh
+pip install psll
+```
+
+Or from source:
 
 ```sh
 cd ~

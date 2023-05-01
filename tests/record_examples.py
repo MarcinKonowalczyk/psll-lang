@@ -30,6 +30,7 @@ print(f"Found {len(psll_examples)} examples.")
 # Exclude some examples since they take user input
 exclude = [
     "golf_pyramid_scheme_negation",
+    "favourite_number",
 ]
 
 filenames: dict[str, str] = {}
