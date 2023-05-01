@@ -38,3 +38,4 @@ Gemfile.lock
 .cspellcache
 dist
 psll/pyra.rb
+*.*~
