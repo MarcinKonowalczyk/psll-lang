@@ -31,16 +31,13 @@ jobs:
       - name: Install uv
         run: curl -LsSf https://astral.sh/uv/install.sh | sh && uv --version
 
-      - name: Create virtual environment
-        run: uv venv && source .venv/bin/activate
-
       - name: Install test dependencies
         run: |
-          uv pip install --upgrade wheel setuptools
-          uv pip install --upgrade coverage pytest black mypy
+          uv pip install --system --upgrade wheel setuptools
+          uv pip install --system --upgrade coverage pytest black mypy
 
       - name: Install psll
-        run: uv pip install "psll @ ."
+        run: uv pip install --system  "psll @ ."
 
       - name: Check with black
         run: black --preview --check --verbose .
@@ -53,7 +50,7 @@ jobs:
 
       - name: Push to coveralls
         run: |
-          uv pip install --upgrade coveralls
+          uv pip install --system --upgrade coveralls
           coveralls debug --service=github
 
       # Performance check

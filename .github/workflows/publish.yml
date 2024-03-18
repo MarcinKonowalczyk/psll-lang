@@ -23,12 +23,9 @@ jobs:
       - name: Install uv
         run: curl -LsSf https://astral.sh/uv/install.sh | sh && uv --version
 
-      - name: Create virtual environment
-        run: uv venv && source .venv/bin/activate
-
       - name: Build
         run: |
-          uv pip install --upgrade wheel setuptools build twine
+          uv pip install --system --upgrade wheel setuptools build twine
           python -m build
           twine check dist/*
 
