@@ -2,76 +2,78 @@ name: test-commit
 
 on:
   push:
-    branches: [ master ]
+    branches: [master]
 
 jobs:
   build:
-
     runs-on: ubuntu-latest
 
     env:
       GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
     steps:
-    - name: Checkout repository
-      uses: actions/checkout@v3
+      - name: Checkout repository
+        uses: actions/checkout@v3
 
-    - name: Checkout Pyramid-Scheme
-      run: git submodule update --init # --recursive
+      - name: Checkout Pyramid-Scheme
+        run: git submodule update --init # --recursive
 
-    - name: Set up Ruby
-      uses: ruby/setup-ruby@v1
-      with:
-        ruby-version: 2.6
+      - name: Set up Ruby
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: 2.6
 
-    - name: Set up Python 3.9.16
-      uses: actions/setup-python@v4
-      with:
-        python-version: '3.9.16'
+      - name: Set up Python 3.9
+        uses: actions/setup-python@v4
+        with:
+          python-version: 3.9
 
-    - name: Install test dependencies
-      run: |
-        pip install --upgrade pip wheel setuptools
-        pip install --upgrade coverage pytest black mypy
+      - name: Install uv
+        run: curl -LsSf https://astral.sh/uv/install.sh | sh && uv --version
 
-    - name: Install psll
-      run: pip install .
+      - name: Install test dependencies
+        run: |
+          uv pip install --system --upgrade wheel setuptools
+          uv pip install --system --upgrade coverage pytest black mypy
 
-    - name: Check with black
-      run: black --preview --check --verbose .
-    
-    - name: Check with mypy
-      run: mypy --config-file ./mypy.ini psll
+      - name: Install psll
+        run: uv pip install --system  "psll @ ."
 
-    - name: Run tests and coverage
-      run: bash test.sh -e -c 
+      - name: Check with black
+        run: black --preview --check --verbose .
 
-    - name: Push to coveralls
-      run: |
-        pip install --upgrade coveralls
-        coveralls debug --service=github
+      - name: Check with mypy
+        run: mypy --config-file ./mypy.ini psll
 
-    # Performance check
+      - name: Run tests and coverage
+        run: bash test.sh -e -c
 
-    - name: Run performance check
-      run: python ./perf/perf_ascii_trees.py result.perf && cat result.perf
+      - name: Push to coveralls
+        run: |
+          uv pip install --system --upgrade coveralls
+          coveralls debug --service=github
 
-    - name: Checkout psll-perf branch
-      uses: actions/checkout@v3
-      with:
-        ref: psll-perf
-        path: temp-perf
+      # Performance check
 
-    - name: Append performance data
-      run: |
-        cd ./temp-perf
-        cat ../result.perf | tail -n +2 | awk -v sha=$GITHUB_SHA '{ f = "./data/" $1 ".data"; $1 = sha; print >> f }'
+      - name: Run performance check
+        run: python ./perf/perf_ascii_trees.py result.perf && cat result.perf
 
-    - name: Push to psll-perf
-      run: |
-        cd ./temp-perf
-        git status
-        git config user.name github-actions
-        git config user.email github-actions@github.com
-        git commit -a -m "Automated report"
-        git push
+      - name: Checkout psll-perf branch
+        uses: actions/checkout@v3
+        with:
+          ref: psll-perf
+          path: temp-perf
+
+      - name: Append performance data
+        run: |
+          cd ./temp-perf
+          cat ../result.perf | tail -n +2 | awk -v sha=$GITHUB_SHA '{ f = "./data/" $1 ".data"; $1 = sha; print >> f }'
+
+      - name: Push to psll-perf
+        run: |
+          cd ./temp-perf
+          git status
+          git config user.name github-actions
+          git config user.email github-actions@github.com
+          git commit -a -m "Automated report"
+          git push
