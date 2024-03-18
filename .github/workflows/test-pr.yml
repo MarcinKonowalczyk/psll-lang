@@ -27,11 +27,12 @@ jobs:
 
       - name: Install test dependencies
         run: |
-          pip install --upgrade pip wheel setuptools
-          pip install --upgrade coverage pytest black mypy
+          pip install --upgrade uv
+          uv pip install --upgrade pip wheel setuptools
+          uv pip install --upgrade coverage pytest black mypy
 
       - name: Install psll
-        run: pip install .
+        run: uv pip install .
 
       - name: Check with black
         run: black --preview --check --verbose .
