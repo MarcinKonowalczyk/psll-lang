@@ -40,7 +40,7 @@ jobs:
           uv pip install --upgrade coverage pytest black mypy
 
       - name: Install psll
-        run: uv pip install .
+        run: uv pip install "psll @ ."
 
       - name: Check with black
         run: black --preview --check --verbose .
