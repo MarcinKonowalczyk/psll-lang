@@ -1,7 +1,7 @@
 language: python
 
 python:
-  - "3.9.16"
+  - "3.9"
 
 install:
   - pip install --upgrade pip wheel setuptools
@@ -13,6 +13,6 @@ before_script:
   - ls Pyramid-Scheme/ -lh
 
 script:
-  - bash test.sh -e -c 
+  - bash test.sh -e -c
   - black --preview --check --verbose .
   - mypy --config-file ./mypy.ini .

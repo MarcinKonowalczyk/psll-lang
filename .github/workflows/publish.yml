@@ -2,31 +2,30 @@ name: publish
 
 on:
   push:
-    branches: [ publish ]
+    branches: [publish]
 
 jobs:
   build:
-
     runs-on: ubuntu-latest
 
     env:
       PYPI_TOKEN: ${{ secrets.PYPI_TOKEN }}
 
     steps:
-    - name: Checkout repository
-      uses: actions/checkout@v3
+      - name: Checkout repository
+        uses: actions/checkout@v3
 
-    - name: Set up Python 3.9.16
-      uses: actions/setup-python@v4
-      with:
-        python-version: '3.9.16'
+      - name: Set up Python 3.9
+        uses: actions/setup-python@v4
+        with:
+          python-version: 3.9
 
-    - name: Build
-      run: |
-        pip install --upgrade pip wheel setuptools build twine
-        python -m build
-        twine check dist/*
-    
-    # --repository testpypi
-    - name: Publish
-      run: twine upload --verbose --username __token__ --password "$PYPI_TOKEN" dist/*
+      - name: Build
+        run: |
+          pip install --upgrade pip wheel setuptools build twine
+          python -m build
+          twine check dist/*
+
+      # --repository testpypi
+      - name: Publish
+        run: twine upload --verbose --username __token__ --password "$PYPI_TOKEN" dist/*

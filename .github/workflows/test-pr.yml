@@ -2,43 +2,42 @@ name: test-pr
 
 on:
   pull_request:
-    branches: [ master ]
+    branches: [master]
 
 jobs:
   build:
-
     runs-on: ubuntu-latest
 
     steps:
-    - name: Checkout repository
-      uses: actions/checkout@v3
+      - name: Checkout repository
+        uses: actions/checkout@v3
 
-    - name: Checkout Pyramid-Scheme
-      run: git submodule update --init # --recursive
+      - name: Checkout Pyramid-Scheme
+        run: git submodule update --init # --recursive
 
-    - name: Set up Ruby
-      uses: ruby/setup-ruby@v1
-      with:
-        ruby-version: 2.6
+      - name: Set up Ruby
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: 2.6
 
-    - name: Set up Python 3.9.16
-      uses: actions/setup-python@v4
-      with:
-        python-version: '3.9.16'
+      - name: Set up Python 3.9
+        uses: actions/setup-python@v4
+        with:
+          python-version: 3.9
 
-    - name: Install test dependencies
-      run: |
-        pip install --upgrade pip wheel setuptools
-        pip install --upgrade coverage pytest black mypy
+      - name: Install test dependencies
+        run: |
+          pip install --upgrade pip wheel setuptools
+          pip install --upgrade coverage pytest black mypy
 
-    - name: Install psll
-      run: pip install .
+      - name: Install psll
+        run: pip install .
 
-    - name: Check with black
-      run: black --preview --check --verbose .
-    
-    - name: Check with mypy
-      run: mypy --config-file ./mypy.ini psll
+      - name: Check with black
+        run: black --preview --check --verbose .
 
-    - name: Run tests (PR)
-      run: bash test.sh -e
+      - name: Check with mypy
+        run: mypy --config-file ./mypy.ini psll
+
+      - name: Run tests (PR)
+        run: bash test.sh -e
