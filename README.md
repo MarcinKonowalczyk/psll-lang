@@ -1,6 +1,6 @@
 # psll-lang <!-- omit in toc -->
 
-[![publish](https://github.com/MarcinKonowalczyk/psll-lang/actions/workflows/publish.yml/badge.svg)](https://github.com/MarcinKonowalczyk/psll-lang/actions/workflows/publish.yml) [![Build Status](https://app.travis-ci.com/MarcinKonowalczyk/psll-lang.svg?branch=master)](https://app.travis-ci.com/MarcinKonowalczyk/psll-lang) [![Coverage Status](https://coveralls.io/repos/github/MarcinKonowalczyk/psll-lang/badge.svg?branch=master)](https://coveralls.io/github/MarcinKonowalczyk/psll-lang?branch=master) [![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
+[![PyPI version](https://badge.fury.io/py/psll.svg)](https://pypi.org/project/psll/) [![publish](https://github.com/MarcinKonowalczyk/psll-lang/actions/workflows/publish.yml/badge.svg)](https://github.com/MarcinKonowalczyk/psll-lang/actions/workflows/publish.yml) [![Build Status](https://app.travis-ci.com/MarcinKonowalczyk/psll-lang.svg?branch=master)](https://app.travis-ci.com/MarcinKonowalczyk/psll-lang) [![Coverage Status](https://coveralls.io/repos/github/MarcinKonowalczyk/psll-lang/badge.svg?branch=master)](https://coveralls.io/github/MarcinKonowalczyk/psll-lang?branch=master) [![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
 
 Macro-driven metalanguage which compiles to [Pyramid Scheme](https://github.com/ConorOBrien-Foxx/Pyramid-Scheme). Read [the paper](./sigbovik-paper/sigbovik-psll.pdf)!
 
