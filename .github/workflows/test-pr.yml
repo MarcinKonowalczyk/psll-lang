@@ -25,9 +25,14 @@ jobs:
         with:
           python-version: 3.9
 
+      - name: Install uv
+        run: curl -LsSf https://astral.sh/uv/install.sh | sh && uv --version
+
+      - name: Create virtual environment
+        run: uv venv && source .venv/bin/activate
+
       - name: Install test dependencies
         run: |
-          pip install --upgrade uv
           uv pip install --upgrade pip wheel setuptools
           uv pip install --upgrade coverage pytest black mypy
 
