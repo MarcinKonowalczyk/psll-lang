@@ -1,7 +1,6 @@
 import os
 import random
 import sys
-import unittest
 from collections.abc import Iterator
 
 # from itertools import product, permutations
@@ -156,7 +155,7 @@ def test_read_file_comments(subtests: Subtests) -> None:
     paired_test(subtests, contents, targets, read_file)
 
 
-@unittest.skip("Needs work")
+@pytest.mark.skip(reason="Needs work")
 def test_read_file_single_spaces(subtests: Subtests) -> None:
     """> Only single spaces"""
     contents = ["( )", "(  )", "(   )", "(     )"]
@@ -164,7 +163,7 @@ def test_read_file_single_spaces(subtests: Subtests) -> None:
     paired_test(subtests, contents, targets, read_file)
 
 
-@unittest.skip("Needs work")
+@pytest.mark.skip("Needs work")
 def test_read_file_leading_and_trailing_spaces(subtests: Subtests) -> None:
     """> No leading or trailing whitespace"""
     contents = ["(   hi)", "(hi   )", "(hi   1)", "(   hi 1)", "(hi 1   )"]
@@ -190,7 +189,7 @@ def test_read_file_multiline(subtests: Subtests) -> None:
 # =============================================================
 
 
-# @unittest.skip("Needs rewriting into tests of `lex`")
+# @pytest.skip("Needs rewriting into tests of `lex`")
 # class Split(unittest.TestCase, MetaTests):
 #     def test_simple(self):
 #         """> Simple inputs"""
@@ -245,7 +244,7 @@ def test_read_file_multiline(subtests: Subtests) -> None:
 #         targets = [('"hi"',), ("set", "a", '"one"'), ('"string with spaces"',)]
 #         self.paired_test(texts, targets, psll.split_into_subtrees)
 
-#     @unittest.skip("Currently broken")
+#     @pytest.skip("Currently broken")
 #     def test_double_quote_command(self):
 #         """> Make sure " command is not broken (aka it does not start an unnecessary string)"""
 #         pass
@@ -448,7 +447,7 @@ def test_tree_traveral_type_error(subtests: Subtests) -> None:
             "dog",
         ),
     ]
-    error_test(subtests, trees, psll.macros.tree_traversal, TypeError)
+    error_test(subtests, trees, psll.macros.tree_traversal, TypeError)  # type: ignore
 
 
 # =====================================================================================================
@@ -707,7 +706,3 @@ def test_build_tree_invalid(subtests: Subtests) -> None:
     # TODO Split this into multiple tests
     trees = [(), (("set",), "a", "1")]
     error_test(subtests, trees, fun, RuntimeError)
-
-
-if __name__ == "__main__":
-    unittest.main(verbosity=2, failfast=True)

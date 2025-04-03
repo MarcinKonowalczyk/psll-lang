@@ -271,6 +271,7 @@ class Tree(AbstractTree):
     def add_side_by_side(
         self,
         other: AbstractTree,
+        *,
         tight: bool = True,
         min_spacing: int | None = None,
         odd_spacing: bool = False,

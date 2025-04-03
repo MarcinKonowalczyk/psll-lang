@@ -69,13 +69,13 @@ def run(filename: str) -> str:
 
 
 @pytest.mark.parametrize("filename, expected_output", psll_examples)
-def test_examples(filename, expected_output):
+def test_examples(filename: str, expected_output: str) -> None:
     """Test that the examples compile and run correctly"""
     assert compile_and_run(filename) == expected_output, f"Example {filename} output mismatch"
 
 
 @pytest.mark.parametrize("filename, expected_output", psll_examples)
-def test_examples_with_greedy_optimisation(filename, expected_output):
+def test_examples_with_greedy_optimisation(filename: str, expected_output: str) -> None:
     """Test just the compile command, with a bunch of optimisation flags"""
 
     with tempfile.TemporaryDirectory() as tmpdir:

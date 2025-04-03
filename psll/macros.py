@@ -68,11 +68,20 @@ PS_KEYWORDS = {"+", "*", "-", "/", "^", "=", "<=>", "out", "chr", "arg", "#",
 
 # _Node = Union[None, str, tuple]
 Leaf: TypeAlias = str
-Node: TypeAlias = dyn_union[Leaf, None, tuple["Node", ...]]
-PreFun: TypeAlias = Callable[[tuple], tuple]
-StrFun: TypeAlias = Callable[[Leaf], dyn_union[tuple, str]]
-PostFun: TypeAlias = Callable[[tuple], Node]
-FinalFun: TypeAlias = Callable[[Node], Node]
+
+if TYPE_CHECKING:
+    dyn_tuple_nodes = tuple["Node", ...]
+else:
+    dyn_tuple_nodes = tuple
+
+Node: TypeAlias = dyn_union[Leaf, None, dyn_tuple_nodes]
+PreFun: TypeAlias = Callable[[dyn_tuple_nodes], dyn_tuple_nodes]
+StrFun: TypeAlias = Callable[[Leaf], dyn_union[dyn_tuple_nodes, str]]
+PostFun: TypeAlias = Callable[[dyn_tuple_nodes], Node]
+
+_T_Node = TypeVar("_T_Node", bound=Node)
+FinalFun: TypeAlias = Callable[[_T_Node], _T_Node]
+
 
 # mypy x singledispatch
 # https://github.com/python/mypy/issues/8356#issuecomment-884548381
@@ -122,20 +131,20 @@ def tree_traversal(
 @overload
 @_tree_traversal.register
 def tree_traversal(
-    ast: tuple,
+    ast: dyn_tuple_nodes,
     *,
     pre_fun: dyn_option[PreFun] = None,
     str_fun: dyn_option[StrFun] = None,
     post_fun: dyn_option[PostFun] = None,
     final_fun: dyn_option[FinalFun] = None,
-) -> tuple:
+) -> dyn_tuple_nodes:
     ast2: list[Node] = []  # Since, ast is immutable, build a new ast
     for node in ast:
         if node is None:
             ast2.append(node)
         elif isinstance(node, str):
             ast2.append(str_fun(node) if str_fun else node)
-        elif isinstance(node, tuple):
+        elif isinstance(node, dyn_tuple_nodes):  # type: ignore
             node = pre_fun(node) if pre_fun else node
             node = tree_traversal(
                 node,
@@ -167,7 +176,7 @@ def tree_traversal(
     return _tree_traversal(ast, pre_fun=pre_fun, str_fun=str_fun, post_fun=post_fun, final_fun=final_fun)
 
 
-__processing_stack__ = []  # Pre processing functions in order they ought to be applied
+__processing_stack__: list[Macro] = []  # Pre processing functions in order they ought to be applied
 
 
 Macro = Callable[[tuple], tuple]
