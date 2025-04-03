@@ -53,18 +53,14 @@ for name, filename in filenames.items():
     skip = False
     for recorded_filename in already_recorded:
         if os.path.basename(recorded_filename).startswith(f"{name}-"):
-            old_hash = (
-                os.path.basename(recorded_filename).split("-", 1)[1].split(".")[0]
-            )
+            old_hash = os.path.basename(recorded_filename).split("-", 1)[1].split(".")[0]
             if old_hash == file_md5_hash:
                 print(f"Output for example {name} already recorded.")
                 skip = True
             else:
                 shutil.copyfile(recorded_filename, f"{recorded_filename}~")
                 os.remove(recorded_filename)
-                print(
-                    f"Output for example {name} has changed. Old output saved to *.txt~"
-                )
+                print(f"Output for example {name} has changed. Old output saved to *.txt~")
     if skip:
         continue
 

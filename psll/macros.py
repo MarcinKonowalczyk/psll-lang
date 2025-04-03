@@ -155,9 +155,7 @@ def tree_traversal(
     final_fun: Optional[FinalFun] = None,
 ) -> Node:
     """(Depth-first) walk through the abstract syntax tree and application of appropriate functions"""
-    return _tree_traversal(
-        ast, pre_fun=pre_fun, str_fun=str_fun, post_fun=post_fun, final_fun=final_fun
-    )
+    return _tree_traversal(ast, pre_fun=pre_fun, str_fun=str_fun, post_fun=post_fun, final_fun=final_fun)
 
 
 __processing_stack__ = []  # Pre processing functions in order they ought to be applied
@@ -251,9 +249,7 @@ def apply_replacement_rules(ast: tuple, rules: dict[str, tuple]) -> tuple:
     def string_replacer(node: str) -> Union[tuple, str]:  # Replace f by def of f
         return rules[node] if node in rules.keys() else node
 
-    ast2 = tree_traversal(
-        ast, pre_fun=singleton_tuple_replacer, str_fun=string_replacer
-    )
+    ast2 = tree_traversal(ast, pre_fun=singleton_tuple_replacer, str_fun=string_replacer)
 
     return cast(tuple, ast2)
 
@@ -274,22 +270,15 @@ def def_keyword(ast: tuple) -> tuple:
     def find_defs(node: tuple) -> tuple:
         if len(node) > 0 and node[0] == "def":
             if not len(node) == 3:
-                raise PsllSyntaxError(
-                    f"'def' statement must have 3 members, not {len(node)} (node ="
-                    f" {node})"
-                )
+                raise PsllSyntaxError(f"'def' statement must have 3 members, not {len(node)} (node = {node})")
             key, value = node[1], node[2]
             if not isinstance(key, str):
-                raise PsllSyntaxError(
-                    "'def' statement can only assign keys to brackets. Got type"
-                    f" {type(key)} for key"
-                )
+                raise PsllSyntaxError(f"'def' statement can only assign keys to brackets. Got type {type(key)} for key")
             if key == "def":
                 raise PsllSyntaxError("('def' 'def' (...)) structure is not allowed")
             if not isinstance(value, tuple):
                 raise PsllSyntaxError(
-                    "'def' statement can only assign keys to brackets. Got type"
-                    f" {type(value)} for bracket"
+                    f"'def' statement can only assign keys to brackets. Got type {type(value)} for bracket"
                 )
             defs.append((key, apply_replacement_rules(value, dict(defs))))
             return ()  # Return empty tuple
@@ -302,9 +291,7 @@ def def_keyword(ast: tuple) -> tuple:
                     defs.pop()
         return ast
 
-    return tree_traversal(
-        ast, str_fun=replacer, pre_fun=find_defs, final_fun=pop_def_stack
-    )
+    return tree_traversal(ast, str_fun=replacer, pre_fun=find_defs, final_fun=pop_def_stack)
 
 
 # =======================================================================================
@@ -325,10 +312,7 @@ def range_keyword(ast: tuple) -> tuple:
             if not all(map(lambda x: isinstance(x, str), node[1:])):
                 raise PsllSyntaxError("'range' arguments must be integer literals")
             if len(node) > 4:
-                raise PsllSyntaxError(
-                    "'range' must be of the form (range begin end) or (range begin end"
-                    " step)"
-                )
+                raise PsllSyntaxError("'range' must be of the form (range begin end) or (range begin end step)")
             start, stop = int(node[1]), int(node[2]) + 1
             step = int(node[3]) if len(node) == 4 else 1
             return ("[" + ", ".join(map(str, range(start, stop, step))) + "]",)
@@ -357,11 +341,7 @@ def range_keyword(ast: tuple) -> tuple:
 def expand_array_literals(ast: tuple) -> tuple:
     def one_element_array(element: str) -> tuple:
         """Put `element` into a one-element array with the subtraction trick"""
-        return (
-            ("-", (element, "0"), ("0", "0"))
-            if element != "0"
-            else ("-", (element, "1"), ("1", "1"))
-        )
+        return ("-", (element, "0"), ("0", "0")) if element != "0" else ("-", (element, "1"), ("1", "1"))
 
     def array_to_tree(string: str) -> tuple:
         """Parse (inner) array string to its ast tree representation"""
@@ -403,9 +383,7 @@ def expand_array_literals(ast: tuple) -> tuple:
 # TESTED
 @in_processing_stack
 def expand_string_literals(ast: tuple) -> tuple:
-    string_split = partial(
-        lexer.context_split, delimiter="", contexts=('""',), remove_empty=True
-    )
+    string_split = partial(lexer.context_split, delimiter="", contexts=('""',), remove_empty=True)
 
     def special(char: str) -> str:
         """Convert char to its special character representation"""
@@ -501,9 +479,7 @@ def expand_overfull_brackets(ast: tuple) -> tuple:
             while len(node) > 2:
                 node = tuple(p for p in in_pairs(node))
         elif len(node) > 3:
-            raise PsllSyntaxError(
-                "Invalid bracket structure. Can only expand lists of lists."
-            )
+            raise PsllSyntaxError("Invalid bracket structure. Can only expand lists of lists.")
         return node
 
     return tree_traversal(ast, post_fun=expander)

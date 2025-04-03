@@ -44,9 +44,7 @@ row_tuple = NamedTuple("row_tuple", [("left", int), ("center", str), ("right", i
 
 _T_AbstractTree = TypeVar("_T_AbstractTree", bound="AbstractTree")
 
-_T_Dunder_Add_Other: TypeAlias = Union[
-    "AbstractTree", tuple[Optional["AbstractTree"], Optional["AbstractTree"]]
-]
+_T_Dunder_Add_Other: TypeAlias = Union["AbstractTree", tuple[Optional["AbstractTree"], Optional["AbstractTree"]]]
 
 
 class AbstractTree(ABC):
@@ -102,18 +100,13 @@ class AbstractTree(ABC):
             pad = i - len(front)
             lines.append(L_SIDE + front + pad * SPACE + R_SIDE)
         lines.append(BOTTOM * (2 * level + 1))
-        grid = [
-            row_tuple(level - j + 1, line, level - j + 1)
-            for j, line in enumerate(lines)
-        ]
+        grid = [row_tuple(level - j + 1, line, level - j + 1) for j, line in enumerate(lines)]
         grid[-1] = row_tuple(1, grid[-1][1], 1)  # Correct the padding of the final row
         return grid
 
     @staticmethod
     def grid2string(grid: Iterable[row_tuple]) -> str:
-        return "\n".join(
-            [SPACE * left + row + SPACE * right for left, row, right in grid]
-        )
+        return "\n".join([SPACE * left + row + SPACE * right for left, row, right in grid])
 
     @staticmethod
     def string2grid(string: str) -> list[row_tuple]:
@@ -231,10 +224,7 @@ class Pyramid(AbstractTree):
 
     @property
     def content(self) -> str:
-        content = "".join(
-            row[1:-1].replace(SPACE, "")
-            for _, row, _ in islice(self, 1, self.height - 1)
-        )
+        content = "".join(row[1:-1].replace(SPACE, "") for _, row, _ in islice(self, 1, self.height - 1))
         return content.strip()
 
     def toTree(self) -> Tree:
@@ -250,10 +240,7 @@ class Pyramid(AbstractTree):
         elif isinstance(other, tuple) and len(other) == 2:
             return self.toTree() + other
         else:
-            raise TypeError(
-                f"unsupported operand type for +: '{type(self).__name__}' and"
-                f" '{type(other).__name__}'"
-            )
+            raise TypeError(f"unsupported operand type for +: '{type(self).__name__}' and '{type(other).__name__}'")
 
 
 # =================================================================
@@ -272,9 +259,7 @@ class Tree(AbstractTree):
     """Tree of pyramids"""
 
     @staticmethod
-    def distance_row_iterator(
-        left_tree: AbstractTree, right_tree: AbstractTree
-    ) -> Iterator[int]:
+    def distance_row_iterator(left_tree: AbstractTree, right_tree: AbstractTree) -> Iterator[int]:
         """Return distance of closest approach of each pair of rows"""
         for left_row, right_row in zip(left_tree, right_tree):
             distance = left_row.right + right_row.left
@@ -326,9 +311,7 @@ class Tree(AbstractTree):
             if lr and rr:
                 row = row_tuple(
                     left=lr.left + lp,
-                    center=lr.center
-                    + (lr.right + rr.left - squeeze) * SPACE
-                    + rr.center,
+                    center=lr.center + (lr.right + rr.left - squeeze) * SPACE + rr.center,
                     right=rr.right + rp,
                 )
             elif lr:
@@ -412,16 +395,12 @@ class Tree(AbstractTree):
 
         # Put children together with minimum width of a parent, make sure they're odd
         left, right = left.toTree(), right.toTree()
-        children = left.add_side_by_side(
-            right, min_spacing=parent_width, odd_spacing=True
-        )
+        children = left.add_side_by_side(right, min_spacing=parent_width, odd_spacing=True)
         actual_children_width = len(children[0].center) - 2
 
         # Try to expand oneself to accommodate the width of the children
         if (actual_children_width > parent_width) or (parent_width > len(self[-1][1])):
-            parent = Tree.from_text(
-                parent_as_pyramid.content, min_width=actual_children_width
-            )
+            parent = Tree.from_text(parent_as_pyramid.content, min_width=actual_children_width)
         else:
             parent = self
 
@@ -467,10 +446,7 @@ class Tree(AbstractTree):
             else:
                 return self
         else:
-            raise TypeError(
-                f"unsupported operand type for +: '{type(self).__name__}' and"
-                f" '{type(other).__name__}'"
-            )
+            raise TypeError(f"unsupported operand type for +: '{type(self).__name__}' and '{type(other).__name__}'")
 
 
 # ======================================================================

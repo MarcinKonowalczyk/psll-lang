@@ -27,8 +27,7 @@ def depth(tree):
             return max(depth(node) for node in tree) + 1
     else:
         raise TypeError(
-            "The abstract syntax tree can contain only strings or other, smaller,"
-            f" trees, not {type(tree).__name__}"
+            f"The abstract syntax tree can contain only strings or other, smaller, trees, not {type(tree).__name__}"
         )
 
 
@@ -189,9 +188,7 @@ class Split(unittest.TestCase, MetaTests):
     def test_error(self):
         """> Bracket parity and ketbra errors"""
         texts = ["(", ")", ")(", "(hi))", "((hi)", "((", "))", "((()())", "(()()))"]
-        self.error_test(
-            texts, psll.macros.split_into_lines, psll.macros.PsllSyntaxError
-        )
+        self.error_test(texts, psll.macros.split_into_lines, psll.macros.PsllSyntaxError)
 
     def test_simple_subtrees(self):
         """> Simple subtrees"""
@@ -338,9 +335,7 @@ class TreeTraversal(unittest.TestCase, MetaTests):
                     self.assertEqual(subnode, "")
             return node
 
-        fun = partial(
-            psll.macros.tree_traversal, post_fun=empty_checker, str_fun=lambda x: ""
-        )
+        fun = partial(psll.macros.tree_traversal, post_fun=empty_checker, str_fun=lambda x: "")
         self.single_test(trees, fun)
 
     def test_pre_is_pre(self):
@@ -450,9 +445,7 @@ class ArrayExpansion(unittest.TestCase, MetaTests):
 
     def test_more_elements(self):
         """> Actually useful arrays"""
-        strings = [
-            ("set", "a", x) for x in ["[1 2]", "[1 2 3]", "[1 2 3 4]", "[1 2 3 4 5]"]
-        ]
+        strings = [("set", "a", x) for x in ["[1 2]", "[1 2 3]", "[1 2 3 4]", "[1 2 3 4 5]"]]
         targets = [
             ("set", "a", ("1", "2")),
             ("set", "a", ("+", ("1", "2"), ("-", ("3", "0"), ("0", "0")))),
@@ -480,17 +473,13 @@ class ArrayExpansion(unittest.TestCase, MetaTests):
 
     def test_delimiters(self):
         """> Different delimiter patterns"""
-        strings = [
-            ("set", "a", x) for x in ["[1 2]", "[1  2]", "[ 1 2 ]", "[    1      2  ]"]
-        ]
+        strings = [("set", "a", x) for x in ["[1 2]", "[1  2]", "[ 1 2 ]", "[    1      2  ]"]]
         targets = [("set", "a", ("1", "2"))] * len(strings)
         self.paired_test(strings, targets, psll.macros.expand_array_literals)
 
     def test_strings(self):
         """> Make sure psll strings are not expanded"""
-        strings = [
-            ("set", "a", x) for x in ['["hellos"]', '["hi" "sup"]', '["13" angry men]']
-        ]
+        strings = [("set", "a", x) for x in ['["hellos"]', '["hi" "sup"]', '["13" angry men]']]
         targets = [
             ("set", "a", ("-", ('"hellos"', "0"), ("0", "0"))),
             ("set", "a", ('"hi"', '"sup"')),
@@ -592,9 +581,7 @@ class BracketExpansion(unittest.TestCase, MetaTests):
             ("hello", ("a", ("b",), ("c",), ("d",))),
             ("greetings", (("a",), "b", ("c",), ("d",), ("e",))),
         )
-        self.error_test(
-            trees, psll.macros.expand_overfull_brackets, psll.macros.PsllSyntaxError
-        )
+        self.error_test(trees, psll.macros.expand_overfull_brackets, psll.macros.PsllSyntaxError)
 
 
 # =======================================================================
@@ -621,10 +608,7 @@ class BuildTree(unittest.TestCase, MetaTests):
             "  ^  \n / \\ \n --- ",
             "   ^   \n  / \\  \n /hi \\ \n ----- ",
             "     ^   \n    / \\  \n   /out\\ \n  ^----- \n /a\\     \n ---     ",
-            (
-                "     ^     \n    / \\    \n   /set\\   \n  ^-----^  \n /a\\   /1\\ \n"
-                " ---   --- "
-            ),
+            ("     ^     \n    / \\    \n   /set\\   \n  ^-----^  \n /a\\   /1\\ \n ---   --- "),
         ]
         fun = lambda tree: str(psll.build.build_tree(tree))
         self.paired_test(trees, targets, fun)

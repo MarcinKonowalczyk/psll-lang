@@ -3,9 +3,7 @@ import statistics as st
 import math
 from collections import namedtuple
 
-stats_result = namedtuple(
-    "stats_result", ("center", "spread_upper", "spread_lower", "N")
-)
+stats_result = namedtuple("stats_result", ("center", "spread_upper", "spread_lower", "N"))
 
 
 def runtime(fun, runtime: float = 1.0, divisor=1, *args, **kwargs):

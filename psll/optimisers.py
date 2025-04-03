@@ -16,9 +16,7 @@ import operator
 from . import build
 
 
-def greedy_optimisation(
-    ast: tuple, verbose: bool = True, max_iter: Optional[int] = None
-) -> tuple:
+def greedy_optimisation(ast: tuple, verbose: bool = True, max_iter: Optional[int] = None) -> tuple:
     """Greedily insert empty trees into the abstract syntax tree"""
 
     def candidates(ast: tuple) -> Generator[tuple, None, None]:

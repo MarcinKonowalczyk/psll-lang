@@ -34,9 +34,7 @@ for example in glob.glob(os.path.join(__output_dir__, "*.txt")):
         actual_hash = hashlib.md5(f.read().encode("utf-8")).hexdigest()
 
     if actual_hash != expected_hash:
-        raise RuntimeError(
-            f"Hash mismatch for {expected_filename}: {actual_hash} != {expected_hash}"
-        )
+        raise RuntimeError(f"Hash mismatch for {expected_filename}: {actual_hash} != {expected_hash}")
 
     psll_examples.append((expected_filename, expected_output))
 
@@ -71,9 +69,7 @@ def run(filename: str) -> str:
 @pytest.mark.parametrize("filename, expected_output", psll_examples)
 def test_examples(filename, expected_output):
     """Test that the examples compile and run correctly"""
-    assert (
-        compile_and_run(filename) == expected_output
-    ), f"Example {filename} output mismatch"
+    assert compile_and_run(filename) == expected_output, f"Example {filename} output mismatch"
 
 
 @pytest.mark.parametrize("filename, expected_output", psll_examples)
@@ -83,14 +79,10 @@ def test_examples_with_greedy_optimisation(filename, expected_output):
     with tempfile.TemporaryDirectory() as tmpdir:
         temp_filename = os.path.join(tmpdir, os.path.basename(filename) + ".pyra")
         compile(filename, temp_filename, args=[])
-        assert (
-            run(temp_filename) == expected_output
-        ), f"Example {filename} output mismatch"
+        assert run(temp_filename) == expected_output, f"Example {filename} output mismatch"
 
         compile(filename, temp_filename, args=["-go"])
-        assert (
-            run(temp_filename) == expected_output
-        ), f"Example {filename} output mismatch"
+        assert run(temp_filename) == expected_output, f"Example {filename} output mismatch"
 
         # compile(filename, temp_filename, args=['-co'])
         # assert run(temp_filename) == expected_output, f"Example {filename} output mismatch"

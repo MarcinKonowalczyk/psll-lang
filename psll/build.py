@@ -20,10 +20,7 @@ from .ascii_trees import Pyramid, AbstractTree
 
 @singledispatch
 def _build_tree(ast: Union[str, tuple, None]) -> Union[AbstractTree, None]:
-    raise TypeError(
-        "Abstract syntax tree must be represented by a list (or just a string) not a"
-        f" {type(ast)}"
-    )
+    raise TypeError(f"Abstract syntax tree must be represented by a list (or just a string) not a {type(ast)}")
 
 
 @overload
@@ -48,8 +45,7 @@ def build_tree(ast: tuple) -> AbstractTree:
     one, two, three = ast
     if not isinstance(one, str):
         raise RuntimeError(
-            "Invalid abstract syntax tree. The first element of each node must be"
-            f" a string, not a {type(one)}"
+            f"Invalid abstract syntax tree. The first element of each node must be a string, not a {type(one)}"
         )
 
     return build_tree(one) + (build_tree(two), build_tree(three))
