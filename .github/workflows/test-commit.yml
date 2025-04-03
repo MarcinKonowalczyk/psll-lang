@@ -51,27 +51,27 @@ jobs:
           uv pip install --system --upgrade coveralls
           coveralls debug --service=github
 
-    #   # Performance check
+      # Performance check
 
-    #   - name: Run performance check
-    #     run: python ./perf/perf_ascii_trees.py result.perf && cat result.perf
+      - name: Run performance check
+        run: python ./perf/perf_ascii_trees.py result.perf && cat result.perf
 
-    #   - name: Checkout psll-perf branch
-    #     uses: actions/checkout@v3
-    #     with:
-    #       ref: psll-perf
-    #       path: temp-perf
+      - name: Checkout psll-perf branch
+        uses: actions/checkout@v3
+        with:
+          ref: psll-perf
+          path: temp-perf
 
-    #   - name: Append performance data
-    #     run: |
-    #       cd ./temp-perf
-    #       cat ../result.perf | tail -n +2 | awk -v sha=$GITHUB_SHA '{ f = "./data/" $1 ".data"; $1 = sha; print >> f }'
+      - name: Append performance data
+        run: |
+          cd ./temp-perf
+          cat ../result.perf | tail -n +2 | awk -v sha=$GITHUB_SHA '{ f = "./data/" $1 ".data"; $1 = sha; print >> f }'
 
-    #   - name: Push to psll-perf
-    #     run: |
-    #       cd ./temp-perf
-    #       git status
-    #       git config user.name github-actions
-    #       git config user.email github-actions@github.com
-    #       git commit -a -m "Automated report"
-    #       git push
+      - name: Push to psll-perf
+        run: |
+          cd ./temp-perf
+          git status
+          git config user.name github-actions
+          git config user.email github-actions@github.com
+          git commit -a -m "Automated report"
+          git push
