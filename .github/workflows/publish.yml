@@ -14,21 +14,17 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v3
-
+  
       - name: Set up Python 3.9
         uses: actions/setup-python@v4
         with:
           python-version: 3.9
-
-      - name: Install uv
-        run: curl -LsSf https://astral.sh/uv/install.sh | sh && uv --version
-
-      - name: Build
-        run: |
-          uv pip install --system --upgrade wheel setuptools build twine
-          python -m build
-          twine check dist/*
-
-      # --repository testpypi
-      - name: Publish
-        run: twine upload --verbose --username __token__ --password "$PYPI_TOKEN" dist/*
+  
+      - name: install flit
+        run: pip install flit
+  
+      - name: build and publish
+        run: flit publish --pypirc .pypirc
+        env:
+          FLIT_USERNAME: __token__
+          FLIT_PASSWORD: ${{ secrets.PYPI_TOKEN }}

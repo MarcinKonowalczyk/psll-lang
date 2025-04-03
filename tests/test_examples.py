@@ -1,127 +1,93 @@
-import unittest
-
+import glob
+import hashlib
 import os
-from os.path import exists, splitext
-
-# TODO change to subprocess.run
 import subprocess
-from functools import partial
+import tempfile
+from typing import Optional
 
-shell = partial(subprocess.run, shell=True, stdout=subprocess.PIPE)
+import pytest
 
-pyra_path = os.getcwd() + "/Pyramid-Scheme/pyra.rb"
-pyra_exists = exists(pyra_path)
-print("pyra.rb path:", pyra_path)
-print("exists:", pyra_exists)
+# Get all the example outputs from the examples_outputs directory
 
-# spell-checker: disable-next-line
-ruby_path = os.popen("which ruby").read().replace("\n", "")
-ruby_exists = exists(ruby_path)
-print("ruby path:", ruby_path)
-print("exists:", ruby_exists)
+__this_file_dir__ = os.path.dirname(os.path.abspath(__file__))
+__examples_dir__ = os.path.abspath(os.path.join(__this_file_dir__, "..", "examples"))
+__output_dir__ = os.path.join(__this_file_dir__, "examples_outputs")
 
-examples = "./examples/"
+if not os.path.isdir(__output_dir__):
+    raise RuntimeError(f"Could not find examples_outputs directory: {__output_dir__}")
 
+# Find all the examples
+psll_examples: list[tuple[str, str]] = []
+for example in glob.glob(os.path.join(__output_dir__, "*.txt")):
+    basename = os.path.basename(example)
+    basename = os.path.splitext(basename)[0]
+    basename, expected_hash = basename.rsplit("-", 1)
 
-def skipUnlessExampleExists(filename):
-    """Skip the test unless the example file exists"""
+    with open(example) as f:
+        expected_output = f.read()
 
-    def obj_wrapper(obj):
-        if exists(filename):
-            obj.filename = filename
-            return obj
-        else:
-            reason = f"No '{filename}' found"
-            return unittest.skip(reason)(obj)
+    expected_filename = os.path.join(__examples_dir__, basename + ".psll")
 
-    return obj_wrapper
+    if not os.path.exists(expected_filename):
+        raise RuntimeError(f"Could not find expected file {expected_filename}")
 
+    with open(expected_filename) as f:
+        actual_hash = hashlib.md5(f.read().encode("utf-8")).hexdigest()
 
-# TODO This is somewhat messy with all those paths...
-class MetaTests:
-    def test_compiles(self):
-        path, ext = splitext(self.filename)
-        pyra_filename = path + ".pyra"
-        if exists(pyra_filename):
-            os.remove(pyra_filename)
+    if actual_hash != expected_hash:
+        raise RuntimeError(f"Hash mismatch for {expected_filename}: {actual_hash} != {expected_hash}")
 
-        commands = [f"psll compile {self.filename} -o -f"]
-        # commands = [commands[0], commands[0] + ' -go'] # Also test with greedy optimisation
-        for com in commands:
-            with self.subTest(command=com):
-                s = shell(com)
-                if s.returncode != 0:
-                    self.fail("Compilation unsuccessful!")
-                else:
-                    # out = s.stdout.decode("utf-8")
-                    # out = (' > ' + l for l in out.split('\n') if l)
-                    # print('\nPsll compiler output:')
-                    # print('\n'.join(out))
-                    pass
-                self.assertTrue(exists(pyra_filename), ".pyra file not generated")
-
-    @unittest.skipUnless(ruby_exists, "No ruby found")
-    @unittest.skipUnless(pyra_exists, "No pyra.rb found")
-    def test_runs(self):
-        path, ext = splitext(self.filename)
-        pyra_filename = path + ".pyra"
-
-        # TODO What if the script takes a command line input? (Add timeout?)
-        # TODO Capture stdout better
-
-        commands = [f"psll compile {self.filename} -o -f"]
-        # commands = [commands[0], commands[0] + ' -go'] # Also test with greedy optimisation
-        for psll_com in commands:
-            rb_com = f"{ruby_path} {pyra_path} {pyra_filename}"
-            with self.subTest(command=psll_com):
-                shell(psll_com)  # Recompile
-                s = shell(rb_com)
-                if s.returncode != 0:
-                    self.fail("Pyramid Scheme code does not run!")
-                else:
-                    # out = s.stdout.decode("utf-8")
-                    # out = (' > ' + l for l in out.split('\n') if l)
-                    # print('\nPyramid Scheme output:')
-                    # print('\n'.join(out))
-                    pass
+    psll_examples.append((expected_filename, expected_output))
 
 
-# spell-checker: words nargin
-@skipUnlessExampleExists(examples + "nargin_counter.psll")
-class TestNarginCounter(unittest.TestCase, MetaTests):
-    pass
+def compile_and_run(filename: str) -> str:
+    """Compile and run the given file, returning the output"""
+    return subprocess.check_output(
+        ["psll", "compile-and-run", filename],
+        stderr=subprocess.STDOUT,
+        text=True,
+    )
 
 
-@skipUnlessExampleExists(examples + "xor.psll")
-class TestXOR(unittest.TestCase, MetaTests):
-    pass
+def compile(input_filename: str, output_filename: str, args: Optional[list[str]] = None) -> None:
+    """Compile the given input file to the given output file"""
+    args = args or []
+    subprocess.check_call(
+        ["psll", "compile", input_filename, "-o", output_filename, "--force"] + args,
+        stderr=subprocess.STDOUT,
+        text=True,
+    )
 
 
-@skipUnlessExampleExists(examples + "bubble_sort.psll")
-class TestBubbleSort(unittest.TestCase, MetaTests):
-    pass
+def run(filename: str) -> str:
+    """Run the given file, returning the output"""
+    return subprocess.check_output(
+        ["psll", "run", filename],
+        stderr=subprocess.STDOUT,
+        text=True,
+    )
 
 
-@skipUnlessExampleExists(examples + "def_keyword.psll")
-class TestDefKeyword(unittest.TestCase, MetaTests):
-    pass
+@pytest.mark.parametrize("filename, expected_output", psll_examples)
+def test_examples(filename: str, expected_output: str) -> None:
+    """Test that the examples compile and run correctly"""
+    assert compile_and_run(filename) == expected_output, f"Example {filename} output mismatch"
 
 
-@skipUnlessExampleExists(examples + "arrays.psll")
-class TestArray(unittest.TestCase, MetaTests):
-    pass
+@pytest.mark.parametrize("filename, expected_output", psll_examples)
+def test_examples_with_greedy_optimisation(filename: str, expected_output: str) -> None:
+    """Test just the compile command, with a bunch of optimisation flags"""
+
+    with tempfile.TemporaryDirectory() as tmpdir:
+        temp_filename = os.path.join(tmpdir, os.path.basename(filename) + ".pyra")
+        compile(filename, temp_filename, args=[])
+        assert run(temp_filename) == expected_output, f"Example {filename} output mismatch"
+
+        compile(filename, temp_filename, args=["-go"])
+        assert run(temp_filename) == expected_output, f"Example {filename} output mismatch"
+
+        # compile(filename, temp_filename, args=['-co'])
+        # assert run(temp_filename) == expected_output, f"Example {filename} output mismatch"
 
 
-@skipUnlessExampleExists(examples + "binary_operator_chains.psll")
-class TestOperatorChains(unittest.TestCase, MetaTests):
-    pass
-
-
-# spell-checker: words PRNG
-@skipUnlessExampleExists(examples + "linear_congruential_generator.psll")
-class TestPRNG(unittest.TestCase, MetaTests):
-    pass
-
-
-if __name__ == "__main__":
-    unittest.main()
+# TODO: Test optimisations

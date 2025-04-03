@@ -1,0 +1,11 @@
+33 mod 16 = 1
+33 // 16 = 2
+11 mod 7 = 4
+11 // 7 = 1
+
+Integer division and remainder:
+45 // 11 = 1 rem 4
+9 // 2 = 1 rem 4
+9 // 1 = 0 rem 9
+89321 // 3 = 2 rem 29773
+10 // 20 = 10 rem 0

@@ -1,14 +1,13 @@
-from time import perf_counter as now
-import statistics as st
 import math
+import statistics as st
 from collections import namedtuple
+from time import perf_counter as now
+from typing import Any, Callable
 
-stats_result = namedtuple(
-    "stats_result", ("center", "spread_upper", "spread_lower", "N")
-)
+stats_result = namedtuple("stats_result", ("center", "spread_upper", "spread_lower", "N"))
 
 
-def runtime(fun, runtime: float = 1.0, divisor=1, *args, **kwargs):
+def runtime(fun: Callable, runtime: float = 1.0, divisor: int = 1, *args: Any, **kwargs: Any) -> list:
     """Call and time fun() repeatedly for 'runtime' seconds"""
     T = []
     t0 = t2 = now()
@@ -20,7 +19,7 @@ def runtime(fun, runtime: float = 1.0, divisor=1, *args, **kwargs):
     return [t / divisor for t in T]
 
 
-def ncalls(fun, ncalls=1000, divisor=1, *args, **kwargs):
+def ncalls(fun: Callable, ncalls: int = 1000, divisor: int = 1, *args: Any, **kwargs: Any) -> list:
     """Call and time fun() repeatedly 'ncalls' times"""
     T = []
     for _ in range(ncalls):
@@ -31,12 +30,17 @@ def ncalls(fun, ncalls=1000, divisor=1, *args, **kwargs):
     return [t / divisor for t in T]
 
 
-def rms(X):
+def rms(X: list) -> float:
     """Root mean square"""
     return math.sqrt(st.mean([x * x for x in X]))
 
 
-def stats(T, center_fun=st.median, spread_fun=rms, remove_outliers=True):
+def stats(
+    T: list,
+    center_fun: Callable[[list], float] = st.median,
+    spread_fun: Callable[[list], float] = rms,
+    remove_outliers: bool = True,
+) -> stats_result:
     """Calculate the central tendency, and upper/lower spread of the timing data"""
 
     if remove_outliers:

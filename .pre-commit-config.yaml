@@ -19,7 +19,6 @@ repos:
       - id: mypy
         additional_dependencies:
           - more-itertools>=8.5.0
-          - types-setuptools
         # Using bash makes this less portable, but also makes it use the correct
         # config file. Is there a better way to do this?
         entry: bash -c 'mypy --config-file ./mypy.ini .'

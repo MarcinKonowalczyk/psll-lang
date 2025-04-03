@@ -1,0 +1,15 @@
+a: 1
+<incr> a: 2
+<incr> a: 3
+entering scope 1
+Vikings approaching!
+Vikings approaching!
+Vikings approaching!
+leaving scope 1
+a: 3
+<incr> a: 4
+<incr> a: 5
+entering scope 2
+leaving scope 2
+<incr> a: 6
+<incr> a: 7

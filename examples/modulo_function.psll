@@ -3,19 +3,40 @@
 (loop (<=> (<=> a b) -1) (set a (- a b)))
 (out "33 mod 16 = " a "\n")
 
+////// Implementation of integer division with repeated subtraction //////
+(set a 33) (set b 16)
+((set c 0) (loop (<=> (<=> a b) -1) ((set a (- a b)) (set c (+ c 1)))) (set a c))
+(out "33 \/\/ 16 = " a "\n")
+
 ////// Same thing using 'def' keyword //////
 (def mod (loop (<=> (<=> a b) -1) (set a (- a b)))) // Set a to mod(a,b)
+(def div ((set c 0) (loop (<=> (<=> a b) -1) ((set a (- a b)) (set c (+ c 1)))) (set a c))) // Set 
 (set a 11) (set b 7)
 (out a " mod " b " = ")
 (mod)
 (out a "\n")
 
-////// Same thing with print //////
+(set a 11) (set b 7)
+(out a " \/\/ " b " = ")
+(div)
+(out a "\n")
+
+
+////// More examples with print //////
 (def mod (
-    (out a " mod " b " = ")
+    (out a " \/\/ " b " = ")
+
+    (set atmp a) (set btmp b) // Save a and b
     (mod)
-    (out a "\n")
+    (out a)
+
+    (set a atmp) (set b btmp)
+    (div)
+    (out " rem " a "\n")
 ))
+
+(out "\n")
+(out "Integer division and remainder:\n")
 (set a 45) (set b 11) (mod)
 (set a 9) (set b 2) (mod)
 (set a 9) (set b 1) (mod)
