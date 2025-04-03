@@ -39,3 +39,7 @@ Gemfile.lock
 dist
 psll/pyra.rb
 *.*~
+.tox
+.python-version
+.ruff_cache
+.venv

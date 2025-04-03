@@ -2,7 +2,8 @@ name: test-commit
 
 on:
   push:
-    branches: [master]
+    branches:
+      - master
 
 jobs:
   build:
@@ -28,22 +29,19 @@ jobs:
         with:
           python-version: 3.9
 
-      - name: Install uv
-        run: curl -LsSf https://astral.sh/uv/install.sh | sh && uv --version
-
-      - name: Install test dependencies
+      - name: Install flit and uv
         run: |
-          uv pip install --system --upgrade wheel setuptools
-          uv pip install --system --upgrade coverage pytest black mypy
+          pip install flit uv
+          uv sync
 
-      - name: Install psll
-        run: uv pip install --system  "psll @ ."
+      - name: Flit install
+        run: flit install
 
-      - name: Check with black
-        run: black --preview --check --verbose .
+      - name: Check with ruff
+        run: uv run ruff format --check .
 
       - name: Check with mypy
-        run: mypy --config-file ./mypy.ini psll
+        run: uv run mypy
 
       - name: Run tests and coverage
         run: bash test.sh -e -c
@@ -53,27 +51,27 @@ jobs:
           uv pip install --system --upgrade coveralls
           coveralls debug --service=github
 
-      # Performance check
+    #   # Performance check
 
-      - name: Run performance check
-        run: python ./perf/perf_ascii_trees.py result.perf && cat result.perf
+    #   - name: Run performance check
+    #     run: python ./perf/perf_ascii_trees.py result.perf && cat result.perf
 
-      - name: Checkout psll-perf branch
-        uses: actions/checkout@v3
-        with:
-          ref: psll-perf
-          path: temp-perf
+    #   - name: Checkout psll-perf branch
+    #     uses: actions/checkout@v3
+    #     with:
+    #       ref: psll-perf
+    #       path: temp-perf
 
-      - name: Append performance data
-        run: |
-          cd ./temp-perf
-          cat ../result.perf | tail -n +2 | awk -v sha=$GITHUB_SHA '{ f = "./data/" $1 ".data"; $1 = sha; print >> f }'
+    #   - name: Append performance data
+    #     run: |
+    #       cd ./temp-perf
+    #       cat ../result.perf | tail -n +2 | awk -v sha=$GITHUB_SHA '{ f = "./data/" $1 ".data"; $1 = sha; print >> f }'
 
-      - name: Push to psll-perf
-        run: |
-          cd ./temp-perf
-          git status
-          git config user.name github-actions
-          git config user.email github-actions@github.com
-          git commit -a -m "Automated report"
-          git push
+    #   - name: Push to psll-perf
+    #     run: |
+    #       cd ./temp-perf
+    #       git status
+    #       git config user.name github-actions
+    #       git config user.email github-actions@github.com
+    #       git commit -a -m "Automated report"
+    #       git push

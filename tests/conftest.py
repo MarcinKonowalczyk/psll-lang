@@ -1,3 +1,18 @@
+
+# import pytest_subtests
+
+
+# def pytest_addoption(parser: pytest.Parser) -> None:
+#     group = parser.getgroup("subtests")
+#     group.addoption(
+#         "--no-subtests-shortletter",
+#         action="store_true",
+#         dest="no_subtests_shortletter",
+#         default=False,
+#         help="Disables subtest output 'dots' in non-verbose mode (EXPERIMENTAL)",
+#     )
+
+
 ##========================================================================================================
 ##
 ##   ####  ##   ##  #####  ######  ######   ####  ######  ####
