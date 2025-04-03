@@ -170,11 +170,11 @@ class AbstractTree(ABC):
 
     @abstractmethod
     def toTree(self) -> Tree:
-        return NotImplemented
+        raise NotImplementedError("Abstract method")
 
     @abstractmethod
     def toPyramid(self) -> Pyramid:
-        return NotImplemented
+        raise NotImplementedError("Abstract method")
 
     def __str__(self) -> str:
         return self.grid2string(self.grid)

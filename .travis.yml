@@ -4,7 +4,7 @@ python:
   - "3.9"
 
 install:
-  - pip install --upgrade pip wheel setuptools
+  - pip install --upgrade pip wheel
   - pip install --upgrade coverage coveralls pytest black mypy
   - pip install .
 

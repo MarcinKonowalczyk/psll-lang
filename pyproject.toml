@@ -29,8 +29,23 @@ Homepage = "https://github.com/MarcinKonowalczyk/psll-lang"
 [project.scripts]
 psll = "psll.__main__:argparse_and_main"
 
-[tool.setuptools]
-packages = ["psll"]
+# coverage setup
+[tool.coverage.run]
+omit = ["tests/*", "**/__init__.py"]
+
+# coverage configuration
+[tool.coverage.report]
+skip_empty = true
+exclude_lines = [
+    "pragma: no cover",
+    "def __repr__",
+    "raise AssertionError",
+    "raise NotImplementedError",
+    "if __name__ == .__main__.:",
+    "@abstractmethod",
+    "if TYPE_CHECKING:",
+    "except ImportError:",
+]
 
 [tool.mypy]
 ignore_missing_imports = true
@@ -38,7 +53,7 @@ follow_imports = "normal"
 
 namespace_packages = true
 disallow_untyped_defs = true
-# disallow_any_unimported = true
+disallow_any_unimported = true
 # disallow_any_generics = true
 no_implicit_optional = true
 check_untyped_defs = true
