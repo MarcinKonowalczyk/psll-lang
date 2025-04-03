@@ -1,1 +1,3 @@
-(out "What's your favorite number? ") (set n (# line)) (out "Your favorite number is " n ".")
+(out "What's your favorite number? ")
+(set n (# line))
+(out "Your favorite number is " n ".")

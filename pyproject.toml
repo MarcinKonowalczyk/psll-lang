@@ -24,14 +24,14 @@ dependencies = [
 ]
 requires-python = ">=3.9"
 
-[project.optional-dependencies]
-dev = [
-    "black>=23.3.0",
-    "flake8>=6.0.0",
-    "mypy>=1.2.0",
-    "types-setuptools",
-    "pytest",
-]
+# [project.optional-dependencies]
+# dev = [
+#     "black>=23.3.0",
+#     "flake8>=6.0.0",
+#     "mypy>=1.2.0",
+#     "types-setuptools",
+#     "pytest",
+# ]
 
 [project.urls]
 Homepage = "https://github.com/MarcinKonowalczyk/psll-lang"
@@ -41,3 +41,44 @@ psll = "psll.__main__:argparse_and_main"
 
 [tool.setuptools]
 packages = ["psll"]
+
+[tool.ruff]
+exclude = [
+    ".git",
+    "__pycache__",
+    ".venv",
+    ".env",
+    ".eggs",
+    "*.egg",
+    ".tox",
+    ".mypy_cache",
+    ".pytest_cache",
+    ".vscode",
+    "*-env",
+]
+line-length = 120
+lint.ignore = []
+lint.select = [
+    "E",   # pycodestyle
+    "F",   # Pyflakes
+    "B",   # flake8-bugbear
+    "SIM", # flake8-simplify
+    "W",   # warnings
+    "UP",  # pyupgrade
+    "I",   # isort
+    "Q",   # flake8-quotes
+    "RUF", # ruff
+    # "PL",
+]
+output-format = 'concise'
+
+[tool.pytest.ini_options]
+minversion = "6.0"
+addopts = ["-s", "--tb=short", "--color=yes"]
+
+[dependency-groups]
+dev = [
+    "mypy>=1.15.0",
+    "pytest>=8.3.5",
+    "ruff>=0.11.3",
+]
