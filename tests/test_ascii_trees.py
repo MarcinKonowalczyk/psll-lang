@@ -189,7 +189,7 @@ class TreeTests(unittest.TestCase):
                 p + o
                 p.toTree() + o
 
-    def test_add_one_child(self):
+    def test_add_one_child(self) -> None:
         """> Add one child on both left and right"""
         for c in product(TEST_CONTENT, repeat=2):
             p1, p2 = tuple(map(Pyramid.from_text, c))

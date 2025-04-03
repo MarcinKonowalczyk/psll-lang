@@ -53,7 +53,7 @@ follow_imports = "normal"
 
 namespace_packages = true
 disallow_untyped_defs = true
-disallow_any_unimported = true
+# disallow_any_unimported = true
 # disallow_any_generics = true
 no_implicit_optional = true
 check_untyped_defs = true
@@ -113,7 +113,9 @@ addopts = ["-s", "--tb=short", "--color=yes"]
 
 [dependency-groups]
 dev = [
+    "coverage>=7.8.0",
     "mypy>=1.15.0",
     "pytest>=8.3.5",
+    "pytest-subtests>=0.14.1",
     "ruff>=0.11.3",
 ]

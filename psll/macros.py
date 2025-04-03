@@ -64,12 +64,15 @@ PS_KEYWORDS = {"+", "*", "-", "/", "^", "=", "<=>", "out", "chr", "arg", "#",
 #
 # ======================================================================================================================
 
+# Node = Union[Leaf, tuple[Union[Leaf, "Node"], ...]]
+
 # _Node = Union[None, str, tuple]
-Node: TypeAlias = dyn_union[str, tuple, None]
+Leaf: TypeAlias = str
+Node: TypeAlias = dyn_union[Leaf, None, tuple["Node", ...]]
 PreFun: TypeAlias = Callable[[tuple], tuple]
-StrFun: TypeAlias = Callable[[str], dyn_union[tuple, str]]
+StrFun: TypeAlias = Callable[[Leaf], dyn_union[tuple, str]]
 PostFun: TypeAlias = Callable[[tuple], Node]
-FinalFun: TypeAlias = Callable[[tuple], tuple]
+FinalFun: TypeAlias = Callable[[Node], Node]
 
 # mypy x singledispatch
 # https://github.com/python/mypy/issues/8356#issuecomment-884548381
@@ -475,7 +478,7 @@ def expand_right_associative(ast: tuple) -> tuple:
 
 # TESTED
 @in_processing_stack
-def expand_overfull_brackets(ast: tuple) -> tuple:
+def expand_overfull_brackets(ast: Node) -> tuple:
     """Expand lists of many lists into lists of length 2"""
 
     def expander(node: tuple) -> tuple:
@@ -486,7 +489,13 @@ def expand_overfull_brackets(ast: tuple) -> tuple:
             raise PsllSyntaxError("Invalid bracket structure. Can only expand lists of lists.")
         return node
 
-    return tree_traversal(ast, post_fun=expander)
+    if isinstance(ast, tuple):
+        return tree_traversal(ast, post_fun=expander)
+    else:
+        raise TypeError(
+            "The abstract syntax tree can contain",
+            f"only strings or other, smaller, trees, not {type(ast)}",
+        )
 
 
 @in_processing_stack
