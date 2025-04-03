@@ -1,8 +1,8 @@
 """
-Macro-driven metalanguage which compiles to [Pyramid Scheme](https://github.com/ConorOBrien-Foxx/Pyramid-Scheme).
+Macro-driven metalanguage which compiles to Pyramid Scheme.
 """
 
-__version__ = "0.1.7"
+__version__ = "0.1.8"
 
 
 class PsllSyntaxError(SyntaxError):
