@@ -332,6 +332,14 @@ def _(subparsers: argparse._SubParsersAction) -> None:
         default=None,
     )
 
+    download_command.add_argument(
+        "-f",
+        "--force",
+        action="store_true",
+        help="Force overwrite of the interpreter if it already exists",
+        default=False,
+    )
+
 
 @register_validate_options(Subcommand.DOWNLOAD_PYRA)
 def _(args: argparse.Namespace, extra: list[str]) -> tuple[argparse.Namespace, list[str]]:
@@ -569,7 +577,7 @@ def _(args: argparse.Namespace, extra: list[str]) -> None:
 def _(args: argparse.Namespace, extra: list[str]) -> None:
     pyra_rb = find_pyra_rb(args.verbose)
 
-    if pyra_rb is not None:
+    if pyra_rb is not None and not args.force:
         ans = input(f"Pyramid scheme found at {pyra_rb}. Re-download? [y/N] ")
         if ans.lower() != "y":
             return
