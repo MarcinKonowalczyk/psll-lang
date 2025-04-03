@@ -1,7 +1,7 @@
-from time import perf_counter as now
-import statistics as st
 import math
+import statistics as st
 from collections import namedtuple
+from time import perf_counter as now
 
 stats_result = namedtuple("stats_result", ("center", "spread_upper", "spread_lower", "N"))
 

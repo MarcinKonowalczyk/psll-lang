@@ -57,7 +57,11 @@ exclude = [
     "*-env",
 ]
 line-length = 120
-lint.ignore = []
+lint.ignore = [
+    "E731", # do not assign a lambda expression, use a def
+    "SIM108", # use ternary operator
+    #
+]
 lint.select = [
     "E",   # pycodestyle
     "F",   # Pyflakes
@@ -67,7 +71,7 @@ lint.select = [
     "UP",  # pyupgrade
     "I",   # isort
     "Q",   # flake8-quotes
-    "RUF", # ruff
+    # "RUF", # ruff
     # "PL",
 ]
 output-format = 'concise'

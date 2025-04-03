@@ -1,8 +1,8 @@
-from typing import overload, Union
-from functools import lru_cache, singledispatch, reduce
 import operator
+from functools import lru_cache, reduce, singledispatch
+from typing import Union, overload
 
-from .ascii_trees import Pyramid, AbstractTree
+from .ascii_trees import AbstractTree, Pyramid
 
 # ===================================================================================
 #

@@ -1,22 +1,17 @@
-import unittest
-
-from string import ascii_letters
-from random import choice
-
-from itertools import product
-
 # Add '.' to path so running this file by itself also works
 import os
 import sys
-
-
+import unittest
 from contextlib import contextmanager
 from io import StringIO
+from itertools import product
+from random import choice
+from string import ascii_letters
 
 sys.path.append(os.path.realpath("."))
 
-import psll.ascii_trees as ascii_trees  # noqa: E402
-from psll.ascii_trees import Pyramid, Tree  # noqa: E402
+import psll.ascii_trees as ascii_trees
+from psll.ascii_trees import Pyramid, Tree
 
 
 @contextmanager
@@ -190,10 +185,9 @@ class TreeTests(unittest.TestCase):
         """> Type error is raised when attempting to add wrong types"""
         p = Pyramid.from_text("hello")
         for o in ("", 1, {}, [], ()):
-            with self.subTest(other=o):
-                with self.assertRaises(TypeError):
-                    p + o
-                    p.toTree() + o
+            with self.subTest(other=o), self.assertRaises(TypeError):
+                p + o
+                p.toTree() + o
 
     def test_add_one_child(self):
         """> Add one child on both left and right"""

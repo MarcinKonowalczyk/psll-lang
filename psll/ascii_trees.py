@@ -1,16 +1,14 @@
 # spell-checker: words Dunder rowlen fillvalue
 from __future__ import annotations
 
+from collections.abc import Iterable, Iterator
 from typing import (
-    Iterator,
+    TYPE_CHECKING,
     NamedTuple,
     Optional,
-    Union,
-    Iterable,
     TypeVar,
-    Type,
+    Union,
     final,
-    TYPE_CHECKING,
 )
 
 if TYPE_CHECKING:
@@ -19,11 +17,11 @@ if TYPE_CHECKING:
 
 # from typing import final
 from abc import ABC, abstractmethod
+from itertools import islice, zip_longest
 
-from itertools import zip_longest, islice
 from more_itertools import pairwise
 
-# ========================================================================================================================================
+# ======================================================================================================================
 #
 #    ###    #####    ####  ######  #####      ###     ####  ######        ######  #####    #####  #####
 #   ## ##   ##  ##  ##       ##    ##  ##    ## ##   ##       ##            ##    ##  ##   ##     ##
@@ -31,7 +29,7 @@ from more_itertools import pairwise
 #  #######  ##  ##     ##    ##    ##  ##   #######  ##       ##            ##    ##  ##   ##     ##
 #  ##   ##  #####   ####     ##    ##   ##  ##   ##   ####    ##            ##    ##   ##  #####  #####
 #
-# ========================================================================================================================================
+# ======================================================================================================================
 
 TOP = "^"
 BOTTOM = "-"
@@ -40,7 +38,11 @@ R_SIDE = "\\"
 SPACE = " "
 
 
-row_tuple = NamedTuple("row_tuple", [("left", int), ("center", str), ("right", int)])
+class row_tuple(NamedTuple):
+    left: int
+    center: str
+    right: int
+
 
 _T_AbstractTree = TypeVar("_T_AbstractTree", bound="AbstractTree")
 
@@ -58,7 +60,7 @@ class AbstractTree(ABC):
     def text2grid(
         text: str,
         *,
-        min_width: Optional[int] = None,
+        min_width: int | None = None,
         remove_spaces: bool = False,
     ) -> list[row_tuple]:
         """Put text inside of a pyramid"""
@@ -78,9 +80,7 @@ class AbstractTree(ABC):
             text = (text_width - len(text)) * SPACE + text  # Pad out the rest
 
         # Ensure nice formatting of short keywords (without excessive SPACE)
-        if len(text) == 2:
-            text = SPACE + text
-        elif len(text) == 3:
+        if len(text) == 2 or len(text) == 3:
             text = SPACE + text
         elif len(text) == 5:
             text = 4 * SPACE + text
@@ -121,7 +121,7 @@ class AbstractTree(ABC):
             grid.append(row_tuple(i1, row[i1:i2], len(row) - i2))
         return grid
 
-    def __init__(self, grid: Iterable[Union[row_tuple, tuple[int, str, int]]]):
+    def __init__(self, grid: Iterable[row_tuple | tuple[int, str, int]]):
         """Initialise from a grid"""
 
         def rowlen(r: row_tuple) -> int:
@@ -153,9 +153,9 @@ class AbstractTree(ABC):
 
     @classmethod
     def from_text(
-        cls: Type[_T_AbstractTree],
+        cls: type[_T_AbstractTree],
         text: str,
-        min_width: Optional[int] = None,
+        min_width: int | None = None,
         remove_spaces: bool = False,
     ) -> _T_AbstractTree:
         """Initialise from keyword text"""
@@ -163,7 +163,7 @@ class AbstractTree(ABC):
         return cls(_grid)
 
     @classmethod
-    def from_str(cls: Type[_T_AbstractTree], string: str) -> _T_AbstractTree:
+    def from_str(cls: type[_T_AbstractTree], string: str) -> _T_AbstractTree:
         """Initialise from string representation"""
         _grid = cls.string2grid(string)
         return cls(_grid)
@@ -180,7 +180,7 @@ class AbstractTree(ABC):
         return self.grid2string(self.grid)
 
     def __repr__(self) -> str:
-        return f"<{type(self).__name__} #{hash(self)}:\n{str(self)}\n>"
+        return f"<{type(self).__name__} #{hash(self)}:\n{self!s}\n>"
 
     def __getitem__(self, key: int) -> row_tuple:
         return self.grid[key]
@@ -214,7 +214,7 @@ class AbstractTree(ABC):
 class Pyramid(AbstractTree):
     """Single pyramid"""
 
-    def __init__(self, grid: Iterable[Union[row_tuple, tuple[int, str, int]]]) -> None:
+    def __init__(self, grid: Iterable[row_tuple | tuple[int, str, int]]) -> None:
         super().__init__(grid)
         assert self[0].center == TOP, "Pyramid has an invalid top"
         for row, next_row in pairwise(self):
@@ -272,7 +272,7 @@ class Tree(AbstractTree):
         self,
         other: AbstractTree,
         tight: bool = True,
-        min_spacing: Optional[int] = None,
+        min_spacing: int | None = None,
         odd_spacing: bool = False,
     ) -> Tree:
         """Add trees side-by-side"""
@@ -333,7 +333,7 @@ class Tree(AbstractTree):
     @staticmethod
     def child_row_iterator(
         parent: AbstractTree, child: AbstractTree
-    ) -> Iterator[tuple[Optional[row_tuple], Optional[row_tuple]]]:
+    ) -> Iterator[tuple[row_tuple | None, row_tuple | None]]:
         """Yield rows from parent and then from the child, signalling the changeover"""
         _parent, _child = iter(parent), iter(child)
         for row, next_row in pairwise(_parent):
@@ -389,7 +389,7 @@ class Tree(AbstractTree):
         try:  # Parent *must* be a single pyramid, even if children would fit
             parent_as_pyramid = self.toPyramid()
         except Exception:
-            raise RuntimeError("Cannot expand non-singleton Trees")
+            raise RuntimeError("Cannot expand non-singleton Trees") from None
 
         parent_width = len(self[-1][1]) // 2 * 2 + 1  # Make sure parent width is odd
 

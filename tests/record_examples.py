@@ -2,13 +2,12 @@
 Run all the examples in the examples folder and record the output.
 """
 
-import os
-
 # import sys
 import glob
-import subprocess
-import shutil
 import hashlib
+import os
+import shutil
+import subprocess
 
 __this_file_dir__ = os.path.dirname(os.path.abspath(__file__))
 __examples_dir__ = os.path.abspath(os.path.join(__this_file_dir__, "..", "examples"))
@@ -45,7 +44,7 @@ already_recorded = glob.glob(os.path.join(__outputs_dir__, "*.txt"))
 
 for name, filename in filenames.items():
     # Figure out the output filename
-    with open(filename, "r") as f:
+    with open(filename) as f:
         file_md5_hash = hashlib.md5(f.read().encode("utf-8")).hexdigest()
     output_filename = os.path.join(__outputs_dir__, f"{name}-{file_md5_hash}.txt")
 

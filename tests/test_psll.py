@@ -1,19 +1,18 @@
-import unittest
 import os
-import sys
-
-from functools import partial
-from string import ascii_letters
 import random
+import sys
+import unittest
 
 # from itertools import product, permutations
 from contextlib import contextmanager
+from functools import partial
+from string import ascii_letters
 
 # Add '.' to path so running this file by itself also works
 sys.path.append(os.path.realpath("."))
 
-import psll  # noqa: E402
-import psll.macros  # noqa: E402
+import psll
+import psll.macros
 
 
 def depth(tree):
@@ -77,9 +76,11 @@ class MetaTests:
     def error_test(self, inputs, fun, error):
         """Test that text throws an error"""
         for i in inputs:
-            with self.subTest(input=i):
-                with self.assertRaises(error):
-                    fun(i)
+            with (
+                self.subTest(input=i),
+                self.assertRaises(error),
+            ):
+                fun(i)
 
 
 # ==========================================================================================================
@@ -226,7 +227,7 @@ class Split(unittest.TestCase, MetaTests):
         pass
 
 
-# ==================================================================================================================================================
+# ======================================================================================================================
 #
 #  ######  #####    #####  #####        ######  #####      ###    ##   ##  #####  #####     ####    ###    ##
 #    ##    ##  ##   ##     ##             ##    ##  ##    ## ##   ##   ##  ##     ##  ##   ##      ## ##   ##
@@ -234,7 +235,7 @@ class Split(unittest.TestCase, MetaTests):
 #    ##    ##  ##   ##     ##             ##    ##  ##   #######   ## ##   ##     ##  ##      ##  #######  ##
 #    ##    ##   ##  #####  #####          ##    ##   ##  ##   ##    ###    #####  ##   ##  ####   ##   ##  ######
 #
-# ==================================================================================================================================================
+# ======================================================================================================================
 
 
 class TreeTraversal(unittest.TestCase, MetaTests):
@@ -507,7 +508,7 @@ class StingExpansion(unittest.TestCase, MetaTests):
     def test_single_char(self):
         """> Expand single character string"""
         trees = [(f'"{c}"',) for c in ascii_letters]
-        targets = [(("chr", "_", f"{str(ord(c))}"),) for c in ascii_letters]
+        targets = [(("chr", "_", f"{ord(c)!s}"),) for c in ascii_letters]
         self.paired_test(trees, targets, psll.macros.expand_string_literals)
 
     def test_double_quote(self):
@@ -615,7 +616,7 @@ class BuildTree(unittest.TestCase, MetaTests):
 
     def test_nested(self):
         """> Nested trees"""
-        # trees = [(' ',('sup','_','_'),'_'),('set','a',('+','1','1')),('out',('chr','32','_'),'b'),('loop',('!',('<=>','n','N'),'_'),('set','a',('+','a','1')))]
+        # trees = [(' ',('sup','_','_'),'_'),('set','a',('+','1','1')),('out',('chr','32','_'),'b'),('loop',('!',('<=>','n','N'),'_'),('set','a',('+','a','1')))]  # noqa: E501
         trees = [
             (" ", ("sup",)),
             ("set", "a", ("+", "1", "1")),

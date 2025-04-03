@@ -1,14 +1,12 @@
 import argparse
+import hashlib
 import os
 import os.path as op
 import shutil
 import subprocess
-import tempfile
-
 import sys
-import hashlib
-
-from typing import Callable, TypeVar, TYPE_CHECKING, Any, Optional
+import tempfile
+from typing import TYPE_CHECKING, Any, Callable, Optional, TypeVar
 
 if TYPE_CHECKING:
     from typing_extensions import TypeAlias
@@ -16,7 +14,6 @@ else:
     TypeAlias = Any
 
 from enum import Enum
-
 from functools import partial
 
 from . import __version__
@@ -250,7 +247,7 @@ def _(args: argparse.Namespace, extra: list[str]) -> tuple[argparse.Namespace, l
     return args, extra
 
 
-# ==================================================================================================================================================================
+# ======================================================================================================================
 #
 #   #####  ####   ##    ##  #####  ####  ##      ######          ###    ##   ##  #####         #####   ##   ##  ##   ##
 #  ##     ##  ##  ###  ###  ##  ##  ##   ##      ##             ## ##   ###  ##  ##  ##        ##  ##  ##   ##  ###  ##
@@ -258,7 +255,7 @@ def _(args: argparse.Namespace, extra: list[str]) -> tuple[argparse.Namespace, l
 #  ##     ##  ##  ##    ##  ##      ##   ##      ##            #######  ## ####  ##  ##        ##  ##  ##   ##  ## ####
 #   #####  ####   ##    ##  ##     ####  ######  ######        ##   ##  ##  ###  #####         ##   ##  #####   ##  ###
 #
-# ==================================================================================================================================================================
+# ======================================================================================================================
 
 
 @register_add_subcommand(Subcommand.COMPILE_AND_RUN)
@@ -395,11 +392,11 @@ def parse_args() -> tuple[argparse.Namespace, list[str]]:
 # ======================================================================
 
 from . import (  # noqa: E402
-    preprocessor,
+    build,
     lexer,
     macros,
-    build,
     optimisers,
+    preprocessor,
 )
 
 
@@ -493,7 +490,7 @@ def find_pyra_rb(verbose: int) -> Optional[str]:
     pyra_rb = None
     for candidate in candidates:
         if op.isfile(candidate):
-            with open(candidate, "r") as f:
+            with open(candidate) as f:
                 file_hash = hashlib.md5(f.read().encode("utf-8")).hexdigest()
             if file_hash == EXPECTED_HASH:
                 # This is the correct version of pyra.rb

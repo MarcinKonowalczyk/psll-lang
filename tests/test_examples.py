@@ -1,10 +1,11 @@
-import pytest
-
-import os
-import subprocess
 import glob
 import hashlib
+import os
+import subprocess
 import tempfile
+from typing import Optional
+
+import pytest
 
 # Get all the example outputs from the examples_outputs directory
 
@@ -22,7 +23,7 @@ for example in glob.glob(os.path.join(__output_dir__, "*.txt")):
     basename = os.path.splitext(basename)[0]
     basename, expected_hash = basename.rsplit("-", 1)
 
-    with open(example, "r") as f:
+    with open(example) as f:
         expected_output = f.read()
 
     expected_filename = os.path.join(__examples_dir__, basename + ".psll")
@@ -30,7 +31,7 @@ for example in glob.glob(os.path.join(__output_dir__, "*.txt")):
     if not os.path.exists(expected_filename):
         raise RuntimeError(f"Could not find expected file {expected_filename}")
 
-    with open(expected_filename, "r") as f:
+    with open(expected_filename) as f:
         actual_hash = hashlib.md5(f.read().encode("utf-8")).hexdigest()
 
     if actual_hash != expected_hash:
@@ -48,8 +49,9 @@ def compile_and_run(filename: str) -> str:
     )
 
 
-def compile(input_filename: str, output_filename: str, args: list[str] = []) -> None:
+def compile(input_filename: str, output_filename: str, args: Optional[list[str]] = None) -> None:
     """Compile the given input file to the given output file"""
+    args = args or []
     subprocess.check_call(
         ["psll", "compile", input_filename, "-o", output_filename, "--force"] + args,
         stderr=subprocess.STDOUT,

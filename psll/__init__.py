@@ -1,19 +1,14 @@
 __version__ = "0.1.6.dev0"
 
-import sys
-
-if sys.version_info < (3, 9):
-    raise RuntimeError("Upgrade to python 3.9, or newer.")  # pragma: no cover
-
 
 class PsllSyntaxError(SyntaxError):
     pass
 
 
 from . import (  # noqa: F401, E402
-    preprocessor,
+    build,
     lexer,
     macros,
-    build,
     optimisers,
+    preprocessor,
 )
