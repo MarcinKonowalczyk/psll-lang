@@ -3,7 +3,7 @@ import re
 
 def read_file(filename: str) -> str:
     """Read a file and return the contents as a string"""
-    with open(filename, "r") as f:
+    with open(filename) as f:
         text = f.read()
     return text
 

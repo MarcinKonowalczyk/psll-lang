@@ -1,13 +1,13 @@
 [build-system]
-requires = ["setuptools", "wheel"]
-build-backend = "setuptools.build_meta"
+requires = ["flit_core >=3.2,<4"]
+build-backend = "flit_core.buildapi"
 
 [project]
 name = "psll"
-dynamic = ["version"]
-description = "Read the latest Real Python tutorials"
-readme = "README.md"
 authors = [{ name = "Marcin Konowalczyk", email = "marcin.konow@lczyk.xyz" }]
+dynamic = ["version", "description"]
+readme = "README.md"
+requires-python = ">=3.9"
 license = { file = "LICENSE" }
 classifiers = [
     "License :: OSI Approved :: MIT License",
@@ -16,20 +16,11 @@ classifiers = [
     "Programming Language :: Other",
     "Development Status :: 3 - Alpha",
     "Environment :: Console",
-
 ]
 keywords = ["compiler", "macros", "code-golf", "pyramid-scheme", "programming-language"]
+
 dependencies = [
     "more-itertools>=8.5.0",
-]
-requires-python = ">=3.9"
-
-[project.optional-dependencies]
-dev = [
-    "black>=23.3.0",
-    "flake8>=6.0.0",
-    "mypy>=1.2.0",
-    "types-setuptools",
 ]
 
 [project.urls]
@@ -38,5 +29,93 @@ Homepage = "https://github.com/MarcinKonowalczyk/psll-lang"
 [project.scripts]
 psll = "psll.__main__:argparse_and_main"
 
-[tool.setuptools]
-packages = ["psll"]
+# coverage setup
+[tool.coverage.run]
+omit = ["tests/*", "**/__init__.py"]
+
+# coverage configuration
+[tool.coverage.report]
+skip_empty = true
+exclude_lines = [
+    "pragma: no cover",
+    "def __repr__",
+    "raise AssertionError",
+    "raise NotImplementedError",
+    "if __name__ == .__main__.:",
+    "@abstractmethod",
+    "if TYPE_CHECKING:",
+    "except ImportError:",
+]
+
+[tool.mypy]
+ignore_missing_imports = true
+follow_imports = "normal"
+
+namespace_packages = true
+disallow_untyped_defs = true
+# disallow_any_unimported = true
+# disallow_any_generics = true
+no_implicit_optional = true
+check_untyped_defs = true
+warn_return_any = true
+show_error_codes = true
+warn_unused_ignores = true
+warn_unused_configs = true
+explicit_package_bases = true
+# enable_error_code = "explicit-override"
+extra_checks = true
+local_partial_types = true
+
+files = [
+    "./psll/**/*.py",
+    "./tests/**/*.py",
+    "./perf/**/*.py",
+    #
+]
+
+[tool.ruff]
+exclude = [
+    ".git",
+    "__pycache__",
+    ".venv",
+    ".env",
+    ".eggs",
+    "*.egg",
+    ".tox",
+    ".mypy_cache",
+    ".pytest_cache",
+    ".vscode",
+    "*-env",
+]
+line-length = 120
+lint.ignore = [
+    "E731", # do not assign a lambda expression, use a def
+    "SIM108", # use ternary operator
+    #
+]
+lint.select = [
+    "E",   # pycodestyle
+    "F",   # Pyflakes
+    "B",   # flake8-bugbear
+    "SIM", # flake8-simplify
+    "W",   # warnings
+    "UP",  # pyupgrade
+    "I",   # isort
+    "Q",   # flake8-quotes
+    # "RUF", # ruff
+    # "PL",
+]
+output-format = 'concise'
+
+[tool.pytest.ini_options]
+minversion = "6.0"
+addopts = ["-s", "--tb=short", "--color=yes"]
+
+[dependency-groups]
+dev = [
+    "coverage>=7.8.0",
+    "mypy>=1.15.0",
+    "pytest>=8.3.5",
+    "pytest-subtests>=0.14.1",
+    "ruff>=0.11.3",
+]

@@ -1,34 +1,40 @@
 # spell-checker: words replacer, lengther
 from __future__ import annotations
 
+from collections.abc import Generator, Iterable
 from typing import (
-    Union,
-    Callable,
-    Optional,
-    cast,
-    Generator,
-    Iterable,
-    TypeVar,
-    overload,
     TYPE_CHECKING,
+    Callable,
+    TypeVar,
+    cast,
+    overload,
 )
 
 if TYPE_CHECKING:
-    from typing_extensions import _T, TypeAlias
+    from typing import Optional as dyn_option
+    from typing import Union as dyn_union
 
-from more_itertools import windowed
+    from typing_extensions import _T, TypeAlias
+else:
+    from typing import Optional, Union
+
+    # note: we do want these specific types *at runtime*, not any other annotation for the dyamic dispatch
+    # hence explicitly mark them
+    dyn_option = Optional
+    dyn_union = Union
 
 from functools import partial, reduce, singledispatch
 from string import ascii_letters
 
-from . import PsllSyntaxError
-from . import lexer
+from more_itertools import windowed
+
+from . import PsllSyntaxError, lexer
 
 
 def in_pairs(
     iterable: Iterable[_T],
     in_tuple: bool = False,
-) -> Generator[Union[tuple[_T, _T], tuple[_T], _T], None, None]:
+) -> Generator[tuple[_T, _T] | tuple[_T] | _T, None, None]:
     """Pair up elements in the array. (s1,s2,s3,s4,s5) -> ((s1,s2),(s3,s4),s5).
     If the iterable has an odd number of elements, `in_tuple` determines if the
     last element is a tuple or not.
@@ -48,7 +54,7 @@ PS_KEYWORDS = {"+", "*", "-", "/", "^", "=", "<=>", "out", "chr", "arg", "#",
 # fmt: on
 
 
-# ==================================================================================================================================================
+# ======================================================================================================================
 #
 #  ######  #####    #####  #####        ######  #####      ###    ##   ##  #####  #####     ####    ###    ##
 #    ##    ##  ##   ##     ##             ##    ##  ##    ## ##   ##   ##  ##     ##  ##   ##      ## ##   ##
@@ -56,14 +62,26 @@ PS_KEYWORDS = {"+", "*", "-", "/", "^", "=", "<=>", "out", "chr", "arg", "#",
 #    ##    ##  ##   ##     ##             ##    ##  ##   #######   ## ##   ##     ##  ##      ##  #######  ##
 #    ##    ##   ##  #####  #####          ##    ##   ##  ##   ##    ###    #####  ##   ##  ####   ##   ##  ######
 #
-# ==================================================================================================================================================
+# ======================================================================================================================
+
+# Node = Union[Leaf, tuple[Union[Leaf, "Node"], ...]]
 
 # _Node = Union[None, str, tuple]
-Node: TypeAlias = Union[str, tuple, None]
-PreFun: TypeAlias = Callable[[tuple], tuple]
-StrFun: TypeAlias = Callable[[str], Union[tuple, str]]
-PostFun: TypeAlias = Callable[[tuple], Node]
-FinalFun: TypeAlias = Callable[[tuple], tuple]
+Leaf: TypeAlias = str
+
+if TYPE_CHECKING:
+    dyn_tuple_nodes = tuple["Node", ...]
+else:
+    dyn_tuple_nodes = tuple
+
+Node: TypeAlias = dyn_union[Leaf, None, dyn_tuple_nodes]
+PreFun: TypeAlias = Callable[[dyn_tuple_nodes], dyn_tuple_nodes]
+StrFun: TypeAlias = Callable[[Leaf], dyn_union[dyn_tuple_nodes, str]]
+PostFun: TypeAlias = Callable[[dyn_tuple_nodes], Node]
+
+_T_Node = TypeVar("_T_Node", bound=Node)
+FinalFun: TypeAlias = Callable[[_T_Node], _T_Node]
+
 
 # mypy x singledispatch
 # https://github.com/python/mypy/issues/8356#issuecomment-884548381
@@ -73,10 +91,10 @@ FinalFun: TypeAlias = Callable[[tuple], tuple]
 def _tree_traversal(
     ast: Node,
     *,
-    pre_fun: Optional[PreFun] = None,
-    str_fun: Optional[StrFun] = None,
-    post_fun: Optional[PostFun] = None,
-    final_fun: Optional[FinalFun] = None,
+    pre_fun: dyn_option[PreFun] = None,
+    str_fun: dyn_option[StrFun] = None,
+    post_fun: dyn_option[PostFun] = None,
+    final_fun: dyn_option[FinalFun] = None,
 ) -> Node:
     raise TypeError(
         "The abstract syntax tree can contain",
@@ -89,11 +107,11 @@ def _tree_traversal(
 def tree_traversal(
     ast: str,
     *,
-    pre_fun: Optional[PreFun] = None,
-    str_fun: Optional[StrFun] = None,
-    post_fun: Optional[PostFun] = None,
-    final_fun: Optional[FinalFun] = None,
-) -> Union[tuple, str]:
+    pre_fun: dyn_option[PreFun] = None,
+    str_fun: dyn_option[StrFun] = None,
+    post_fun: dyn_option[PostFun] = None,
+    final_fun: dyn_option[FinalFun] = None,
+) -> dyn_union[tuple, str]:
     return str_fun(ast) if str_fun else ast
 
 
@@ -102,10 +120,10 @@ def tree_traversal(
 def tree_traversal(
     ast: None,
     *,
-    pre_fun: Optional[PreFun] = None,
-    str_fun: Optional[StrFun] = None,
-    post_fun: Optional[PostFun] = None,
-    final_fun: Optional[FinalFun] = None,
+    pre_fun: dyn_option[PreFun] = None,
+    str_fun: dyn_option[StrFun] = None,
+    post_fun: dyn_option[PostFun] = None,
+    final_fun: dyn_option[FinalFun] = None,
 ) -> None:
     return ast
 
@@ -113,20 +131,20 @@ def tree_traversal(
 @overload
 @_tree_traversal.register
 def tree_traversal(
-    ast: tuple,
+    ast: dyn_tuple_nodes,
     *,
-    pre_fun: Optional[PreFun] = None,
-    str_fun: Optional[StrFun] = None,
-    post_fun: Optional[PostFun] = None,
-    final_fun: Optional[FinalFun] = None,
-) -> tuple:
+    pre_fun: dyn_option[PreFun] = None,
+    str_fun: dyn_option[StrFun] = None,
+    post_fun: dyn_option[PostFun] = None,
+    final_fun: dyn_option[FinalFun] = None,
+) -> dyn_tuple_nodes:
     ast2: list[Node] = []  # Since, ast is immutable, build a new ast
     for node in ast:
         if node is None:
             ast2.append(node)
         elif isinstance(node, str):
             ast2.append(str_fun(node) if str_fun else node)
-        elif isinstance(node, tuple):
+        elif isinstance(node, dyn_tuple_nodes):  # type: ignore
             node = pre_fun(node) if pre_fun else node
             node = tree_traversal(
                 node,
@@ -149,18 +167,16 @@ def tree_traversal(
 def tree_traversal(
     ast: Node,
     *,
-    pre_fun: Optional[PreFun] = None,
-    str_fun: Optional[StrFun] = None,
-    post_fun: Optional[PostFun] = None,
-    final_fun: Optional[FinalFun] = None,
+    pre_fun: dyn_option[PreFun] = None,
+    str_fun: dyn_option[StrFun] = None,
+    post_fun: dyn_option[PostFun] = None,
+    final_fun: dyn_option[FinalFun] = None,
 ) -> Node:
     """(Depth-first) walk through the abstract syntax tree and application of appropriate functions"""
-    return _tree_traversal(
-        ast, pre_fun=pre_fun, str_fun=str_fun, post_fun=post_fun, final_fun=final_fun
-    )
+    return _tree_traversal(ast, pre_fun=pre_fun, str_fun=str_fun, post_fun=post_fun, final_fun=final_fun)
 
 
-__processing_stack__ = []  # Pre processing functions in order they ought to be applied
+__processing_stack__: list[Macro] = []  # Pre processing functions in order they ought to be applied
 
 
 Macro = Callable[[tuple], tuple]
@@ -173,7 +189,7 @@ def in_processing_stack(fun: _T_Macro) -> _T_Macro:
     return fun
 
 
-# ==================================================================================================================================================
+# ======================================================================================================================
 #
 #   ####  ##   ##   #####   #####    ######  #####  ##     ##        ##     ##    ###    ###    ###  #####   ####
 #  ##     ##   ##  ##   ##  ##  ##     ##    ##     ####   ##        ####   ##   ## ##   ## #  # ##  ##     ##
@@ -181,7 +197,7 @@ def in_processing_stack(fun: _T_Macro) -> _T_Macro:
 #     ##  ##   ##  ##   ##  ##  ##     ##    ##     ##    ###        ##    ###  #######  ##      ##  ##        ##
 #  ####   ##   ##   #####   ##   ##    ##    #####  ##     ##        ##     ##  ##   ##  ##      ##  #####  ####
 #
-# ==================================================================================================================================================
+# ======================================================================================================================
 
 
 def find_variable_names(ast: tuple) -> set[str]:
@@ -189,9 +205,8 @@ def find_variable_names(ast: tuple) -> set[str]:
     names = set()
 
     def variable_finder(node: tuple) -> None:
-        if len(node) == 3:
-            if node[0] == "set" and isinstance(node[1], str):
-                names.add(node[1])
+        if len(node) == 3 and node[0] == "set" and isinstance(node[1], str):
+            names.add(node[1])
 
     tree_traversal(ast, post_fun=variable_finder)
     return names
@@ -226,12 +241,12 @@ def shorten_variable_names(ast: tuple) -> tuple:
 
     def string_replacer(node: str) -> str:
         """Replace variable names with shorter ones"""
-        return rules[node] if node in rules.keys() else node
+        return rules.get(node, node)
 
     return tree_traversal(ast, str_fun=string_replacer)
 
 
-# =============================================================================================================================
+# ======================================================================================================================
 #
 #  ####    #####  #####        ##  ##  #####  ##    ##  ##      ##   #####   #####    ####
 #  ##  ##  ##     ##           ## ##   ##      ##  ##   ##      ##  ##   ##  ##  ##   ##  ##
@@ -239,21 +254,19 @@ def shorten_variable_names(ast: tuple) -> tuple:
 #  ##  ##  ##     ##           ## ##   ##        ##     ##  ##  ##  ##   ##  ##  ##   ##  ##
 #  ####    #####  ##           ##  ##  #####     ##      ###  ###    #####   ##   ##  ####
 #
-# =============================================================================================================================
+# ======================================================================================================================
 
 
 def apply_replacement_rules(ast: tuple, rules: dict[str, tuple]) -> tuple:
     """Apply replacement rules to the abstract syntax tree"""
 
     def singleton_tuple_replacer(node: tuple) -> tuple:  # Replace (f) by def of f
-        return rules[node[0]] if len(node) == 1 and node[0] in rules.keys() else node
+        return rules[node[0]] if len(node) == 1 and node[0] in rules else node
 
-    def string_replacer(node: str) -> Union[tuple, str]:  # Replace f by def of f
-        return rules[node] if node in rules.keys() else node
+    def string_replacer(node: str) -> tuple | str:  # Replace f by def of f
+        return rules.get(node, node)
 
-    ast2 = tree_traversal(
-        ast, pre_fun=singleton_tuple_replacer, str_fun=string_replacer
-    )
+    ast2 = tree_traversal(ast, pre_fun=singleton_tuple_replacer, str_fun=string_replacer)
 
     return cast(tuple, ast2)
 
@@ -264,7 +277,7 @@ def def_keyword(ast: tuple) -> tuple:
 
     defs: list[tuple[str, tuple]] = []
 
-    def replacer(node: str) -> Union[tuple, str]:
+    def replacer(node: str) -> tuple | str:
         if len(defs) > 0:
             for value, definition in reversed(defs):
                 if node == value:
@@ -274,22 +287,15 @@ def def_keyword(ast: tuple) -> tuple:
     def find_defs(node: tuple) -> tuple:
         if len(node) > 0 and node[0] == "def":
             if not len(node) == 3:
-                raise PsllSyntaxError(
-                    f"'def' statement must have 3 members, not {len(node)} (node ="
-                    f" {node})"
-                )
+                raise PsllSyntaxError(f"'def' statement must have 3 members, not {len(node)} (node = {node})")
             key, value = node[1], node[2]
             if not isinstance(key, str):
-                raise PsllSyntaxError(
-                    "'def' statement can only assign keys to brackets. Got type"
-                    f" {type(key)} for key"
-                )
+                raise PsllSyntaxError(f"'def' statement can only assign keys to brackets. Got type {type(key)} for key")
             if key == "def":
                 raise PsllSyntaxError("('def' 'def' (...)) structure is not allowed")
             if not isinstance(value, tuple):
                 raise PsllSyntaxError(
-                    "'def' statement can only assign keys to brackets. Got type"
-                    f" {type(value)} for bracket"
+                    f"'def' statement can only assign keys to brackets. Got type {type(value)} for bracket"
                 )
             defs.append((key, apply_replacement_rules(value, dict(defs))))
             return ()  # Return empty tuple
@@ -297,13 +303,11 @@ def def_keyword(ast: tuple) -> tuple:
 
     def pop_def_stack(ast: tuple) -> tuple:
         for node in ast:
-            if node == ():
+            if node == () and len(defs) > 0:
                 defs.pop()
         return ast
 
-    return tree_traversal(
-        ast, str_fun=replacer, pre_fun=find_defs, final_fun=pop_def_stack
-    )
+    return tree_traversal(ast, str_fun=replacer, pre_fun=find_defs, final_fun=pop_def_stack)
 
 
 # =======================================================================================
@@ -324,10 +328,7 @@ def range_keyword(ast: tuple) -> tuple:
             if not all(map(lambda x: isinstance(x, str), node[1:])):
                 raise PsllSyntaxError("'range' arguments must be integer literals")
             if len(node) > 4:
-                raise PsllSyntaxError(
-                    "'range' must be of the form (range begin end) or (range begin end"
-                    " step)"
-                )
+                raise PsllSyntaxError("'range' must be of the form (range begin end) or (range begin end step)")
             start, stop = int(node[1]), int(node[2]) + 1
             step = int(node[3]) if len(node) == 4 else 1
             return ("[" + ", ".join(map(str, range(start, stop, step))) + "]",)
@@ -356,11 +357,7 @@ def range_keyword(ast: tuple) -> tuple:
 def expand_array_literals(ast: tuple) -> tuple:
     def one_element_array(element: str) -> tuple:
         """Put `element` into a one-element array with the subtraction trick"""
-        return (
-            ("-", (element, "0"), ("0", "0"))
-            if element != "0"
-            else ("-", (element, "1"), ("1", "1"))
-        )
+        return ("-", (element, "0"), ("0", "0")) if element != "0" else ("-", (element, "1"), ("1", "1"))
 
     def array_to_tree(string: str) -> tuple:
         """Parse (inner) array string to its ast tree representation"""
@@ -380,7 +377,7 @@ def expand_array_literals(ast: tuple) -> tuple:
 
         return tree
 
-    def array_expander(string: str) -> Union[tuple, str]:
+    def array_expander(string: str) -> tuple | str:
         if lexer.in_context(string, "[]"):
             return array_to_tree(string[1:-1])
         return string
@@ -402,16 +399,14 @@ def expand_array_literals(ast: tuple) -> tuple:
 # TESTED
 @in_processing_stack
 def expand_string_literals(ast: tuple) -> tuple:
-    string_split = partial(
-        lexer.context_split, delimiter="", contexts=('""',), remove_empty=True
-    )
+    string_split = partial(lexer.context_split, delimiter="", contexts=('""',), remove_empty=True)
 
     def special(char: str) -> str:
         """Convert char to its special character representation"""
         cases = {"n": "\n", "t": "\t", "r": "\r"}
-        return cases[char] if char in cases else char
+        return cases.get(char, char)
 
-    def expand(string: str) -> Union[tuple, str]:
+    def expand(string: str) -> tuple | str:
         if lexer.in_context(string, '""'):
             tree: tuple = ()
             for char in string_split(string[1:-1]):
@@ -428,7 +423,7 @@ def expand_string_literals(ast: tuple) -> tuple:
     return tree_traversal(ast, str_fun=expand)
 
 
-# =============================================================================================================================================
+# ======================================================================================================================
 #
 #   #####   ##   ##  #####  #####  ##   ##  ##      ##             ####   #####   ###    ###  ###    ###
 #  ##   ##  ##   ##  ##     ##     ##   ##  ##      ##            ##     ##   ##  ## #  # ##  ## #  # ##
@@ -436,7 +431,7 @@ def expand_string_literals(ast: tuple) -> tuple:
 #  ##   ##   ## ##   ##     ##     ##   ##  ##      ##            ##     ##   ##  ##      ##  ##      ##
 #   #####     ###    #####  ##      #####   ######  ######         ####   #####   ##      ##  ##      ##  ##
 #
-# =============================================================================================================================================
+# ======================================================================================================================
 
 
 @in_processing_stack
@@ -492,7 +487,7 @@ def expand_right_associative(ast: tuple) -> tuple:
 
 # TESTED
 @in_processing_stack
-def expand_overfull_brackets(ast: tuple) -> tuple:
+def expand_overfull_brackets(ast: Node) -> tuple:
     """Expand lists of many lists into lists of length 2"""
 
     def expander(node: tuple) -> tuple:
@@ -500,12 +495,16 @@ def expand_overfull_brackets(ast: tuple) -> tuple:
             while len(node) > 2:
                 node = tuple(p for p in in_pairs(node))
         elif len(node) > 3:
-            raise PsllSyntaxError(
-                "Invalid bracket structure. Can only expand lists of lists."
-            )
+            raise PsllSyntaxError("Invalid bracket structure. Can only expand lists of lists.")
         return node
 
-    return tree_traversal(ast, post_fun=expander)
+    if isinstance(ast, tuple):
+        return tree_traversal(ast, post_fun=expander)
+    else:
+        raise TypeError(
+            "The abstract syntax tree can contain",
+            f"only strings or other, smaller, trees, not {type(ast)}",
+        )
 
 
 @in_processing_stack
@@ -515,9 +514,7 @@ def fill_in_empty_trees(ast: tuple) -> tuple:
     def filler(node: tuple) -> Node:
         if node == ():  # Empty node
             return ""
-        elif all(map(lambda x: isinstance(x, tuple), node)):  # All tuples
-            return ("", *node)
-        elif node[0] == "_":
+        elif all(map(lambda x: isinstance(x, tuple), node)) or node[0] == "_":  # All tuples
             return ("", *node)
         elif node[0] in PS_KEYWORDS:
             return node  # Don't add a pad before psll keywords
@@ -552,7 +549,7 @@ def fill_in_underscores(ast: tuple) -> tuple:
 
 @in_processing_stack
 def underscore_keyword(ast: tuple) -> tuple:
-    def replacer(node: str) -> Union[str, None]:
+    def replacer(node: str) -> str | None:
         return None if node == "_" else node
 
     # TODO: This is the only case when we use str_fun to return None.

@@ -1,13 +1,15 @@
 #!/bin/bash
 
 # Parse flags
-while getopts "cehr" flag
-do
+while getopts "cehr" flag; do
     case "${flag}" in
-        c) c=true;;
-        e) e=true;;
-        h) h=true;;
-        r) r=true;c=true;; # Must run coverage to show the report
+    c) c=true ;;
+    e) e=true ;;
+    h) h=true ;;
+    r)
+        r=true
+        c=true
+        ;; # Must run coverage to show the report
     esac
 done
 
@@ -27,15 +29,20 @@ RED='\033[0;31m'
 GREEN='\033[0;32m'
 NC='\033[0m' # No Color
 
+COVERAGE="$(command -v coverage)"
+if [ -z "$COVERAGE" ]; then
+    COVERAGE="uv run coverage"
+fi
+
 if [ $c ]; then
     echo "Running tests with coverage"
     echo "---------------------------"
     # Collect coverage for each file individually to not artificially increase coverage
     declare -a FILES_TO_COVER=("ascii_trees" "lexer" "macros" "optimisers" "preprocessor")
-    coverage erase
+    ${COVERAGE} erase
     for NAME in "${FILES_TO_COVER[@]}"; do
         echo -e "${GREEN}Collecting coverage for $NAME.py${NC}"
-        coverage run --append --include="./psll/$NAME.py" -m pytest -k "not examples" --quiet;
+        ${COVERAGE} run --append --include="./psll/$NAME.py" -m pytest -k "not examples" --no-subtests-shortletter --quiet
 
         # Exit if unittests of this file failed
         if [ "$?" != "0" ]; then

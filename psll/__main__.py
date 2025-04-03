@@ -1,14 +1,12 @@
 import argparse
+import hashlib
 import os
 import os.path as op
 import shutil
 import subprocess
-import tempfile
-
 import sys
-import hashlib
-
-from typing import Callable, TypeVar, TYPE_CHECKING, Any, Optional
+import tempfile
+from typing import TYPE_CHECKING, Any, Callable, Optional, TypeVar
 
 if TYPE_CHECKING:
     from typing_extensions import TypeAlias
@@ -16,7 +14,6 @@ else:
     TypeAlias = Any
 
 from enum import Enum
-
 from functools import partial
 
 from . import __version__
@@ -25,9 +22,7 @@ ArgumentError = partial(argparse.ArgumentError, None)
 sys.tracebacklimit = 0  # spell-checker: disable-line
 
 Add_Sig: TypeAlias = Callable[[argparse._SubParsersAction], None]
-Validate_Sig: TypeAlias = Callable[
-    [argparse.Namespace, list[str]], tuple[argparse.Namespace, list[str]]
-]
+Validate_Sig: TypeAlias = Callable[[argparse.Namespace, list[str]], tuple[argparse.Namespace, list[str]]]
 Run_Sig: TypeAlias = Callable[[argparse.Namespace, list[str]], None]
 
 ADD_SUBCOMMAND: dict["Subcommand", Add_Sig] = {}
@@ -47,9 +42,7 @@ class Subcommand(Enum):
         """Add the subcommand to the subparsers"""
         ADD_SUBCOMMAND[self](subparsers)
 
-    def validate_options(
-        self, args: argparse.Namespace, extra: list[str]
-    ) -> tuple[argparse.Namespace, list[str]]:
+    def validate_options(self, args: argparse.Namespace, extra: list[str]) -> tuple[argparse.Namespace, list[str]]:
         """Validate the options for this subcommand"""
         return VALIDATE_OPTIONS[self](args, extra)
 
@@ -95,17 +88,11 @@ def check_all_subcommands_registered() -> None:
     """Check that all subcommands are registered"""
     for subcommand in Subcommand:
         if subcommand not in ADD_SUBCOMMAND:
-            raise RuntimeError(
-                f"Subcommand {subcommand} is not registered! Missing add subcommand."
-            )
+            raise RuntimeError(f"Subcommand {subcommand} is not registered! Missing add subcommand.")
         if subcommand not in VALIDATE_OPTIONS:
-            raise RuntimeError(
-                f"Subcommand {subcommand} is not registered! Missing validate options."
-            )
+            raise RuntimeError(f"Subcommand {subcommand} is not registered! Missing validate options.")
         if subcommand not in RUN_SUBCOMMAND:
-            raise RuntimeError(
-                f"Subcommand {subcommand} is not registered! Missing run subcommand."
-            )
+            raise RuntimeError(f"Subcommand {subcommand} is not registered! Missing run subcommand.")
 
 
 # ==================================================================================================
@@ -130,10 +117,7 @@ def _(subparsers: argparse._SubParsersAction) -> None:
 
     compile_parser.add_argument(
         "input",
-        help=(
-            "Input file written in the pyramid scheme (lisp (like)) syntax, with the"
-            " .psll expansion."
-        ),
+        help=("Input file written in the pyramid scheme (lisp (like)) syntax, with the .psll expansion."),
     )
 
     compile_parser.add_argument(
@@ -152,9 +136,7 @@ def _(subparsers: argparse._SubParsersAction) -> None:
         ),
     )
 
-    compile_parser.add_argument(
-        "-f", "--force", action="store_true", help="Force file overwrite."
-    )
+    compile_parser.add_argument("-f", "--force", action="store_true", help="Force file overwrite.")
 
     compile_parser.add_argument(
         "--full-names",
@@ -194,9 +176,7 @@ def _(subparsers: argparse._SubParsersAction) -> None:
 
 
 @register_validate_options(Subcommand.COMPILE)
-def _(
-    args: argparse.Namespace, extra: list[str]
-) -> tuple[argparse.Namespace, list[str]]:
+def _(args: argparse.Namespace, extra: list[str]) -> tuple[argparse.Namespace, list[str]]:
     """Validate options for the compile subcommand"""
 
     if len(extra) != 0:
@@ -223,7 +203,7 @@ def _(
             # Silently exit, but with error code so that it can be used in scripts
             sys.exit(1)
 
-    if args.output is not None:
+    if args.output is not None and args.output != "":
         output_root, output_ext = op.splitext(args.output)
         if output_ext != ".pyra":
             raise ArgumentError("Output file does not have .pyra extension")
@@ -254,9 +234,7 @@ def _(subparsers: argparse._SubParsersAction) -> None:
 
 
 @register_validate_options(Subcommand.RUN)
-def _(
-    args: argparse.Namespace, extra: list[str]
-) -> tuple[argparse.Namespace, list[str]]:
+def _(args: argparse.Namespace, extra: list[str]) -> tuple[argparse.Namespace, list[str]]:
     """Validate options for the run subcommand"""
 
     if not op.exists(args.input):
@@ -269,7 +247,7 @@ def _(
     return args, extra
 
 
-# ==================================================================================================================================================================
+# ======================================================================================================================
 #
 #   #####  ####   ##    ##  #####  ####  ##      ######          ###    ##   ##  #####         #####   ##   ##  ##   ##
 #  ##     ##  ##  ###  ###  ##  ##  ##   ##      ##             ## ##   ###  ##  ##  ##        ##  ##  ##   ##  ###  ##
@@ -277,7 +255,7 @@ def _(
 #  ##     ##  ##  ##    ##  ##      ##   ##      ##            #######  ## ####  ##  ##        ##  ##  ##   ##  ## ####
 #   #####  ####   ##    ##  ##     ####  ######  ######        ##   ##  ##  ###  #####         ##   ##  #####   ##  ###
 #
-# ==================================================================================================================================================================
+# ======================================================================================================================
 
 
 @register_add_subcommand(Subcommand.COMPILE_AND_RUN)
@@ -290,17 +268,12 @@ def _(subparsers: argparse._SubParsersAction) -> None:
 
     compile_and_run_parser.add_argument(
         "input",
-        help=(
-            "Input file written in the pyramid scheme (lisp (like)) syntax, with the"
-            " .psll extension."
-        ),
+        help=("Input file written in the pyramid scheme (lisp (like)) syntax, with the .psll extension."),
     )
 
 
 @register_validate_options(Subcommand.COMPILE_AND_RUN)
-def _(
-    args: argparse.Namespace, extra: list[str]
-) -> tuple[argparse.Namespace, list[str]]:
+def _(args: argparse.Namespace, extra: list[str]) -> tuple[argparse.Namespace, list[str]]:
     """Validate options for the compile-and-run subcommand"""
     # No validation needed. Will be validated by the compile and run subcommands
 
@@ -359,11 +332,17 @@ def _(subparsers: argparse._SubParsersAction) -> None:
         default=None,
     )
 
+    download_command.add_argument(
+        "-f",
+        "--force",
+        action="store_true",
+        help="Force overwrite of the interpreter if it already exists",
+        default=False,
+    )
+
 
 @register_validate_options(Subcommand.DOWNLOAD_PYRA)
-def _(
-    args: argparse.Namespace, extra: list[str]
-) -> tuple[argparse.Namespace, list[str]]:
+def _(args: argparse.Namespace, extra: list[str]) -> tuple[argparse.Namespace, list[str]]:
     """Validate options for the download-pyra subcommand"""
 
     if len(extra) != 0:
@@ -421,11 +400,11 @@ def parse_args() -> tuple[argparse.Namespace, list[str]]:
 # ======================================================================
 
 from . import (  # noqa: E402
-    preprocessor,
+    build,
     lexer,
     macros,
-    build,
     optimisers,
+    preprocessor,
 )
 
 
@@ -485,7 +464,9 @@ def _(args: argparse.Namespace, extra: list[str]) -> None:
 
 
 # PYRA_RB_URL = "https://raw.github.com/ConorOBrien-Foxx/Pyramid-Scheme/blob/fd183d296f08e0cba8bf55da907697eaf412f6a7/pyra.rb"
-PYRA_RB_URL = "https://raw.githubusercontent.com/ConorOBrien-Foxx/Pyramid-Scheme/fd183d296f08e0cba8bf55da907697eaf412f6a7/pyra.rb"
+PYRA_RB_URL = (
+    "https://raw.githubusercontent.com/ConorOBrien-Foxx/Pyramid-Scheme/fd183d296f08e0cba8bf55da907697eaf412f6a7/pyra.rb"
+)
 EXPECTED_HASH = "a2b8175e8807cf5acce35c73252994dd"
 
 
@@ -517,7 +498,7 @@ def find_pyra_rb(verbose: int) -> Optional[str]:
     pyra_rb = None
     for candidate in candidates:
         if op.isfile(candidate):
-            with open(candidate, "r") as f:
+            with open(candidate) as f:
                 file_hash = hashlib.md5(f.read().encode("utf-8")).hexdigest()
             if file_hash == EXPECTED_HASH:
                 # This is the correct version of pyra.rb
@@ -527,10 +508,7 @@ def find_pyra_rb(verbose: int) -> Optional[str]:
                 break
             else:
                 if verbose > 1:
-                    print(
-                        f" {candidate} has the wrong hash ({file_hash} !="
-                        f" {EXPECTED_HASH})"
-                    )
+                    print(f" {candidate} has the wrong hash ({file_hash} != {EXPECTED_HASH})")
         else:
             if verbose > 1:
                 print(f" {candidate} does not exist")
@@ -545,9 +523,7 @@ def _(args: argparse.Namespace, extra: list[str]) -> None:
     # rind ruby
     ruby = shutil.which("ruby")
     if ruby is None:
-        raise RuntimeError(
-            "Could not find ruby executable. Make sure ruby is installed."
-        )
+        raise RuntimeError("Could not find ruby executable. Make sure ruby is installed.")
 
     if args.verbose > 1:
         print("Ruby executable:", ruby)
@@ -560,9 +536,7 @@ def _(args: argparse.Namespace, extra: list[str]) -> None:
     pyra_rb = find_pyra_rb(args.verbose)
 
     if pyra_rb is None:
-        raise RuntimeError(
-            "Could not find pyra.rb. Make sure pyramid scheme is installed."
-        )
+        raise RuntimeError("Could not find pyra.rb. Make sure pyramid scheme is installed.")
 
     if args.verbose > 1:
         print("pyra.rb:", pyra_rb)
@@ -603,7 +577,7 @@ def _(args: argparse.Namespace, extra: list[str]) -> None:
 def _(args: argparse.Namespace, extra: list[str]) -> None:
     pyra_rb = find_pyra_rb(args.verbose)
 
-    if pyra_rb is not None:
+    if pyra_rb is not None and not args.force:
         ans = input(f"Pyramid scheme found at {pyra_rb}. Re-download? [y/N] ")
         if ans.lower() != "y":
             return
@@ -617,9 +591,7 @@ def _(args: argparse.Namespace, extra: list[str]) -> None:
     if args.here:
         write_dir = op.abspath(os.getcwd())
         if not os.access(write_dir, os.W_OK):
-            raise RuntimeError(
-                f"No write access to the current working directory ({write_dir})"
-            )
+            raise RuntimeError(f"No write access to the current working directory ({write_dir})")
 
     elif args.home:
         home_dir = op.expanduser("~")
@@ -676,10 +648,7 @@ def _(args: argparse.Namespace, extra: list[str]) -> None:
         downloaded_hash = hashlib.md5(pyra_rb.encode("utf-8")).hexdigest()
 
         if downloaded_hash != EXPECTED_HASH:
-            raise RuntimeError(
-                f"Downloaded pyra.rb has the wrong hash ({downloaded_hash} !="
-                f" {EXPECTED_HASH})."
-            )
+            raise RuntimeError(f"Downloaded pyra.rb has the wrong hash ({downloaded_hash} != {EXPECTED_HASH}).")
 
         with open(op.join(tmpdir, "pyra.rb"), "w") as f:
             f.write(pyra_rb)

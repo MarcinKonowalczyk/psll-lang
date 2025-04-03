@@ -4,21 +4,21 @@ Optimisers work on the abstract syntax tree to improve byte count of the compile
 
 from __future__ import annotations
 
-from typing import Optional, Generator, Callable, TYPE_CHECKING
+from collections.abc import Generator
+from typing import TYPE_CHECKING, Callable
 
 if TYPE_CHECKING:
     from typing_extensions import _T
 
-from itertools import chain
-from more_itertools import windowed_complete
 import operator
+from itertools import chain
+
+from more_itertools import windowed_complete
 
 from . import build
 
 
-def greedy_optimisation(
-    ast: tuple, verbose: bool = True, max_iter: Optional[int] = None
-) -> tuple:
+def greedy_optimisation(ast: tuple, verbose: bool = True, max_iter: int | None = None) -> tuple:
     """Greedily insert empty trees into the abstract syntax tree"""
 
     def candidates(ast: tuple) -> Generator[tuple, None, None]:
@@ -64,7 +64,7 @@ def repeat(func: Callable[[_T], _T], n: int, arg: _T) -> _T:
 def considerate_optimisation(
     ast: tuple,
     verbose: bool = True,
-    max_iter: Optional[int] = None,
+    max_iter: int | None = None,
     max_depth: int = 10,
 ) -> tuple:
     """Consider all the possible places to insert a tree up to ``max_depth``"""
