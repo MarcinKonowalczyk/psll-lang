@@ -9,21 +9,23 @@ if sys.version_info >= (3, 14):
     # Fix for lru_cache in Python 3.14+
     # See: https://github.com/python/cpython/issues/132064
     from functools import wraps
-    from typing import Any, Callable
+    from typing import Any, Callable, TypeVar
 
     _old_lru_cache = lru_cache
 
-    def wrapped_lru_cache[T: Callable](*lru_args, **lru_kwargs) -> Callable[[T], T]:
-        def decorator(func: T) -> T:
+    _T = TypeVar("_T", bound=Callable)
+
+    def wrapped_lru_cache(*lar: Any, **lkw: Any) -> Callable[[_T], _T]:
+        def decorator(func: _T) -> _T:
             @wraps(func)
-            def wrapper(*args: Any, **kwargs: Any) -> Any:
-                return _old_lru_cache(*lru_args, **lru_kwargs)(func)(*args, **kwargs)
+            def wrapper(*ar: Any, **kw: Any) -> Any:
+                return _old_lru_cache(*lar, **lkw)(func)(*ar, **kw)
 
             return wrapper  # type: ignore
 
         return decorator
 
-    lru_cache = wrapped_lru_cache
+    lru_cache = wrapped_lru_cache  # type: ignore
 
 
 # ===================================================================================
