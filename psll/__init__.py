@@ -2,7 +2,7 @@
 Macro-driven metalanguage which compiles to Pyramid Scheme.
 """
 
-__version__ = "0.1.8"
+__version__ = "0.1.9"
 
 
 class PsllSyntaxError(SyntaxError):

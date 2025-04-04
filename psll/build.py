@@ -1,8 +1,32 @@
 import operator
+import sys
 from functools import lru_cache, reduce, singledispatch
 from typing import Union, overload
 
 from .ascii_trees import AbstractTree, Pyramid
+
+if sys.version_info >= (3, 14):
+    # Fix for lru_cache in Python 3.14+
+    # See: https://github.com/python/cpython/issues/132064
+    from functools import wraps
+    from typing import Any, Callable, TypeVar
+
+    _old_lru_cache = lru_cache
+
+    _T = TypeVar("_T", bound=Callable)
+
+    def wrapped_lru_cache(*lar: Any, **lkw: Any) -> Callable[[_T], _T]:
+        def decorator(func: _T) -> _T:
+            @wraps(func)
+            def wrapper(*ar: Any, **kw: Any) -> Any:
+                return _old_lru_cache(*lar, **lkw)(func)(*ar, **kw)
+
+            return wrapper  # type: ignore
+
+        return decorator
+
+    lru_cache = wrapped_lru_cache  # type: ignore
+
 
 # ===================================================================================
 #
