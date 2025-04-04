@@ -7,6 +7,7 @@ from .ascii_trees import AbstractTree, Pyramid
 
 if sys.version_info >= (3, 14):
     # Fix for lru_cache in Python 3.14+
+    # See: https://github.com/python/cpython/issues/132064
     from functools import wraps
     from typing import Any, Callable
 
