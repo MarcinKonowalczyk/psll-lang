@@ -9,6 +9,7 @@ __pycache__
 psll-venv
 htmlcov
 coverage
+pyra.rb
 
 # Compiled pyramid schemes in the examples folder
 examples/*.pyra
