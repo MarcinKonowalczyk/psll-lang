@@ -2,6 +2,24 @@
 requires = ["flit_core >=3.2,<4"]
 build-backend = "flit_core.buildapi"
 
+[tool.flit.sdist]
+include = []
+exclude = [
+    ".github",
+    ".gitignore",
+    ".gitmodules",
+    ".pre-commit-config.yaml",
+    ".pypirc",
+    "tox.ini",
+    "sigbovik-paper",
+    "test.sh",
+    "perf",
+    "makefile",
+    "cspell.json",
+    "Pyramid-Scheme"
+    #
+]
+
 [project]
 name = "psll"
 authors = [{ name = "Marcin Konowalczyk", email = "marcin.konow@lczyk.xyz" }]
@@ -17,11 +35,15 @@ classifiers = [
     "Development Status :: 3 - Alpha",
     "Environment :: Console",
 ]
-keywords = ["compiler", "macros", "code-golf", "pyramid-scheme", "programming-language"]
-
-dependencies = [
-    "more-itertools>=8.5.0",
+keywords = [
+    "compiler",
+    "macros",
+    "code-golf",
+    "pyramid-scheme",
+    "programming-language",
 ]
+
+dependencies = ["more-itertools>=8.5.0"]
 
 [project.urls]
 Homepage = "https://github.com/MarcinKonowalczyk/psll-lang"
@@ -89,7 +111,7 @@ exclude = [
 ]
 line-length = 120
 lint.ignore = [
-    "E731", # do not assign a lambda expression, use a def
+    "E731",   # do not assign a lambda expression, use a def
     "SIM108", # use ternary operator
     #
 ]
