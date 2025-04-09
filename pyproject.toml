@@ -114,6 +114,7 @@ addopts = ["-s", "--tb=short", "--color=yes"]
 [dependency-groups]
 dev = [
     "coverage>=7.8.0",
+    "flit>=3.12.0",
     "mypy>=1.15.0",
     "pytest>=8.3.5",
     "pytest-subtests>=0.14.1",
