@@ -40,10 +40,14 @@ for example in glob.glob(os.path.join(__output_dir__, "*.txt")):
     psll_examples.append((expected_filename, expected_output))
 
 
-def compile_and_run(filename: str) -> str:
+def compile_and_run(filename: str, ruby: Optional[str] = None) -> str:
     """Compile and run the given file, returning the output"""
+    args = ["psll", "compile-and-run"]
+    if ruby:
+        args += ["--ruby", ruby]
+    args += [filename]
     return subprocess.check_output(
-        ["psll", "compile-and-run", filename],
+        args,
         stderr=subprocess.STDOUT,
         text=True,
     )
@@ -69,9 +73,10 @@ def run(filename: str) -> str:
 
 
 @pytest.mark.parametrize("filename, expected_output", psll_examples)
-def test_examples(filename: str, expected_output: str) -> None:
+def test_examples(ruby: Optional[str], filename: str, expected_output: str) -> None:
     """Test that the examples compile and run correctly"""
-    assert compile_and_run(filename) == expected_output, f"Example {filename} output mismatch"
+    # get the 'ruby' keyword from the pytest config
+    assert compile_and_run(filename, ruby=ruby) == expected_output, f"Example {filename} output mismatch"
 
 
 @pytest.mark.parametrize("filename, expected_output", psll_examples)

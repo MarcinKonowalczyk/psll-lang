@@ -230,6 +230,12 @@ def _(subparsers: argparse._SubParsersAction) -> None:
         help="run a pyramid scheme program",
     )
 
+    run_parser.add_argument(
+        "--ruby",
+        help="Path to the ruby executable",
+        type=str,
+    )
+
     run_parser.add_argument("input", help="Input pyramid scheme file.")
 
 
@@ -243,6 +249,8 @@ def _(args: argparse.Namespace, extra: list[str]) -> tuple[argparse.Namespace, l
     input_root, input_ext = op.splitext(args.input)
     if input_ext != ".pyra":
         raise ArgumentError("Input file does not have .pyra extension")
+
+    args.ruby = check_ruby(args.ruby)
 
     return args, extra
 
@@ -267,9 +275,32 @@ def _(subparsers: argparse._SubParsersAction) -> None:
     )
 
     compile_and_run_parser.add_argument(
+        "--ruby",
+        help="Path to the ruby executable",
+        type=str,
+    )
+
+    compile_and_run_parser.add_argument(
         "input",
         help=("Input file written in the pyramid scheme (lisp (like)) syntax, with the .psll extension."),
     )
+
+
+def check_ruby(ruby: str) -> str:
+    if ruby:
+        # Check if the specified ruby executable exists
+        if not op.exists(ruby):
+            raise ArgumentError(f"Ruby executable '{ruby}' does not exist.")
+        if not op.isfile(ruby):
+            raise ArgumentError(f"'{ruby}' is not a file.")
+    else:
+        # Check if ruby is in the PATH
+        found_ruby = shutil.which("ruby")
+        if found_ruby is None:
+            raise ArgumentError("Ruby executable not found. Please specify the path to the ruby executable.")
+        ruby = found_ruby
+
+    return ruby
 
 
 @register_validate_options(Subcommand.COMPILE_AND_RUN)
@@ -285,6 +316,8 @@ def _(args: argparse.Namespace, extra: list[str]) -> tuple[argparse.Namespace, l
     input_root, input_ext = op.splitext(args.input)
     if input_ext != ".psll":
         raise ArgumentError("Input file does not have .psll extension")
+
+    args.ruby = check_ruby(args.ruby)
 
     return args, extra
 
@@ -457,6 +490,8 @@ def _(args: argparse.Namespace, extra: list[str]) -> None:
     if args.output:
         with open(args.output, "w") as f:
             f.write(program)
+    else:
+        print(program)
 
     if args.verbose:
         print("psll file:", psll_lines, "lines,", psll_chars, "characters")
@@ -520,16 +555,11 @@ def find_pyra_rb(verbose: int) -> Optional[str]:
 def _(args: argparse.Namespace, extra: list[str]) -> None:
     """Main function for the command-line operation"""
 
-    # rind ruby
-    ruby = shutil.which("ruby")
-    if ruby is None:
-        raise RuntimeError("Could not find ruby executable. Make sure ruby is installed.")
-
     if args.verbose > 1:
-        print("Ruby executable:", ruby)
+        print("Ruby executable:", args.ruby)
 
     # get ruby version
-    ruby_version = subprocess.check_output([ruby, "--version"]).decode("utf-8").strip()
+    ruby_version = subprocess.check_output([args.ruby, "--version"]).decode("utf-8").strip()
     if args.verbose > 1:
         print("Ruby version:", ruby_version)
 
@@ -545,7 +575,7 @@ def _(args: argparse.Namespace, extra: list[str]) -> None:
     if args.verbose:
         print("Running pyramid scheme:")
 
-    subprocess.run([ruby, pyra_rb, args.input, *extra])
+    subprocess.run([args.ruby, pyra_rb, args.input, *extra])
 
 
 @register_subcommand(Subcommand.COMPILE_AND_RUN)

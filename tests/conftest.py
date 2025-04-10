@@ -1,15 +1,26 @@
-# import pytest_subtests
+from typing import TYPE_CHECKING, Any, Optional, Protocol
+
+import pytest
 
 
-# def pytest_addoption(parser: pytest.Parser) -> None:
-#     group = parser.getgroup("subtests")
-#     group.addoption(
-#         "--no-subtests-shortletter",
-#         action="store_true",
-#         dest="no_subtests_shortletter",
-#         default=False,
-#         help="Disables subtest output 'dots' in non-verbose mode (EXPERIMENTAL)",
-#     )
+def pytest_addoption(parser: pytest.Parser) -> None:
+    parser.addoption(
+        "--ruby",
+        action="store",
+        help="specify the ruby executable to use for tests",
+    )
+
+
+def pytest_configure(config: pytest.Config) -> None:
+    config.addinivalue_line("markers", "ruby: specify the ruby executable to use for tests")
+
+
+@pytest.fixture(scope="session")
+def ruby(request: pytest.FixtureRequest) -> Optional[str]:
+    """Fixture to get the ruby executable from the command line options"""
+    ruby = request.config.getoption("--ruby", None)
+    assert isinstance(ruby, (str, type(None))), f"Invalid ruby option: {ruby}"
+    return ruby
 
 
 ##========================================================================================================
@@ -21,8 +32,6 @@
 ##  ####    #####   #####    ##    ######  ####     ##   ####
 ##
 ##========================================================================================================
-
-from typing import TYPE_CHECKING, Any, Protocol
 
 
 class Subtests(Protocol):
