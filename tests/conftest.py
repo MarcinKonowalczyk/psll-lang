@@ -20,12 +20,7 @@ def ruby(request: pytest.FixtureRequest) -> Optional[str]:
     """Fixture to get the ruby executable from the command line options"""
     ruby = request.config.getoption("--ruby", None)
     assert isinstance(ruby, (str, type(None))), f"Invalid ruby option: {ruby}"
-    if isinstance(ruby, str):
-        # we need to prepend the path with some garbage to make it not a valid
-        # path. otherwise pytest gets confused.
-        # https://github.com/pytest-dev/pytest/issues/13368
-        ruby = ruby.lstrip("$")
-    return ruby  # type: ignore
+    return ruby
 
 
 ##========================================================================================================
