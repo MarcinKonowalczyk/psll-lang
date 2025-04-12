@@ -236,6 +236,12 @@ def _(subparsers: argparse._SubParsersAction) -> None:
         type=str,
     )
 
+    run_parser.add_argument(
+        "--pyra",
+        help="Path to the pyramid scheme interpreter",
+        type=str,
+    )
+
     run_parser.add_argument("input", help="Input pyramid scheme file.")
 
 
@@ -251,6 +257,7 @@ def _(args: argparse.Namespace, extra: list[str]) -> tuple[argparse.Namespace, l
         raise ArgumentError("Input file does not have .pyra extension")
 
     args.ruby = check_ruby(args.ruby)
+    args.pyra = check_pyra(args.pyra, args.verbose)
 
     return args, extra
 
@@ -281,6 +288,12 @@ def _(subparsers: argparse._SubParsersAction) -> None:
     )
 
     compile_and_run_parser.add_argument(
+        "--pyra",
+        help="Path to the pyramid scheme interpreter",
+        type=str,
+    )
+
+    compile_and_run_parser.add_argument(
         "input",
         help=("Input file written in the pyramid scheme (lisp (like)) syntax, with the .psll extension."),
     )
@@ -303,6 +316,26 @@ def check_ruby(ruby: str) -> str:
     return ruby
 
 
+def check_pyra(pyra: str, verbose: int = 0) -> str:
+    if pyra:
+        # Check if the specified pyra.rb file exists
+        if not op.exists(pyra):
+            raise ArgumentError(f"Pyra.rb file '{pyra}' does not exist.")
+        if not op.isfile(pyra):
+            raise ArgumentError(f"'{pyra}' is not a file.")
+    else:
+        # Try to find pyra.rb
+        found_pyra = find_pyra_rb(verbose)
+        if found_pyra is None:
+            raise ArgumentError(
+                "Pyra.rb file not found. Please specify the path to the pyra.rb file."
+                "Or use the `download-pyra` command to download it."
+            )
+        pyra = found_pyra
+
+    return pyra
+
+
 @register_validate_options(Subcommand.COMPILE_AND_RUN)
 def _(args: argparse.Namespace, extra: list[str]) -> tuple[argparse.Namespace, list[str]]:
     """Validate options for the compile-and-run subcommand"""
@@ -318,6 +351,7 @@ def _(args: argparse.Namespace, extra: list[str]) -> tuple[argparse.Namespace, l
         raise ArgumentError("Input file does not have .psll extension")
 
     args.ruby = check_ruby(args.ruby)
+    args.pyra = check_pyra(args.pyra, args.verbose)
 
     return args, extra
 
@@ -563,19 +597,14 @@ def _(args: argparse.Namespace, extra: list[str]) -> None:
     if args.verbose > 1:
         print("Ruby version:", ruby_version)
 
-    pyra_rb = find_pyra_rb(args.verbose)
-
-    if pyra_rb is None:
-        raise RuntimeError("Could not find pyra.rb. Make sure pyramid scheme is installed.")
-
     if args.verbose > 1:
-        print("pyra.rb:", pyra_rb)
+        print("pyra.rb:", args.pyra)
 
     # run pyramid scheme
     if args.verbose:
         print("Running pyramid scheme:")
 
-    subprocess.run([args.ruby, pyra_rb, args.input, *extra])
+    subprocess.run([args.ruby, args.pyra, args.input, *extra])
 
 
 @register_subcommand(Subcommand.COMPILE_AND_RUN)
