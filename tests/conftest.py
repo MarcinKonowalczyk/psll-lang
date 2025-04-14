@@ -28,6 +28,7 @@ def ruby(request: pytest.FixtureRequest) -> Optional[str]:
     assert isinstance(ruby, (str, type(None))), f"Invalid ruby option: {ruby}"
     return ruby
 
+
 @pytest.fixture(scope="session")
 def pyra(request: pytest.FixtureRequest) -> Optional[str]:
     """Fixture to get the pyra.rb from the command line options"""
